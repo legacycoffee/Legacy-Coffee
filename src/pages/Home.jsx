@@ -256,26 +256,48 @@ export default function Home() {
 
       {/* ── IMPACT ───────────────────────────────────────────── */}
       <section className="py-24 px-6 bg-peach-light">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-3">What We Do</p>
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+          <div className="mb-12 lg:mb-0 lg:pt-8">
+            <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-4">Our Impact</p>
             <h2 className="text-brown text-4xl md:text-5xl font-black leading-tight">
               Impact beyond<br />the cup.
             </h2>
+            <div className="mt-8 h-1 w-20 bg-primary" />
+            <p className="mt-6 max-w-sm text-brown/70 text-lg leading-relaxed">
+              Building a stronger coffee community and a more sustainable future across Uganda.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
             {[
-              { num: '01', title: 'Farmer Empowerment', body: 'Training in sustainable practices, quality control, and financial literacy — giving farmers the tools to thrive.', bg: 'bg-brown', text: 'text-white', sub: 'text-white/60' },
-              { num: '02', title: 'Youth & Women Inclusion', body: 'Mentorship, income opportunities, and skills training that open doors for young people and women in the coffee chain.', bg: 'bg-primary', text: 'text-white', sub: 'text-white/70' },
-              { num: '03', title: 'Environmental Restoration', body: "Tree planting and wetland restoration projects that protect Uganda's environment for future generations.", bg: 'bg-white', text: 'text-brown', sub: 'text-brown/60' },
-            ].map(card => (
-              <div key={card.num} className={`${card.bg} rounded-3xl p-8 relative overflow-hidden`}>
-                <p className={`absolute -top-4 -right-2 text-9xl font-black opacity-[0.07] ${card.text}`}>{card.num}</p>
-                <p className={`text-5xl font-black mb-6 ${card.text} opacity-20`}>{card.num}</p>
-                <h3 className={`text-xl font-black mb-3 ${card.text}`}>{card.title}</h3>
-                <p className={`text-sm leading-relaxed ${card.sub}`}>{card.body}</p>
-              </div>
+              {
+                num: '01',
+                title: 'Farmer Empowerment',
+                body: 'We work hand-in-hand with local farmers, providing training in sustainable practices, quality control, and financial literacy.',
+              },
+              {
+                num: '02',
+                title: 'Youth & Women Inclusion',
+                body: 'By offering training, mentorship, and income opportunities, we empower young people and women to thrive in the coffee value chain.',
+              },
+              {
+                num: '03',
+                title: 'Environmental Restoration',
+                body: 'Our commitment to nature includes tree planting and wetland restoration projects to safeguard Uganda’s environment for future generations.',
+              },
+            ].map((item, index) => (
+              <article
+                key={item.num}
+                className={`group grid grid-cols-[3.5rem_1fr] gap-5 py-7 md:grid-cols-[5rem_1fr] md:gap-8 ${index < 2 ? 'border-b border-brown/15' : ''}`}
+              >
+                <span className="pt-1 font-serif text-3xl italic text-primary/70 transition-colors duration-300 group-hover:text-primary md:text-4xl">
+                  {item.num}
+                </span>
+                <div>
+                  <h3 className="mb-2 text-xl font-bold text-brown md:text-2xl">{item.title}</h3>
+                  <p className="max-w-2xl text-sm leading-relaxed text-brown/70 md:text-base">{item.body}</p>
+                </div>
+              </article>
             ))}
           </div>
         </div>
