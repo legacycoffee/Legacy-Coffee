@@ -90,7 +90,7 @@ function HeroSlider() {
         </p>
 
         <h1 className="text-white font-black leading-[1.1] mb-4 md:mb-5"
-          style={{ fontSize: 'clamp(1.8rem, 6vw, 5rem)', animation: 'fadeUp 0.8s 0.1s ease both' }}>
+          style={{ animation: 'fadeUp 0.8s 0.1s ease both' }}>
           Empowering Farmers.<br />
           <span className="text-primary">Enriching Communities.</span>
         </h1>
@@ -176,7 +176,7 @@ function OurCoffeeSection() {
 
 export default function Home() {
   return (
-    <div className="overflow-x-hidden">
+    <div className="home-page overflow-x-hidden">
 
       {/* ── HERO ─────────────────────────────────────────────── */}
       <HeroSlider />
@@ -224,7 +224,7 @@ export default function Home() {
 
           {/* section header */}
           <div className="text-center mb-8 md:mb-7">
-            <h2 className="text-brown font-black leading-tight mb-2" style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', fontFamily: 'Playfair Display, serif' }}>
+            <h2 className="text-brown font-black leading-tight mb-2">
               From Farm to Future
             </h2>
             <p className="text-brown/80 text-base md:text-xl max-w-3xl mx-auto leading-relaxed">
@@ -252,7 +252,7 @@ export default function Home() {
                 <path fill="none" stroke="#C8922A" strokeWidth="1.5" d="M260,140 C220,155 180,170 140,185 C110,196 85,205 60,215 C40,222 20,240 0,260" />
               </svg>
               <div className="relative z-10 p-7 md:p-7 xl:p-9 flex flex-col h-full">
-                <h3 className="text-[#E5A547] font-bold leading-[1.04] mb-4" style={{ fontSize: 'clamp(1.8rem, 2.4vw, 2.4rem)', fontFamily: 'Playfair Display, serif' }}>
+                <h3 className="text-[#E5A547] font-bold leading-[1.04] mb-4">
                   Mission
                 </h3>
                 <p className="text-white/80 text-base md:text-lg leading-[1.5] max-w-[290px]">
@@ -278,7 +278,7 @@ export default function Home() {
                 <path fill="#FFB84F" fillOpacity="0.82" d="M0,200 L0,148 C40,128 85,162 130,145 C170,130 205,108 248,118 C290,128 330,155 380,138 L380,200 Z" />
               </svg>
               <div className="relative z-10 p-7 md:p-7 xl:p-9 flex flex-col h-full">
-                <h3 className="text-white font-bold leading-[1.04] mb-4" style={{ fontSize: 'clamp(1.8rem, 2.4vw, 2.4rem)', fontFamily: 'Playfair Display, serif' }}>
+                <h3 className="text-white font-bold leading-[1.04] mb-4">
                   Core Values
                 </h3>
                 <p className="text-white/85 text-base md:text-lg leading-[1.5] max-w-[290px]">
@@ -306,7 +306,7 @@ export default function Home() {
                 <path fill="none" stroke="#7A3A18" strokeWidth="1" strokeOpacity="0.3" d="M240,140 C205,155 168,172 132,188 C104,200 76,212 48,224 C32,230 16,236 0,240" />
               </svg>
               <div className="relative z-10 p-7 md:p-7 xl:p-9 flex flex-col h-full">
-                <h3 className="text-[#A95720] font-bold leading-[1.04] mb-4" style={{ fontSize: 'clamp(1.8rem, 2.4vw, 2.4rem)', fontFamily: 'Playfair Display, serif' }}>
+                <h3 className="text-[#A95720] font-bold leading-[1.04] mb-4">
                   Vision
                 </h3>
                 <p className="text-[#2C1A0E]/80 text-base md:text-lg leading-[1.5] max-w-[290px]">
@@ -366,9 +366,9 @@ export default function Home() {
               { value: 50000, suffix: '', label: 'Coffee trees planted in Kyenjojo' },
             ].map(s => (
               <div key={s.label} className="py-2 px-3 md:px-5 text-center">
-                <p className="text-3xl md:text-4xl font-black text-white mb-1">
+                <div className="text-3xl md:text-4xl font-black text-white mb-1">
                   <CountUp target={s.value} suffix={s.suffix} />
-                </p>
+                </div>
                 <p className="text-peach-light/60 text-xs uppercase tracking-widest">{s.label}</p>
               </div>
             ))}
