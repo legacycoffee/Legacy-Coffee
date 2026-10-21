@@ -173,7 +173,7 @@ export default function Home() {
 
             {/* MISSION — dark espresso */}
             <div className="group relative md:-translate-y-6">
-              <div className="relative overflow-hidden flex flex-col min-h-[320px] transition-transform duration-500 ease-out motion-safe:group-hover:-translate-y-2 motion-safe:group-hover:rotate-[1deg] motion-reduce:transition-none"
+              <div className="relative overflow-hidden flex flex-col min-h-[280px] transition-transform duration-500 ease-out motion-safe:group-hover:-translate-y-2 motion-safe:group-hover:rotate-[1deg] motion-reduce:transition-none"
                 style={{ background: 'linear-gradient(135deg, #351a08 0%, #48240e 100%)', border: '1px solid rgba(245, 200, 150, 0.7)', borderRadius: '38px 54px 48px 44px', boxShadow: '0 22px 48px rgba(75,42,16,0.25)' }}>
               {/* large peach organic blob — bottom-right corner */}
               <svg className="absolute bottom-0 right-0 w-[68%] h-[58%] transition-transform duration-700 ease-out motion-safe:group-hover:scale-110 motion-safe:group-hover:-translate-x-2 motion-reduce:transition-none" viewBox="0 0 260 260" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -200,7 +200,7 @@ export default function Home() {
 
             {/* CORE VALUES — burnt orange */}
             <div className="group relative md:mt-2">
-              <div className="relative overflow-hidden flex flex-col min-h-[320px] transition-transform duration-500 ease-out motion-safe:group-hover:-translate-y-2 motion-safe:group-hover:-rotate-[1deg] motion-reduce:transition-none"
+              <div className="relative overflow-hidden flex flex-col min-h-[280px] transition-transform duration-500 ease-out motion-safe:group-hover:-translate-y-2 motion-safe:group-hover:-rotate-[1deg] motion-reduce:transition-none"
                 style={{ background: 'linear-gradient(135deg, #D94D08 0%, #F17816 100%)', border: '1px solid rgba(255, 225, 180, 0.75)', borderRadius: '42px 100px 40px 44px', boxShadow: '0 22px 48px rgba(163,77,23,0.22)' }}>
               <svg className="absolute top-0 right-0 w-[48%] h-[35%] transition-transform duration-700 ease-out motion-safe:group-hover:scale-110 motion-safe:group-hover:translate-x-2 motion-reduce:transition-none" viewBox="0 0 200 150" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill="#F3A33F" fillOpacity="0.48" d="M0,0 H200 V150 C148,136 132,118 100,92 C68,66 38,20 0,0 Z" />
@@ -226,7 +226,7 @@ export default function Home() {
 
             {/* VISION — warm ivory */}
             <div className="group relative md:mt-2">
-              <div className="relative overflow-hidden flex flex-col min-h-[320px] transition-transform duration-500 ease-out motion-safe:group-hover:-translate-y-2 motion-safe:group-hover:rotate-[1deg] motion-reduce:transition-none"
+              <div className="relative overflow-hidden flex flex-col min-h-[280px] transition-transform duration-500 ease-out motion-safe:group-hover:-translate-y-2 motion-safe:group-hover:rotate-[1deg] motion-reduce:transition-none"
                 style={{ background: 'linear-gradient(135deg, #FFF9ED 0%, #FAF1E1 100%)', border: '1px solid rgba(164, 104, 55, 0.48)', borderRadius: '44px 84px 46px 42px', boxShadow: '0 22px 48px rgba(92,58,30,0.14)' }}>
               {/* large brown/tan organic blob — bottom-right corner */}
               <svg className="absolute bottom-0 right-0 w-[62%] h-[62%] transition-transform duration-700 ease-out motion-safe:group-hover:scale-110 motion-safe:group-hover:-translate-x-2 motion-reduce:transition-none" viewBox="0 0 240 240" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
