@@ -256,14 +256,12 @@ export default function Home() {
 
       {/* ── IMPACT ───────────────────────────────────────────── */}
       <section className="py-24 px-6 bg-peach-light">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
-          <div className="mb-12 lg:mb-0 lg:pt-8">
-            <h2 className="text-brown text-4xl md:text-5xl font-black leading-tight">
-              Impact
-            </h2>
-          </div>
+        <div className="max-w-6xl mx-auto">
+          <h2 className="mb-12 text-center text-brown text-4xl md:text-5xl font-black leading-tight">
+            Impact
+          </h2>
 
-          <div>
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y divide-brown/15 md:divide-y-0 md:divide-x">
             {[
               {
                 num: '01',
@@ -283,14 +281,14 @@ export default function Home() {
             ].map((item, index) => (
               <article
                 key={item.num}
-                className={`group grid grid-cols-[3.5rem_1fr] gap-5 py-7 md:grid-cols-[5rem_1fr] md:gap-8 ${index < 2 ? 'border-b border-brown/15' : ''}`}
+                className={`group py-7 md:px-8 md:py-2 ${index === 0 ? 'md:pl-0' : ''} ${index === 2 ? 'md:pr-0' : ''}`}
               >
-                <span className="pt-1 font-serif text-3xl italic text-primary/70 transition-colors duration-300 group-hover:text-primary md:text-4xl">
+                <span className="mb-5 block font-serif text-3xl italic text-primary/70 transition-colors duration-300 group-hover:text-primary md:text-4xl">
                   {item.num}
                 </span>
                 <div>
                   <h3 className="mb-2 text-xl font-bold text-brown md:text-2xl">{item.title}</h3>
-                  <p className="max-w-2xl text-sm leading-relaxed text-brown/70 md:text-base">{item.body}</p>
+                  <p className="text-sm leading-relaxed text-brown/70 md:text-base">{item.body}</p>
                 </div>
               </article>
             ))}
