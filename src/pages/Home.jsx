@@ -291,9 +291,9 @@ export default function Home() {
       </section>
 
       {/* ── NUMBERS ──────────────────────────────────────────── */}
-      <section className="py-14 md:py-16 px-6 bg-brown">
+      <section className="py-8 md:py-10 px-6 bg-brown">
         <div className="max-w-5xl mx-auto">
-          <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-8 md:mb-10 text-center">Our Impact in Numbers</p>
+          <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-4 md:mb-5 text-center">Our Impact in Numbers</p>
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-white/10">
             {[
               { value: 100, suffix: '+', label: 'Farmers Supported' },
@@ -301,8 +301,8 @@ export default function Home() {
               { value: 5, suffix: '', label: 'Districts Covered' },
               { value: 200, suffix: '+', label: 'Women Empowered' },
             ].map(s => (
-              <div key={s.label} className="py-6 md:py-7 px-4 md:px-6 text-center">
-                <p className="text-4xl md:text-5xl font-black text-primary mb-2">
+              <div key={s.label} className="py-3 md:py-4 px-3 md:px-5 text-center">
+                <p className="text-3xl md:text-4xl font-black text-primary mb-1">
                   <CountUp target={s.value} suffix={s.suffix} />
                 </p>
                 <p className="text-peach-light/60 text-xs uppercase tracking-widest">{s.label}</p>
