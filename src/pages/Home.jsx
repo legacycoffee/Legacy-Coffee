@@ -258,14 +258,9 @@ export default function Home() {
       <section className="py-24 px-6 bg-peach-light">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
           <div className="mb-12 lg:mb-0 lg:pt-8">
-            <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-4">Our Impact</p>
             <h2 className="text-brown text-4xl md:text-5xl font-black leading-tight">
-              Impact beyond<br />the cup.
+              Impact
             </h2>
-            <div className="mt-8 h-1 w-20 bg-primary" />
-            <p className="mt-6 max-w-sm text-brown/70 text-lg leading-relaxed">
-              Building a stronger coffee community and a more sustainable future across Uganda.
-            </p>
           </div>
 
           <div>
