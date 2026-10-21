@@ -158,7 +158,6 @@ export default function Home() {
 
           {/* section header */}
           <div className="text-center mb-8 md:mb-7">
-            <div className="w-12 h-[3px] bg-primary mx-auto mb-3" />
             <h2 className="text-brown font-black leading-tight mb-2" style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', fontFamily: 'Playfair Display, serif' }}>
               From Farm to Future
             </h2>
