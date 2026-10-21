@@ -33,6 +33,15 @@ const slides = [
   { img: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792514667/coffee_1_farm.jpg', pos: 'center' },
 ]
 
+const coffeeBackgroundImages = [
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589717/coffee_3.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589718/coffee_1.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589718/coffee_5.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589718/coffee_4.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589717/coffee_2.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1792514667/coffee_1_farm.jpg',
+]
+
 function HeroSlider() {
   const [current, setCurrent] = useState(0)
 
@@ -104,6 +113,63 @@ function HeroSlider() {
         </div>
       </div>
 
+    </section>
+  )
+}
+
+function OurCoffeeSection() {
+  const [current, setCurrent] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent(prev => (prev + 1) % coffeeBackgroundImages.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <section className="relative isolate overflow-hidden bg-white px-6 py-16 md:py-20">
+      {coffeeBackgroundImages.map((image, index) => (
+        <img
+          key={image}
+          src={image}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          className={`absolute inset-0 z-0 h-full w-full object-cover transition-opacity duration-1000 ${index === current ? 'opacity-100' : 'opacity-0'}`}
+          style={{ objectPosition: 'center 75%' }}
+        />
+      ))}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 z-10"
+        style={{ background: 'linear-gradient(135deg, rgba(92,58,30,0.72) 0%, rgba(245,166,35,0.18) 60%, rgba(92,58,30,0.55) 100%)' }}
+      />
+      <div className="relative z-20 mx-auto max-w-6xl text-white">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="mb-6 text-4xl font-black leading-tight text-primary md:text-5xl">
+            Our Coffee
+          </h2>
+          <p className="text-base font-bold leading-relaxed text-white md:text-lg">
+            Uganda’s rich soils and high-altitude climate create the perfect conditions for exceptional coffee. Legacy Coffee sources directly from smallholder farmers in Kyenjojo, Kabarole, Bunyangabu and surrounding areas, ensuring freshness, traceability, and quality.
+          </p>
+        </div>
+
+        <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-2 md:gap-14">
+          <div>
+            <h3 className="mb-3 text-xl font-bold text-primary md:text-2xl">Processing &amp; Roasting</h3>
+            <p className="text-sm font-bold leading-relaxed text-white md:text-base">
+              From hand-picking ripe cherries to careful washing, drying, and roasting, our process preserves natural flavors and guarantees consistency.
+            </p>
+          </div>
+          <div>
+            <h3 className="mb-3 text-xl font-bold uppercase tracking-wide text-primary md:text-2xl">Flavor Notes</h3>
+            <p className="text-sm font-bold leading-relaxed text-white md:text-base">
+              Rich, smooth body with hints of chocolate, nutty undertones, and a bright, clean finish
+            </p>
+          </div>
+        </div>
+      </div>
     </section>
   )
 }
@@ -291,18 +357,16 @@ export default function Home() {
       </section>
 
       {/* ── NUMBERS ──────────────────────────────────────────── */}
-      <section className="py-8 md:py-10 px-6 bg-brown">
+      <section className="py-5 md:py-6 px-6 bg-brown">
         <div className="max-w-5xl mx-auto">
-          <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-4 md:mb-5 text-center">Our Impact in Numbers</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-white/10">
+          <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-3 text-center">Our Impact in Numbers</p>
+          <div className="mx-auto grid max-w-2xl grid-cols-1 sm:grid-cols-2">
             {[
-              { value: 100, suffix: '+', label: 'Farmers Supported' },
-              { value: 50000, suffix: '+', label: 'Kg Coffee Produced' },
-              { value: 5, suffix: '', label: 'Districts Covered' },
-              { value: 200, suffix: '+', label: 'Women Empowered' },
+              { value: 100, suffix: '', label: 'Farmers equipped with modern skills' },
+              { value: 50000, suffix: '', label: 'Coffee trees planted in Kyenjojo' },
             ].map(s => (
-              <div key={s.label} className="py-3 md:py-4 px-3 md:px-5 text-center">
-                <p className="text-3xl md:text-4xl font-black text-primary mb-1">
+              <div key={s.label} className="py-2 px-3 md:px-5 text-center">
+                <p className="text-3xl md:text-4xl font-black text-white mb-1">
                   <CountUp target={s.value} suffix={s.suffix} />
                 </p>
                 <p className="text-peach-light/60 text-xs uppercase tracking-widest">{s.label}</p>
@@ -313,94 +377,17 @@ export default function Home() {
       </section>
 
       {/* ── OUR COFFEE ───────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-14">
-            <div>
-              <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-3">Farm to Cup</p>
-              <h2 className="text-brown text-4xl md:text-5xl font-black leading-tight">Our Coffee</h2>
-            </div>
-            <Link to="/shop" className="text-brown/50 text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors">
-              View All →
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* feature card */}
-            <div className="relative rounded-3xl overflow-hidden h-[460px] group">
-              <img src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=800"
-                alt="Arabica" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-brown/85 via-brown/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-8">
-                <span className="bg-primary text-white text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">Single Origin</span>
-                <h3 className="text-white text-2xl font-black mt-3 mb-2">Arabica Highlands</h3>
-                <p className="text-white/70 text-sm mb-5">Light roast with fruity notes from the Kyenjojo highlands.</p>
-                <Link to="/shop" className="inline-block bg-white text-brown text-sm font-bold px-6 py-2.5 rounded-full hover:bg-primary hover:text-white transition-all">
-                  Shop Now →
-                </Link>
-              </div>
-            </div>
-
-            {/* stacked right */}
-            <div className="flex flex-col gap-6">
-              <div className="relative rounded-3xl overflow-hidden h-52 group">
-                <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792507268/coffee-bean-bag-with-eucalyptus-roasted-coffee-scaled.png"
-                  alt="Robusta" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-r from-brown/75 to-transparent" />
-                <div className="absolute inset-0 flex flex-col justify-center p-8">
-                  <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full w-fit mb-3">Bold Blend</span>
-                  <h3 className="text-white text-xl font-black">Robusta Espresso</h3>
-                  <Link to="/shop" className="text-primary text-sm font-bold mt-2 hover:text-white transition-colors">Shop Now →</Link>
-                </div>
-              </div>
-
-              <div className="bg-peach-light rounded-3xl p-8 flex flex-col justify-between flex-1">
-                <div>
-                  <p className="text-primary text-xs font-bold uppercase tracking-widest mb-3">Bulk & Export</p>
-                  <h3 className="text-brown text-xl font-black leading-tight mb-2">Premium Export Grade Green Beans</h3>
-                  <p className="text-brown/60 text-sm">Direct from farmers. Traceable. Certified.</p>
-                </div>
-                <Link to="/shop#quote"
-                  className="self-start mt-6 bg-brown text-white text-sm font-bold px-6 py-3 rounded-full hover:bg-primary transition-all">
-                  Get a Quote →
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA BANNER ───────────────────────────────────────── */}
-      <section className="relative py-28 px-6 overflow-hidden">
-        <img src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1600"
-          alt="bg" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-brown/75" />
-        <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-4">Partner With Us</p>
-          <h2 className="text-white text-4xl md:text-6xl font-black leading-tight mb-6">
-            Every cup you buy<br />
-            <span className="text-primary">changes a life.</span>
-          </h2>
-          <p className="text-peach-light/70 text-base mb-10 max-w-xl mx-auto">
-            Whether you're a café, hotel, NGO, or individual — join us in building a fairer coffee industry in Uganda.
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link to="/shop"
-              className="bg-primary text-white px-10 py-4 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-white hover:text-brown transition-all shadow-lg shadow-primary/30">
-              Shop Now
-            </Link>
-            <Link to="/partner"
-              className="border-2 border-peach-light/40 text-peach-light px-10 py-4 rounded-full font-bold text-sm uppercase tracking-wider hover:border-primary hover:text-primary transition-all">
-              Become a Partner
-            </Link>
-          </div>
-        </div>
-      </section>
+      <OurCoffeeSection />
 
       {/* ── PARTNERS ─────────────────────────────────────────── */}
       <section className="py-20 px-6 bg-peach-light">
         <div className="max-w-6xl mx-auto">
-          <p className="text-center text-brown/50 text-xs font-bold uppercase tracking-[0.2em] mb-12">Trusted Partners & Supporters</p>
+          <div className="mx-auto mb-12 max-w-3xl text-center">
+            <h2 className="mb-4 text-3xl font-black text-brown md:text-4xl">Partnerships</h2>
+            <p className="text-base leading-relaxed text-brown/75 md:text-lg">
+              Legacy Coffee welcomes collaborations with Donors, NGOs, restaurants, hotels, exporters, and institutions. Whether through bulk orders, corporate gifting, or joint community projects, together we can make a greater impact.
+            </p>
+          </div>
           <div className="overflow-hidden">
             <div className="flex animate-[marquee_25s_linear_infinite] whitespace-nowrap items-center gap-16">
               {[...Array(2)].flatMap((_, i) =>
