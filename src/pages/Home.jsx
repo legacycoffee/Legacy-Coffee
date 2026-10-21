@@ -389,15 +389,45 @@ export default function Home() {
             </p>
           </div>
           <div className="overflow-hidden">
-            <div className="flex animate-[marquee_25s_linear_infinite] whitespace-nowrap items-center gap-16">
-              {[...Array(2)].flatMap((_, i) =>
-                ['KCCA', 'ImagineHer', 'Tony Elumelu Foundation', 'YonderLife', 'CURAP', 'UNFCU Foundation'].map((p, j) => (
-                  <span key={`${i}-${j}`}
-                    className="text-brown/40 font-black text-lg uppercase tracking-widest hover:text-primary transition-colors cursor-default flex-shrink-0">
-                    {p}
-                  </span>
-                ))
-              )}
+            <div className="partner-logo-track flex w-max items-center">
+              {[0, 1].map(copy => (
+                <div key={copy} className="flex shrink-0 items-center gap-16 pr-16" aria-hidden={copy === 1}>
+                  {[
+                    {
+                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596313/OIP-1.webp',
+                      alt: 'Partner organization logo',
+                    },
+                    {
+                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596313/Yonder-Life-Final-Logo-03.png',
+                      alt: 'Yonder Life',
+                    },
+                    {
+                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/partner.png',
+                      alt: 'Partner organization logo',
+                    },
+                    {
+                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/KCCA-Kampala-Capital-City-Authority-Logo-Vector.svg-.png',
+                      alt: 'Kampala Capital City Authority',
+                    },
+                    {
+                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/logo-color-2.png',
+                      alt: 'Partner organization logo',
+                    },
+                    {
+                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596315/Imagine-Her-Logo-Full-Colour-1-2.png',
+                      alt: 'Imagine Her',
+                    },
+                  ].map(logo => (
+                    <img
+                      key={logo.src}
+                      src={logo.src}
+                      alt={logo.alt}
+                      loading="lazy"
+                      className="h-16 w-36 shrink-0 object-contain md:h-20 md:w-44"
+                    />
+                  ))}
+                </div>
+              ))}
             </div>
           </div>
         </div>

@@ -32,6 +32,15 @@ h1, h2, h3 {
   to { transform: translateX(-25%); }
 }
 
+.partner-logo-track {
+  animation: partner-logo-marquee 18s linear infinite;
+}
+
+@keyframes partner-logo-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
 .marquee-strip {
   animation: marquee 8s linear infinite;
 }
