@@ -264,28 +264,22 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 divide-y divide-brown/15 md:divide-y-0 md:divide-x">
             {[
               {
-                num: '01',
                 title: 'Farmer Empowerment',
                 body: 'We work hand-in-hand with local farmers, providing training in sustainable practices, quality control, and financial literacy.',
               },
               {
-                num: '02',
                 title: 'Youth & Women Inclusion',
                 body: 'By offering training, mentorship, and income opportunities, we empower young people and women to thrive in the coffee value chain.',
               },
               {
-                num: '03',
                 title: 'Environmental Restoration',
                 body: 'Our commitment to nature includes tree planting and wetland restoration projects to safeguard Uganda’s environment for future generations.',
               },
             ].map((item, index) => (
               <article
-                key={item.num}
+                key={item.title}
                 className={`group py-7 md:px-8 md:py-2 ${index === 0 ? 'md:pl-0' : ''} ${index === 2 ? 'md:pr-0' : ''}`}
               >
-                <span className="mb-5 block font-serif text-3xl italic text-primary/70 transition-colors duration-300 group-hover:text-primary md:text-4xl">
-                  {item.num}
-                </span>
                 <div>
                   <h3 className="mb-2 text-xl font-bold text-brown md:text-2xl">{item.title}</h3>
                   <p className="text-sm leading-relaxed text-brown/70 md:text-base">{item.body}</p>
