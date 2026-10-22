@@ -372,60 +372,6 @@ export default function Home() {
       {/* ── OUR COFFEE ───────────────────────────────────────── */}
       <OurCoffeeSection />
 
-      {/* ── PARTNERS ─────────────────────────────────────────── */}
-      <section className="py-20 px-6 bg-peach-light">
-        <div className="max-w-6xl mx-auto">
-          <div className="mx-auto mb-12 max-w-3xl text-center">
-            <h2 className="mb-4 text-3xl font-black text-brown md:text-4xl">Partnerships</h2>
-            <p className="text-base leading-relaxed text-brown/75 md:text-lg">
-              Legacy Coffee welcomes collaborations with Donors, NGOs, restaurants, hotels, exporters, and institutions. Whether through bulk orders, corporate gifting, or joint community projects, together we can make a greater impact.
-            </p>
-          </div>
-          <div className="overflow-hidden">
-            <div className="partner-logo-track flex w-max items-center">
-              {[0, 1].map(copy => (
-                <div key={copy} className="flex shrink-0 items-center gap-16 pr-16" aria-hidden={copy === 1}>
-                  {[
-                    {
-                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596313/OIP-1.webp',
-                      alt: 'Partner organization logo',
-                    },
-                    {
-                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596313/Yonder-Life-Final-Logo-03.png',
-                      alt: 'Yonder Life',
-                    },
-                    {
-                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/partner.png',
-                      alt: 'Partner organization logo',
-                    },
-                    {
-                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/KCCA-Kampala-Capital-City-Authority-Logo-Vector.svg-.png',
-                      alt: 'Kampala Capital City Authority',
-                    },
-                    {
-                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/logo-color-2.png',
-                      alt: 'Partner organization logo',
-                    },
-                    {
-                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596315/Imagine-Her-Logo-Full-Colour-1-2.png',
-                      alt: 'Imagine Her',
-                    },
-                  ].map(logo => (
-                    <img
-                      key={logo.src}
-                      src={logo.src}
-                      alt={logo.alt}
-                      loading="lazy"
-                      className="h-16 w-36 shrink-0 object-contain md:h-20 md:w-44"
-                    />
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
     </div>
   )
 }

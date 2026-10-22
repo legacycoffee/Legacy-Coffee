@@ -12,48 +12,134 @@ export default function PartnerWithUs() {
   }
 
   return (
-    <div>
-      {/* Hero */}
-      <section className="bg-peach py-20 px-6 text-center">
-        <h1 className="text-4xl font-bold text-primary mb-4">Partner With Us</h1>
-        <p className="text-brown max-w-2xl mx-auto">
-          Legacy Coffee welcomes collaborations with Donors, NGOs, restaurants, hotels, exporters, and institutions.
-          Together we can make a greater impact.
-        </p>
+    <div className="bg-[#fffdfa]">
+      <section className="relative isolate min-h-[680px] overflow-hidden bg-[#351a08] lg:min-h-[calc(100svh-5rem)]">
+        <img
+          src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792508243/coffee_farm.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 z-0 h-full w-full object-cover object-center"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 z-0 bg-[#241308]/12"
+        />
+        <svg
+          aria-hidden="true"
+          className="absolute inset-0 z-0 h-full w-full"
+          viewBox="0 0 1920 760"
+          preserveAspectRatio="none"
+        >
+          <path
+            fill="#fff8ee"
+            fillOpacity="0.65"
+            d="M0 0H1465C1505 150 1502 265 1470 375C1422 540 1270 614 1060 660C820 712 632 777 330 760C157 750 57 652 0 420V0Z"
+          />
+          <path
+            fill="#F58537"
+            fillOpacity="0.6"
+            d="M1920 350C1760 376 1650 430 1555 505C1460 580 1404 666 1345 760H1920V350Z"
+          />
+        </svg>
+        <svg
+          aria-hidden="true"
+          className="absolute inset-0 z-0 h-full w-full md:hidden"
+          viewBox="0 0 390 760"
+          preserveAspectRatio="none"
+        >
+          <path
+            fill="#fff8ee"
+            fillOpacity="0.65"
+            d="M0 0H390V390C340 435 300 440 255 470C205 505 180 548 130 580C85 610 40 610 0 585V0Z"
+          />
+          <path
+            fill="#F58537"
+            fillOpacity="0.6"
+            d="M390 535C335 545 295 570 265 610C235 650 220 705 195 760H390V535Z"
+          />
+        </svg>
+        <div className="relative z-10 mx-auto grid min-h-[680px] max-w-[1580px] grid-cols-1 items-center gap-10 px-6 pb-20 pt-16 md:px-10 lg:min-h-[calc(100svh-5rem)] lg:px-12 lg:pb-16 lg:pt-8">
+          <div className="relative z-10 mx-auto max-w-[980px] text-center">
+            <p className="mb-3 text-lg font-bold uppercase tracking-[0.25em] text-primary sm:text-xl md:text-2xl">
+              Let’s build together
+            </p>
+            <h1
+              className="mb-5 text-4xl font-black leading-[1.1] text-brown sm:text-5xl"
+            >
+              Partnerships
+              <span className="block text-primary">
+                That Create Lasting Value
+              </span>
+            </h1>
+            <p className="mx-auto mb-7 max-w-[560px] text-sm leading-relaxed text-brown/80 md:text-lg">
+              We work with cafés, restaurants, hotels, retailers and individuals who share our passion for exceptional coffee.
+            </p>
+          </div>
+
+          <a
+            href="#partnership-form"
+            className="relative z-10 inline-flex items-center justify-self-center gap-5 rounded-full bg-white px-8 py-4 text-sm font-bold uppercase tracking-wider text-primary transition-colors hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:px-9 md:py-4"
+          >
+            Partner With Us <span aria-hidden="true">→</span>
+          </a>
+        </div>
       </section>
 
-      {/* Why Partner */}
-      <section className="py-16 px-6 bg-white">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-primary text-2xl font-bold mb-8 text-center">Why Partner With Legacy Coffee?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { icon: '🤝', title: 'Bulk Orders', text: 'Source premium Ugandan coffee directly at competitive prices for your business.' },
-              { icon: '🎁', title: 'Corporate Gifting', text: 'Unique, meaningful coffee gift packages that tell a story of impact.' },
-              { icon: '🌱', title: 'Community Projects', text: 'Co-invest in farmer training, women empowerment, and environmental restoration.' },
-            ].map(item => (
-              <div key={item.title} className="bg-peach-light rounded-xl p-6 text-center">
-                <div className="text-4xl mb-3">{item.icon}</div>
-                <h3 className="text-brown font-bold text-lg mb-2">{item.title}</h3>
-                <p className="text-brown/80 text-sm leading-relaxed">{item.text}</p>
-              </div>
-            ))}
+      <section id="partnerships" className="bg-peach-light px-6 py-16 md:py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto mb-12 max-w-3xl text-center">
+            <h1 className="mb-4 text-3xl font-black text-brown md:text-4xl">Partnerships</h1>
+            <p className="text-base leading-relaxed text-brown/75 md:text-lg">
+              Legacy Coffee welcomes collaborations with Donors, NGOs, restaurants, hotels, exporters, and institutions. Whether through bulk orders, corporate gifting, or joint community projects, together we can make a greater impact.
+            </p>
+          </div>
+          <div className="overflow-hidden">
+            <div className="partner-logo-track flex w-max items-center">
+              {[0, 1].map(copy => (
+                <div key={copy} className="flex shrink-0 items-center gap-16 pr-16" aria-hidden={copy === 1}>
+                  {[
+                    {
+                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596313/OIP-1.webp',
+                      alt: 'Partner organization logo',
+                    },
+                    {
+                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596313/Yonder-Life-Final-Logo-03.png',
+                      alt: 'Yonder Life',
+                    },
+                    {
+                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/partner.png',
+                      alt: 'Partner organization logo',
+                    },
+                    {
+                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/KCCA-Kampala-Capital-City-Authority-Logo-Vector.svg-.png',
+                      alt: 'Kampala Capital City Authority',
+                    },
+                    {
+                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/logo-color-2.png',
+                      alt: 'Partner organization logo',
+                    },
+                    {
+                      src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596315/Imagine-Her-Logo-Full-Colour-1-2.png',
+                      alt: 'Imagine Her',
+                    },
+                  ].map(logo => (
+                    <img
+                      key={logo.src}
+                      src={logo.src}
+                      alt={logo.alt}
+                      loading="lazy"
+                      className="h-16 w-36 shrink-0 object-contain md:h-20 md:w-44"
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Current Partners */}
-      <section className="py-12 px-6 bg-peach-light text-center">
-        <h2 className="text-primary text-2xl font-bold mb-8">Our Current Partners</h2>
-        <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
-          {['KCCA', 'ImagineHer', 'Tony Elumelu Foundation', 'YonderLife', 'CURAP', 'UNFCU Foundation'].map(p => (
-            <div key={p} className="bg-white px-6 py-3 rounded-lg shadow text-brown font-semibold text-sm">{p}</div>
-          ))}
-        </div>
-      </section>
-
       {/* Partnership Form */}
-      <section className="py-16 px-6 bg-white">
+      <section id="partnership-form" className="bg-white px-6 py-16">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-primary text-3xl font-bold mb-2 text-center">Start a Partnership</h2>
           <p className="text-brown text-center mb-8 text-sm">Fill in the form and our team will reach out within 48 hours.</p>
