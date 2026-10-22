@@ -26,7 +26,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo */}
           <div className="flex flex-col items-start gap-2">
-            <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-16 w-auto" />
+            <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-24 w-auto brightness-0 invert md:h-28" />
           </div>
 
           {/* Menu */}
