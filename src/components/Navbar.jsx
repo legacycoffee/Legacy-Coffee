@@ -172,10 +172,6 @@ export default function Navbar() {
                 )}
               </div>
             ))}
-          </nav>
-
-          {/* CTA */}
-          <div className="px-6 py-5 border-t border-peach-light">
             {isAuthenticated ? (
               <button
                 type="button"
@@ -183,22 +179,36 @@ export default function Navbar() {
                   setMenuOpen(false)
                   signOut().catch(() => setAuthMessage('Signed out locally; the server session could not be cleared.'))
                 }}
-                className="mb-3 block w-full text-center text-sm font-semibold text-brown hover:text-primary"
+                className="w-full rounded-xl px-4 py-3.5 text-left text-base font-semibold text-brown transition-colors hover:bg-peach-light"
               >
                 Sign out
               </button>
             ) : (
-              <div className="mb-3 grid grid-cols-2 gap-2">
-                <Link to="/signin" onClick={() => setMenuOpen(false)}
-                  className="rounded-full border border-brown/30 px-3 py-2 text-center text-xs font-semibold text-brown hover:border-primary hover:text-primary">
+              <>
+                <NavLink
+                  to="/signin"
+                  className={({ isActive }) =>
+                    `block rounded-xl px-4 py-3.5 text-base font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-brown hover:bg-peach-light'}`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
                   Sign in
-                </Link>
-                <Link to="/signup" onClick={() => setMenuOpen(false)}
-                  className="rounded-full border border-brown/30 px-3 py-2 text-center text-xs font-semibold text-brown hover:border-primary hover:text-primary">
+                </NavLink>
+                <NavLink
+                  to="/signup"
+                  className={({ isActive }) =>
+                    `block rounded-xl px-4 py-3.5 text-base font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-brown hover:bg-peach-light'}`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
                   Create account
-                </Link>
-              </div>
+                </NavLink>
+              </>
             )}
+          </nav>
+
+          {/* CTA */}
+          <div className="px-6 py-5 border-t border-peach-light">
             <Link to="/#quote"
               className="block text-center bg-primary text-white px-6 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-brown transition-colors"
               onClick={() => setMenuOpen(false)}>

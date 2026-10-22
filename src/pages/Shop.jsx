@@ -69,10 +69,10 @@ export default function Shop() {
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:gap-5">
               <Link
-                to="/#products"
+                to="/about"
                 className="inline-flex items-center justify-center gap-3 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
-                Shop Our Coffee <span aria-hidden="true">→</span>
+                About Us
               </Link>
               <Link
                 to="/partner"
@@ -89,7 +89,7 @@ export default function Shop() {
         <div className="mx-auto max-w-7xl">
           <div className="mb-7 flex items-end justify-between gap-4 sm:mb-9">
             <div>
-              <h2 className="text-2xl font-bold text-brown sm:text-3xl">Find your perfect cup</h2>
+              <h2 className="text-2xl font-bold text-brown sm:text-3xl">Order your favorite coffee</h2>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
