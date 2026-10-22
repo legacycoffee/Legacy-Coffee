@@ -78,7 +78,7 @@ function HeroSlider() {
       />
 
       <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4 text-center md:px-6">
-        <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-primary md:mb-4 md:text-sm"
+        <p className="mb-3 text-lg font-bold uppercase tracking-[0.25em] text-primary sm:text-xl md:mb-4 md:text-2xl"
           style={{ animation: 'fadeUp 0.7s ease both' }}>
           Legacy Coffee
         </p>

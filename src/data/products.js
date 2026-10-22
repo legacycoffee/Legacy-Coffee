@@ -3,7 +3,7 @@ export const products = [
     id: 'single-origin-arabica',
     name: 'Single Origin Arabica',
     weight: '1kg',
-    price: 18,
+    price: 50000,
     description: 'A light roast with bright fruity notes from the Kyenjojo highlands.',
     details: 'Grown by smallholder farmers in Western Uganda and carefully roasted to highlight its naturally sweet, fruit-forward character.',
     tastingNotes: 'Citrus, red berries, and honey',
@@ -15,7 +15,7 @@ export const products = [
     id: 'robusta-blend',
     name: 'Robusta Blend',
     weight: '500g',
-    price: 10,
+    price: 25000,
     description: 'Bold and earthy, with a rich body that is perfect for espresso lovers.',
     details: 'A full-bodied Ugandan Robusta blend with a deep aroma and a satisfying finish. Delicious as espresso or in milk-based drinks.',
     tastingNotes: 'Dark chocolate, toasted nuts, and spice',
@@ -24,22 +24,10 @@ export const products = [
     imageAlt: 'Roasted coffee beans ready to brew',
   },
   {
-    id: 'premium-export-grade',
-    name: 'Premium Export Grade',
-    weight: '5kg',
-    price: 80,
-    description: 'Bulk export-quality green beans, sourced directly from farmers.',
-    details: 'Carefully selected green coffee beans from our farmer network. Ideal for roasters and businesses looking for traceable Ugandan coffee.',
-    tastingNotes: 'Green coffee beans, ready for roasting',
-    roast: 'Unroasted',
-    image: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=900&auto=format&fit=crop&q=85',
-    imageAlt: 'Coffee beans selected for roasting',
-  },
-  {
     id: 'roasted-ground-coffee',
     name: 'Roasted Ground Coffee',
     weight: '250g',
-    price: 7,
+    price: 15000,
     description: 'Ready-to-brew medium roast coffee, smooth and balanced.',
     details: 'Freshly roasted and ground for an easy, dependable brew. Enjoy it in a French press, filter, or drip coffee maker.',
     tastingNotes: 'Caramel, cocoa, and gentle citrus',
@@ -50,9 +38,7 @@ export const products = [
 ]
 
 export function formatPrice(price) {
-  return new Intl.NumberFormat('en-UG', {
-    style: 'currency',
-    currency: 'UGX',
+  return `UGX ${new Intl.NumberFormat('en-UG', {
     maximumFractionDigits: 0,
-  }).format(price)
+  }).format(price)}`
 }

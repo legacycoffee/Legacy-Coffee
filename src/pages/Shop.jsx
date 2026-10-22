@@ -54,7 +54,7 @@ export default function Shop() {
 
         <div className="relative z-10 mx-auto flex h-full min-h-[600px] max-w-7xl items-center px-6 pb-12 pt-28 md:px-10 md:pb-16 md:pt-28 lg:px-12">
           <div className="max-w-3xl">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-primary md:mb-4 md:text-sm">
+            <p className="mb-3 text-lg font-bold uppercase tracking-[0.25em] text-primary sm:text-xl md:mb-4 md:text-2xl">
               Legacy Coffee
             </p>
             <h1
