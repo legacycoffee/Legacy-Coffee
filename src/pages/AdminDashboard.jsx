@@ -1,192 +1,288 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useAuth } from '../context/useAuth.js'
+import { apiRequest } from '../context/api.js'
 
-const mockData = {
-  stats: [
-    { label: 'Newsletter Subscribers', value: 142, icon: '📬' },
-    { label: 'Contact Messages', value: 38, icon: '✉️' },
-    { label: 'Quote Requests', value: 21, icon: '📋' },
-    { label: 'Partnership Requests', value: 9, icon: '🤝' },
-  ],
-  messages: [
-    { id: 1, name: 'Alice Nakato', email: 'alice@example.com', subject: 'Bulk Order Inquiry', date: '2025-01-10', status: 'New' },
-    { id: 2, name: 'Bob Tumwine', email: 'bob@example.com', subject: 'Partnership Proposal', date: '2025-01-09', status: 'Read' },
-    { id: 3, name: 'Carol Apio', email: 'carol@example.com', subject: 'Export Quote', date: '2025-01-08', status: 'New' },
-  ],
-  subscribers: [
-    { id: 1, name: 'David Ssali', email: 'david@example.com', date: '2025-01-10' },
-    { id: 2, name: 'Eve Namukasa', email: 'eve@example.com', date: '2025-01-09' },
-    { id: 3, name: 'Frank Opio', email: 'frank@example.com', date: '2025-01-07' },
-  ],
+const tabs = ['Overview', 'Orders', 'Requests']
+
+function formatDate(value) {
+  return new Intl.DateTimeFormat('en-UG', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Africa/Kampala',
+  }).format(new Date(value))
 }
 
-const tabs = ['Overview', 'Messages', 'Subscribers', 'Products']
+function formatPrice(value) {
+  return new Intl.NumberFormat('en-UG', {
+    style: 'currency',
+    currency: 'UGX',
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+function StatusBadge({ children }) {
+  return (
+    <span className="inline-flex rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold capitalize text-orange-800">
+      {children.replaceAll('_', ' ')}
+    </span>
+  )
+}
+
+function EmptyState({ children }) {
+  return <p className="py-8 text-center text-sm text-stone-500">{children}</p>
+}
 
 export default function AdminDashboard() {
+  const { token, isAuthenticated, user, signIn, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState('Overview')
-  const [loggedIn, setLoggedIn] = useState(false)
-  const [creds, setCreds] = useState({ username: '', password: '' })
-  const [error, setError] = useState('')
+  const [credentials, setCredentials] = useState({ email: '', password: '' })
+  const [loginError, setLoginError] = useState('')
+  const [dataError, setDataError] = useState('')
+  const [isSigningIn, setIsSigningIn] = useState(false)
+  const [summary, setSummary] = useState(null)
+  const [orders, setOrders] = useState([])
+  const [inquiries, setInquiries] = useState([])
 
-  const handleLogin = e => {
-    e.preventDefault()
-    if (creds.username === 'admin' && creds.password === 'admin123') {
-      setLoggedIn(true)
-    } else {
-      setError('Invalid credentials. Try admin / admin123')
+  useEffect(() => {
+    if (!token) return undefined
+
+    let isCurrent = true
+    Promise.all([
+      apiRequest('/dashboard/', { token }),
+      apiRequest('/dashboard/orders/', { token }),
+      apiRequest('/dashboard/inquiries/', { token }),
+    ])
+      .then(([nextSummary, orderPage, inquiryPage]) => {
+        if (!isCurrent) return
+        setSummary(nextSummary)
+        setOrders(orderPage.results)
+        setInquiries(inquiryPage.results)
+        setDataError('')
+      })
+      .catch(error => {
+        if (isCurrent) setDataError(error.message)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [token])
+
+  const handleLogin = async event => {
+    event.preventDefault()
+    setLoginError('')
+    setDataError('')
+    setIsSigningIn(true)
+    try {
+      await signIn(credentials)
+    } catch (error) {
+      setLoginError(error.message)
+    } finally {
+      setIsSigningIn(false)
     }
   }
 
-  if (!loggedIn) {
+  if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-peach-light flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl p-10 shadow-lg w-full max-w-sm">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-primary mx-auto flex items-center justify-center text-white font-bold text-2xl mb-3">LC</div>
-            <h2 className="text-primary text-2xl font-bold">Admin Login</h2>
+      <main className="flex min-h-screen items-center justify-center bg-[#fff8f1] px-4 py-10">
+        <div className="w-full max-w-md border border-orange-100 bg-white p-6 shadow-sm sm:p-9">
+          <div className="mb-7 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#F58537] text-lg font-bold text-white">LC</div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#F58537]">Staff portal</p>
+            <h1 className="mt-2 text-2xl font-bold text-stone-900">Admin sign in</h1>
+            <p className="mt-2 text-sm text-stone-600">Sign in with your authorized staff account to view orders and requests.</p>
           </div>
-          {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+          {loginError && <p role="alert" className="mb-4 border border-red-200 bg-red-50 p-3 text-sm text-red-800">{loginError}</p>}
           <form onSubmit={handleLogin} className="space-y-4">
-            <input required placeholder="Username" value={creds.username} onChange={e => setCreds({ ...creds, username: e.target.value })}
-              className="w-full border border-peach-mid rounded px-4 py-2 text-brown outline-none focus:border-primary text-sm" />
-            <input required type="password" placeholder="Password" value={creds.password} onChange={e => setCreds({ ...creds, password: e.target.value })}
-              className="w-full border border-peach-mid rounded px-4 py-2 text-brown outline-none focus:border-primary text-sm" />
-            <button type="submit" className="w-full bg-primary text-white py-2 rounded font-semibold hover:opacity-90 transition-opacity">
-              Login
+            <label className="block text-sm font-medium text-stone-800" htmlFor="admin-email">
+              Email address
+              <input
+                id="admin-email"
+                type="email"
+                autoComplete="username"
+                required
+                value={credentials.email}
+                onChange={event => setCredentials(current => ({ ...current, email: event.target.value }))}
+                className="mt-1.5 w-full border border-stone-300 px-3.5 py-3 outline-none focus:border-[#F58537] focus:ring-2 focus:ring-orange-100"
+              />
+            </label>
+            <label className="block text-sm font-medium text-stone-800" htmlFor="admin-password">
+              Password
+              <input
+                id="admin-password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={credentials.password}
+                onChange={event => setCredentials(current => ({ ...current, password: event.target.value }))}
+                className="mt-1.5 w-full border border-stone-300 px-3.5 py-3 outline-none focus:border-[#F58537] focus:ring-2 focus:ring-orange-100"
+              />
+            </label>
+            <button disabled={isSigningIn} className="w-full bg-[#F58537] px-4 py-3 font-bold text-white hover:bg-[#e8742b] disabled:cursor-wait disabled:opacity-60">
+              {isSigningIn ? 'Signing in…' : 'Sign in to dashboard'}
             </button>
           </form>
         </div>
-      </div>
+      </main>
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Admin Header */}
-      <div className="bg-brown text-white px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">LC</div>
-          <span className="font-semibold">Legacy Coffee — Admin</span>
-        </div>
-        <button onClick={() => setLoggedIn(false)} className="text-white/70 hover:text-white text-sm">Logout</button>
-      </div>
+  const stats = summary ? [
+    { label: 'All orders', value: summary.orders },
+    { label: 'Pending orders', value: summary.pending_orders },
+    { label: 'All requests', value: summary.inquiries },
+    { label: 'New requests', value: summary.new_inquiries },
+  ] : []
+  const isLoading = !summary && !dataError
 
-      {/* Tabs */}
-      <div className="bg-white border-b px-6 flex gap-1">
+  return (
+    <main className="min-h-screen bg-stone-50">
+      <header className="flex flex-wrap items-center justify-between gap-3 bg-stone-900 px-4 py-4 text-white sm:px-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F58537] text-sm font-bold">LC</div>
+          <div>
+            <p className="font-semibold">Legacy Coffee — Staff</p>
+            <p className="text-xs text-white/65">{user?.email}</p>
+          </div>
+        </div>
+        <button onClick={signOut} className="text-sm font-medium text-white/75 hover:text-white">Sign out</button>
+      </header>
+
+      <nav aria-label="Admin sections" className="flex gap-1 overflow-x-auto border-b bg-white px-4 sm:px-6">
         {tabs.map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-brown/60 hover:text-brown'}`}
+            aria-current={activeTab === tab ? 'page' : undefined}
+            className={`whitespace-nowrap border-b-2 px-5 py-3 text-sm font-medium transition-colors ${activeTab === tab ? 'border-[#F58537] text-[#b94d0b]' : 'border-transparent text-stone-500 hover:text-stone-900'}`}
           >
             {tab}
           </button>
         ))}
-      </div>
+      </nav>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Overview */}
+      <div className="mx-auto max-w-6xl px-4 py-7 sm:px-6 sm:py-9">
+        {dataError && (
+          <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-3 border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            <p>{dataError.includes('permission') ? 'This account does not have staff access.' : dataError}</p>
+            <button onClick={signOut} className="font-semibold underline">Sign out</button>
+          </div>
+        )}
+        {isLoading && <p role="status" className="mb-5 text-sm text-stone-500">Loading dashboard data…</p>}
+
         {activeTab === 'Overview' && (
-          <div>
-            <h2 className="text-brown font-bold text-xl mb-6">Dashboard Overview</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {mockData.stats.map(stat => (
-                <div key={stat.label} className="bg-white rounded-xl p-5 shadow-sm text-center">
-                  <div className="text-3xl mb-2">{stat.icon}</div>
-                  <div className="text-3xl font-bold text-primary mb-1">{stat.value}</div>
-                  <p className="text-brown/70 text-xs">{stat.label}</p>
+          <section aria-labelledby="overview-heading">
+            <h1 id="overview-heading" className="mb-6 text-2xl font-bold text-stone-900">Dashboard overview</h1>
+            <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+              {stats.map(stat => (
+                <div key={stat.label} className="border border-stone-100 bg-white p-4 shadow-sm sm:p-5">
+                  <p className="text-2xl font-bold text-[#b94d0b]">{stat.value}</p>
+                  <p className="mt-1 text-xs text-stone-600">{stat.label}</p>
                 </div>
               ))}
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="text-brown font-semibold mb-4">Recent Messages</h3>
-              <table className="w-full text-sm">
-                <thead><tr className="text-brown/60 border-b">
-                  <th className="text-left py-2">Name</th>
-                  <th className="text-left py-2">Subject</th>
-                  <th className="text-left py-2">Date</th>
-                  <th className="text-left py-2">Status</th>
-                </tr></thead>
-                <tbody>
-                  {mockData.messages.map(m => (
-                    <tr key={m.id} className="border-b last:border-0">
-                      <td className="py-2 text-brown">{m.name}</td>
-                      <td className="py-2 text-brown/80">{m.subject}</td>
-                      <td className="py-2 text-brown/60">{m.date}</td>
-                      <td className="py-2">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${m.status === 'New' ? 'bg-primary/20 text-primary' : 'bg-gray-100 text-gray-500'}`}>
-                          {m.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="grid gap-5 lg:grid-cols-2">
+              <section className="border border-stone-100 bg-white p-4 shadow-sm sm:p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h2 className="font-bold text-stone-900">Recent orders</h2>
+                  <button onClick={() => setActiveTab('Orders')} className="text-sm font-semibold text-[#b94d0b]">View all</button>
+                </div>
+                {orders.length === 0 ? <EmptyState>No orders received yet.</EmptyState> : (
+                  <ul className="divide-y divide-stone-100">
+                    {orders.slice(0, 5).map(order => (
+                      <li key={order.reference} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
+                        <div><p className="font-semibold text-stone-900">{order.customer_name}</p><p className="text-xs text-stone-500">{order.reference} · {formatDate(order.created_at)}</p></div>
+                        <div className="text-right"><p className="font-semibold text-stone-800">{formatPrice(order.total)}</p><StatusBadge>{order.status}</StatusBadge></div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+              <section className="border border-stone-100 bg-white p-4 shadow-sm sm:p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h2 className="font-bold text-stone-900">Recent requests</h2>
+                  <button onClick={() => setActiveTab('Requests')} className="text-sm font-semibold text-[#b94d0b]">View all</button>
+                </div>
+                {inquiries.length === 0 ? <EmptyState>No requests received yet.</EmptyState> : (
+                  <ul className="divide-y divide-stone-100">
+                    {inquiries.slice(0, 5).map(inquiry => (
+                      <li key={inquiry.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
+                        <div><p className="font-semibold text-stone-900">{inquiry.subject || inquiry.kind} · {inquiry.name}</p><p className="text-xs text-stone-500">{inquiry.email} · {formatDate(inquiry.created_at)}</p></div>
+                        <StatusBadge>{inquiry.status}</StatusBadge>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Messages */}
-        {activeTab === 'Messages' && (
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <h2 className="text-brown font-bold text-xl mb-6">Contact Messages</h2>
-            <table className="w-full text-sm">
-              <thead><tr className="text-brown/60 border-b">
-                <th className="text-left py-2">Name</th>
-                <th className="text-left py-2">Email</th>
-                <th className="text-left py-2">Subject</th>
-                <th className="text-left py-2">Date</th>
-                <th className="text-left py-2">Status</th>
-              </tr></thead>
-              <tbody>
-                {mockData.messages.map(m => (
-                  <tr key={m.id} className="border-b last:border-0 hover:bg-peach-light/30">
-                    <td className="py-3 text-brown font-medium">{m.name}</td>
-                    <td className="py-3 text-brown/70">{m.email}</td>
-                    <td className="py-3 text-brown/80">{m.subject}</td>
-                    <td className="py-3 text-brown/60">{m.date}</td>
-                    <td className="py-3">
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${m.status === 'New' ? 'bg-primary/20 text-primary' : 'bg-gray-100 text-gray-500'}`}>
-                        {m.status}
-                      </span>
-                    </td>
-                  </tr>
+        {activeTab === 'Orders' && (
+          <section aria-labelledby="orders-heading" className="border border-stone-100 bg-white p-4 shadow-sm sm:p-6">
+            <h1 id="orders-heading" className="mb-5 text-2xl font-bold text-stone-900">Order inbox</h1>
+            {orders.length === 0 ? <EmptyState>No orders received yet.</EmptyState> : (
+              <div className="space-y-4">
+                {orders.map(order => (
+                  <article key={order.reference} className="border border-stone-200 p-4 sm:p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-100 pb-3">
+                      <div>
+                        <h2 className="font-bold text-stone-900">{order.customer_name}</h2>
+                        <p className="mt-1 text-xs text-stone-500">{order.reference} · {formatDate(order.created_at)}</p>
+                      </div>
+                      <div className="flex items-center gap-3"><StatusBadge>{order.status}</StatusBadge><strong className="text-stone-900">{formatPrice(order.total)}</strong></div>
+                    </div>
+                    <div className="grid gap-4 py-4 text-sm sm:grid-cols-2">
+                      <div><p className="font-semibold text-stone-700">Customer</p><a className="mt-1 block text-[#a5440b] underline" href={`mailto:${order.customer_email}`}>{order.customer_email}</a><a className="text-[#a5440b] underline" href={`tel:${order.customer_phone}`}>{order.customer_phone}</a></div>
+                      <div><p className="font-semibold text-stone-700">Delivery address</p><p className="mt-1 text-stone-600">{order.delivery_address}, {order.delivery_city}</p>{order.delivery_notes && <p className="mt-1 text-stone-500">Note: {order.delivery_notes}</p>}</div>
+                    </div>
+                    <ul className="space-y-2 border-t border-stone-100 pt-3 text-sm">
+                      {order.items.map((item, index) => (
+                        <li key={`${item.product_name}-${index}`} className="flex justify-between gap-3 text-stone-700">
+                          <span>{item.product_name} ({item.weight}) × {item.quantity}</span>
+                          <span>{formatPrice(item.line_total)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </article>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            )}
+          </section>
         )}
 
-        {/* Subscribers */}
-        {activeTab === 'Subscribers' && (
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <h2 className="text-brown font-bold text-xl mb-6">Newsletter Subscribers</h2>
-            <table className="w-full text-sm">
-              <thead><tr className="text-brown/60 border-b">
-                <th className="text-left py-2">Name</th>
-                <th className="text-left py-2">Email</th>
-                <th className="text-left py-2">Subscribed On</th>
-              </tr></thead>
-              <tbody>
-                {mockData.subscribers.map(s => (
-                  <tr key={s.id} className="border-b last:border-0 hover:bg-peach-light/30">
-                    <td className="py-3 text-brown font-medium">{s.name}</td>
-                    <td className="py-3 text-brown/70">{s.email}</td>
-                    <td className="py-3 text-brown/60">{s.date}</td>
-                  </tr>
+        {activeTab === 'Requests' && (
+          <section aria-labelledby="requests-heading" className="border border-stone-100 bg-white p-4 shadow-sm sm:p-6">
+            <h1 id="requests-heading" className="mb-5 text-2xl font-bold text-stone-900">Contact and business requests</h1>
+            {inquiries.length === 0 ? <EmptyState>No requests received yet.</EmptyState> : (
+              <div className="space-y-4">
+                {inquiries.map(inquiry => (
+                  <article key={inquiry.id} className="border border-stone-200 p-4 sm:p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2"><h2 className="font-bold capitalize text-stone-900">{inquiry.subject || `${inquiry.kind} request`}</h2><StatusBadge>{inquiry.kind}</StatusBadge></div>
+                        <p className="mt-1 text-xs text-stone-500">{formatDate(inquiry.created_at)} · Status: {inquiry.status.replaceAll('_', ' ')}</p>
+                      </div>
+                      <StatusBadge>{inquiry.status}</StatusBadge>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                      <span className="font-medium text-stone-800">{inquiry.name}</span>
+                      <a className="text-[#a5440b] underline" href={`mailto:${inquiry.email}`}>{inquiry.email}</a>
+                      {inquiry.phone && <a className="text-[#a5440b] underline" href={`tel:${inquiry.phone}`}>{inquiry.phone}</a>}
+                    </div>
+                    {(inquiry.business_name || inquiry.product || inquiry.quantity) && (
+                      <p className="mt-2 text-sm text-stone-600">
+                        {[inquiry.business_name, inquiry.product, inquiry.quantity].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+                    <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-stone-700">{inquiry.message}</p>
+                  </article>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Products */}
-        {activeTab === 'Products' && (
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <h2 className="text-brown font-bold text-xl mb-6">Products Management</h2>
-            <p className="text-brown/60 text-sm">Product management will be connected to the backend. Coming soon.</p>
-          </div>
+              </div>
+            )}
+          </section>
         )}
       </div>
-    </div>
+    </main>
   )
 }

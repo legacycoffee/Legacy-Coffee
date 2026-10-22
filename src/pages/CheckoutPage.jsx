@@ -53,7 +53,15 @@ export default function CheckoutPage() {
 
       const order = {
         id: result.reference,
-        customer: { name: result.customer_name, email: result.customer_email },
+        status: result.status,
+        customer: {
+          name: result.customer_name,
+          email: result.customer_email,
+          phone: result.customer_phone,
+          address: result.delivery_address,
+          city: result.delivery_city,
+          notes: result.delivery_notes,
+        },
         items: result.order_items.map((orderItem, index) => ({
           ...items[index],
           price: Number(orderItem.unit_price),

@@ -27,6 +27,8 @@ Set `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, and `CORS_ALLOW
 - `newsletter`: subscriber opt-in and unsubscribe endpoints.
 - `dashboard`: staff-only commerce summary API.
 
+Create the first staff superuser from the backend environment with `py backend\manage.py createsuperuser` (or the equivalent command in the setup steps). There is intentionally no public endpoint for creating superusers. Sign in to `/admin` with that account to review the dashboard; only authenticated Django staff users can access its data.
+
 ## API routes
 
 - `GET /api/health/`
@@ -37,7 +39,7 @@ Set `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, and `CORS_ALLOW
 - `POST /api/orders/`
 - `POST /api/inquiries/` with `kind` set to `contact`, `quote`, or `partner`
 - `POST /api/newsletter/subscribe/`, `POST /api/newsletter/unsubscribe/`
-- `GET /api/dashboard/` (staff only)
+- `GET /api/dashboard/`, `GET /api/dashboard/orders/`, `GET /api/dashboard/inquiries/` (authenticated staff only)
 
 Token-authenticated requests use `Authorization: Token <token>`. Order submission requires a signed-in account; the API associates each order with that account and uses the account email. Product list responses use DRF page-number pagination and expose the storefront product identifier as `id`. Orders accept product IDs and quantities only; the server looks up current active-product prices and snapshots them on each order item.
 
