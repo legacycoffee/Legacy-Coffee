@@ -12,6 +12,13 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      const redirectPath = sessionStorage.getItem('gh-pages-redirect')
+      if (redirectPath) {
+        sessionStorage.removeItem('gh-pages-redirect')
+        history.replaceState(null, '', redirectPath)
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
