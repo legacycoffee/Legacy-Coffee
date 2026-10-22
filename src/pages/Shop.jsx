@@ -6,7 +6,7 @@ import ProductImage from '../components/ProductImage.jsx'
 
 export default function Shop() {
   const { addToCart } = useCart()
-  const [form, setForm] = useState({ name: '', email: '', product: '', quantity: '', message: '' })
+  const [form, setForm] = useState({ name: '', email: '', product: products[0]?.name ?? '', quantity: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [addedProduct, setAddedProduct] = useState('')
 
@@ -23,26 +23,74 @@ export default function Shop() {
 
   return (
     <div className="bg-[#fffdfa]">
-      <section className="bg-gradient-to-br from-peach-light via-white to-peach px-6 py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl">
-          <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-primary">Legacy Coffee · Western Uganda</p>
-          <h1 className="max-w-3xl text-4xl font-bold leading-tight text-brown sm:text-5xl lg:text-6xl">
-            Coffee with a story worth sharing.
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-brown/75 sm:text-lg">
-            Discover carefully sourced Ugandan coffee, grown by smallholder farmers and roasted to bring every cup to life.
-          </p>
+      <section className="relative isolate h-screen min-h-[600px] overflow-hidden bg-[#21160e] text-white">
+        <img
+          src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=2000&auto=format&fit=crop&q=85"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover object-[62%_center]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(90deg, rgba(18,23,15,0.96) 0%, rgba(35,25,16,0.84) 42%, rgba(55,32,17,0.42) 72%, rgba(30,18,9,0.24) 100%), linear-gradient(0deg, rgba(25,15,8,0.5), transparent 40%)',
+          }}
+        />
+        <div aria-hidden="true" className="absolute -right-32 -top-48 hidden h-[780px] w-[420px] rotate-[28deg] bg-white/[0.06] md:block" />
+        <div aria-hidden="true" className="absolute -right-24 top-16 hidden h-[660px] w-[2px] rotate-[28deg] bg-primary/70 md:block" />
+        <div aria-hidden="true" className="absolute -right-[34rem] top-24 hidden h-[760px] w-[760px] rounded-full border-2 border-primary md:block" />
+        <svg
+          aria-hidden="true"
+          className="absolute bottom-0 left-0 h-36 w-[min(26vw,400px)] text-primary"
+          viewBox="0 0 480 144"
+          preserveAspectRatio="none"
+          fill="none"
+        >
+          <path d="M0 0C115 48 234 53 480 144H0V0Z" fill="currentColor" fillOpacity="0.85" />
+          <path d="M0 10C112 63 242 71 355 144" stroke="currentColor" strokeWidth="2" />
+        </svg>
+
+        <div className="relative z-10 mx-auto flex h-full min-h-[600px] max-w-7xl items-center px-6 pb-12 pt-28 md:px-10 md:pb-16 md:pt-28 lg:px-12">
+          <div className="max-w-3xl">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-primary md:mb-4 md:text-sm">
+              Legacy Coffee
+            </p>
+            <h1
+              className="mb-5 max-w-3xl text-5xl font-black leading-[0.98] text-white sm:text-6xl lg:text-7xl"
+            >
+              Bringing the Best Out
+              <br />
+              <span className="text-primary">of Every Bean</span>
+            </h1>
+            <p className="mb-8 max-w-lg text-base leading-relaxed text-white/80 sm:text-lg">
+              From cafés to busy restaurants and homes, we bring you fresh, rich coffee that makes every cup memorable.
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-5">
+              <Link
+                to="/#products"
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                Shop Our Coffee <span aria-hidden="true">→</span>
+              </Link>
+              <Link
+                to="/partner"
+                className="inline-flex items-center justify-center rounded-full border border-peach-light/80 px-7 py-3.5 text-sm font-semibold text-peach-light transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                Partner With Us
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="bg-[#fffdfa] px-4 py-12 sm:px-6 sm:py-16">
+      <section id="products" className="bg-[#fffdfa] px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-7 flex items-end justify-between gap-4 sm:mb-9">
             <div>
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">Small batch, big character</p>
               <h2 className="text-2xl font-bold text-brown sm:text-3xl">Find your perfect cup</h2>
             </div>
-            <p className="hidden pb-1 text-sm text-brown/60 sm:block">Four favorites, freshly sourced</p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
             {products.map(product => (
@@ -80,7 +128,7 @@ export default function Shop() {
         <div className="mx-auto max-w-2xl">
           <p className="mb-2 text-center text-xs font-bold uppercase tracking-[0.18em] text-primary">For your business</p>
           <h2 className="mb-2 text-center text-3xl font-bold text-brown">Need a larger order?</h2>
-          <p className="mb-8 text-center text-sm leading-relaxed text-brown/75">Request a tailored quote for bulk coffee, corporate gifting, or export inquiries.</p>
+          <p className="mb-8 text-center text-sm leading-relaxed text-brown/75">Request a tailored quote.</p>
 
           {submitted ? (
             <div className="rounded-xl bg-white p-8 text-center">
@@ -98,8 +146,7 @@ export default function Shop() {
               </div>
               <select required value={form.product} onChange={event => setForm({ ...form, product: event.target.value })}
                 className="w-full rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary">
-                <option value="">Select Product</option>
-                {products.map(product => <option key={product.id} value={product.name}>{product.name}</option>)}
+                {products.slice(0, 2).map(product => <option key={product.id} value={product.name}>{product.name}</option>)}
               </select>
               <input required placeholder="Quantity (e.g. 50kg)" value={form.quantity} onChange={event => setForm({ ...form, quantity: event.target.value })}
                 className="w-full rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />

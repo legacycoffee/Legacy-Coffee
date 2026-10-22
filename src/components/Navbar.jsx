@@ -7,21 +7,7 @@ import { useAuth } from '../context/useAuth.js'
 
 const navLinks = [
   { label: 'Home', to: '/' },
-  {
-    label: 'About Us', to: '/about',
-    children: [
-      { label: 'Our Story', to: '/about' },
-      { label: 'Our Team', to: '/about#team' },
-    ]
-  },
-  {
-    label: 'Shop', to: '/shop',
-    children: [
-      { label: 'All Products', to: '/shop' },
-      { label: 'Get a Quote', to: '/shop#quote' },
-    ]
-  },
-  { label: 'Gallery', to: '/gallery' },
+  { label: 'About Us', to: '/about' },
   { label: 'Partner With Us', to: '/partner' },
   { label: 'Contact Us', to: '/contact' },
 ]
@@ -50,7 +36,7 @@ export default function Navbar() {
   return (
     <>
       <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur shadow-md' : 'bg-peach'}`}>
-        <div className="max-w-7xl mx-auto px-4 md:px-6 flex items-center justify-between h-16 md:h-20">
+        <div className="relative max-w-7xl mx-auto px-4 md:px-6 flex items-center justify-between h-16 md:h-20">
           <Link to="/" className="flex-shrink-0" onClick={() => setMenuOpen(false)}>
             <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-10 md:h-12 w-auto" />
           </Link>
@@ -58,7 +44,7 @@ export default function Navbar() {
           {/* Desktop Nav */}
           <ul className="hidden md:flex items-center gap-1">
             {navLinks.map(link => (
-              <li key={link.label} className="relative">
+              <li key={link.label} className="relative shrink-0">
                 {link.children ? (
                   <div onMouseEnter={() => setDropdown(link.label)} onMouseLeave={() => setDropdown(null)}>
                     <button className="flex items-center gap-1 px-4 py-2 rounded-full text-brown hover:bg-peach-light hover:text-primary font-medium transition-all text-sm">
@@ -77,7 +63,7 @@ export default function Navbar() {
                     )}
                   </div>
                 ) : (
-                  <NavLink to={link.to}
+                  <NavLink to={link.to} end={link.to === '/'}
                     className={({ isActive }) =>
                       `block px-4 py-2 rounded-full font-medium text-sm transition-all ${isActive ? 'bg-primary text-white shadow-sm' : 'text-brown hover:bg-peach-light hover:text-primary'}`
                     }>
@@ -88,7 +74,7 @@ export default function Navbar() {
             ))}
           </ul>
 
-          <div className="flex items-center gap-3">
+          <div className="absolute right-14 top-1/2 flex -translate-y-1/2 items-center gap-3 md:static md:translate-y-0">
             {isAuthenticated ? (
               <>
                 <span className="hidden max-w-28 truncate text-xs font-medium text-brown lg:block">
@@ -110,14 +96,14 @@ export default function Navbar() {
             <Link
               to="/cart"
               aria-label={`Shopping cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
-              className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-brown transition-colors hover:bg-peach-light hover:text-primary"
+              className="relative inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/40 text-brown transition-colors hover:bg-peach-light hover:text-primary md:h-10 md:w-10 md:bg-transparent"
             >
-              <LuShoppingCart aria-hidden="true" size={20} />
-              <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-white">
+              <LuShoppingCart aria-hidden="true" size={23} />
+              <span aria-hidden="true" className="absolute right-0 top-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-white ring-2 ring-peach">
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             </Link>
-            <Link to="/shop#quote" className="hidden md:block bg-primary text-white px-6 py-2.5 rounded-full font-semibold text-sm hover:bg-brown transition-colors shadow-sm">
+            <Link to="/#quote" className="hidden shrink-0 whitespace-nowrap rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brown md:block">
               Get a Quote
             </Link>
           </div>
@@ -213,7 +199,7 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
-            <Link to="/shop#quote"
+            <Link to="/#quote"
               className="block text-center bg-primary text-white px-6 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-brown transition-colors"
               onClick={() => setMenuOpen(false)}>
               Get a Quote

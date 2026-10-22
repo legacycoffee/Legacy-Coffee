@@ -70,7 +70,7 @@ export default function AuthPage({ mode }) {
         </div>
 
         <div className="p-5 sm:p-8 md:p-10">
-          <Link to="/shop" className="text-sm font-medium text-black/65 transition-colors hover:text-primary">← Back to shop</Link>
+          <Link to="/" className="text-sm font-medium text-black/65 transition-colors hover:text-primary">← Back to home</Link>
           <div className="mt-6">
             <div className="mb-4 flex h-11 w-11 items-center justify-center bg-peach-light text-black md:hidden">
               <LuLockKeyhole aria-hidden="true" className="h-5 w-5" />

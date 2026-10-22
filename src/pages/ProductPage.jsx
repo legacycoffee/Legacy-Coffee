@@ -24,7 +24,7 @@ export default function ProductPage() {
       <section className="px-6 py-20 text-center">
         <h1 className="mb-3 text-3xl font-bold text-primary">Product not found</h1>
         <p className="mb-6 text-brown">That coffee may have moved off our shelves.</p>
-        <Link to="/shop" className="rounded bg-primary px-6 py-3 font-semibold text-white">Back to shop</Link>
+        <Link to="/" className="rounded bg-primary px-6 py-3 font-semibold text-white">Back to home</Link>
       </section>
     )
   }
@@ -78,7 +78,7 @@ export default function ProductPage() {
     <section className="bg-[#fffdfa] px-4 py-4 sm:px-6 sm:py-6">
       <div className="mx-auto max-w-7xl">
         <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 text-sm text-brown/60 sm:mb-5">
-          <Link to="/shop" className="font-medium transition-colors hover:text-primary">Shop</Link>
+          <Link to="/" className="font-medium transition-colors hover:text-primary">Home</Link>
           <span aria-hidden="true">/</span>
           <span className="truncate text-brown" aria-current="page">{product.name}</span>
         </nav>

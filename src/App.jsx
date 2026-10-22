@@ -1,8 +1,7 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
-import AboutUs from './pages/AboutUs'
 import Shop from './pages/Shop'
 import PartnerWithUs from './pages/PartnerWithUs'
 import ContactUs from './pages/ContactUs'
@@ -32,9 +31,9 @@ export default function App() {
       <CartProvider>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Layout><Home /></Layout>} />
-            <Route path="/about" element={<Layout><AboutUs /></Layout>} />
-            <Route path="/shop" element={<Layout><Shop /></Layout>} />
+            <Route path="/" element={<Layout><Shop /></Layout>} />
+            <Route path="/about" element={<Layout><Home /></Layout>} />
+            <Route path="/shop" element={<Navigate to="/" replace />} />
             <Route path="/products/:productId" element={<Layout><ProductPage /></Layout>} />
             <Route path="/cart" element={<Layout><CartPage /></Layout>} />
             <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />

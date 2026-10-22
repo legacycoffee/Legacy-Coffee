@@ -15,7 +15,7 @@ export default function ConfirmationPage() {
   }, [order, clearCart])
 
   if (!order?.id || !Array.isArray(order.items)) {
-    return <Navigate to="/shop" replace />
+    return <Navigate to="/" replace />
   }
 
   const createdAt = order.createdAt ? new Date(order.createdAt) : null
@@ -155,7 +155,7 @@ export default function ConfirmationPage() {
         </div>
 
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link to="/shop" className="inline-flex items-center justify-center gap-2 bg-[#F58537] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#e8742b]">
+          <Link to="/#products" className="inline-flex items-center justify-center gap-2 bg-[#F58537] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#e8742b]">
             Continue shopping <LuArrowRight aria-hidden="true" className="h-4 w-4" />
           </Link>
           <Link to="/" className="inline-flex items-center justify-center border border-black/20 px-6 py-3 text-sm font-bold text-black transition-colors hover:bg-peach-light">

@@ -17,7 +17,7 @@ export default function CartPage() {
           </div>
           <h1 className="mb-2 text-2xl font-bold text-brown sm:text-3xl">Your cart is empty</h1>
           <p className="mb-6 text-sm leading-relaxed text-brown/70">Find your next favorite cup in our coffee shop.</p>
-          <Link to="/shop" className="inline-flex items-center justify-center gap-2 bg-[#F58537] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+          <Link to="/" className="inline-flex items-center justify-center gap-2 bg-[#F58537] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
             Browse coffee
           </Link>
         </div>
@@ -91,7 +91,7 @@ export default function CartPage() {
                 </div>
               </article>
             ))}
-            <Link to="/shop" className="inline-flex items-center gap-2 pt-2 text-sm font-semibold text-brown transition-colors hover:text-primary">
+            <Link to="/#products" className="inline-flex items-center gap-2 pt-2 text-sm font-semibold text-brown transition-colors hover:text-primary">
               <LuArrowLeft aria-hidden="true" className="h-4 w-4" />
               Continue shopping
             </Link>

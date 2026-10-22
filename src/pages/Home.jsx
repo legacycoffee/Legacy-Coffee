@@ -25,14 +25,6 @@ function CountUp({ target, suffix }) {
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
 }
 
-const slides = [
-  { img: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1600', pos: 'center' },
-  { img: 'https://res.cloudinary.com/adfm8lvp/image/upload/v1792507268/coffee-bean-bag-with-eucalyptus-roasted-coffee-scaled.png', pos: 'center 30%', fit: 'contain' },
-  { img: 'https://res.cloudinary.com/adfm8lvp/image/upload/v1792508243/coffee_farm.jpg', pos: 'center' },
-  { img: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=1600', pos: 'center' },
-  { img: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792514667/coffee_1_farm.jpg', pos: 'center' },
-]
-
 const coffeeBackgroundImages = [
   'https://res.cloudinary.com/vgko5mna/image/upload/v1792589717/coffee_3.jpg',
   'https://res.cloudinary.com/vgko5mna/image/upload/v1792589718/coffee_1.jpg',
@@ -42,10 +34,17 @@ const coffeeBackgroundImages = [
   'https://res.cloudinary.com/vgko5mna/image/upload/v1792514667/coffee_1_farm.jpg',
 ]
 
+const slides = [
+  { img: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1600', pos: 'center' },
+  { img: 'https://res.cloudinary.com/adfm8lvp/image/upload/v1792507268/coffee-bean-bag-with-eucalyptus-roasted-coffee-scaled.png', pos: 'center 30%', fit: 'contain' },
+  { img: 'https://res.cloudinary.com/adfm8lvp/image/upload/v1792508243/coffee_farm.jpg', pos: 'center' },
+  { img: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=1600', pos: 'center' },
+  { img: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792514667/coffee_1_farm.jpg', pos: 'center' },
+]
+
 function HeroSlider() {
   const [current, setCurrent] = useState(0)
 
-  // auto-play — never cleared, always loops
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrent(prev => (prev + 1) % slides.length)
@@ -53,12 +52,8 @@ function HeroSlider() {
     return () => clearInterval(timer)
   }, [])
 
-  // manual nav just sets the index; auto-play continues from wherever it is
-  const goTo = (i) => setCurrent(i)
-
   return (
     <section className="relative h-screen min-h-[600px] overflow-hidden">
-      {/* slides */}
       {slides.map((slide, i) => (
         <div
           key={i}
@@ -77,42 +72,40 @@ function HeroSlider() {
         </div>
       ))}
 
-      {/* warm brand overlay — peach-to-brown gradient */}
-      <div className="absolute inset-0 z-20"
+      <div
+        className="absolute inset-0 z-20"
         style={{ background: 'linear-gradient(135deg, rgba(92,58,30,0.72) 0%, rgba(245,166,35,0.18) 60%, rgba(92,58,30,0.55) 100%)' }}
       />
 
-      {/* content — static, same across all slides */}
-      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4 md:px-6 text-center">
-        <p className="text-primary font-bold text-xs md:text-sm uppercase tracking-[0.25em] mb-3 md:mb-4"
+      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4 text-center md:px-6">
+        <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-primary md:mb-4 md:text-sm"
           style={{ animation: 'fadeUp 0.7s ease both' }}>
           Legacy Coffee
         </p>
 
-        <h1 className="text-white font-black leading-[1.1] mb-4 md:mb-5"
+        <h1 className="mb-4 font-black leading-[1.1] text-white md:mb-5"
           style={{ animation: 'fadeUp 0.8s 0.1s ease both' }}>
           Empowering Farmers.<br />
           <span className="text-primary">Enriching Communities.</span>
         </h1>
 
-        <p className="text-white/80 text-sm md:text-lg max-w-2xl mb-8 md:mb-10 leading-relaxed px-2"
+        <p className="mb-8 max-w-2xl px-2 text-sm leading-relaxed text-white/80 md:mb-10 md:text-lg"
           style={{ animation: 'fadeUp 0.8s 0.2s ease both' }}>
           We specialize in producing high-quality, sustainably grown coffee while empowering smallholder farmers, youth, and women.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center w-full max-w-xs sm:max-w-none"
+        <div className="flex w-full max-w-xs flex-col justify-center gap-3 sm:max-w-none sm:flex-row md:gap-4"
           style={{ animation: 'fadeUp 0.8s 0.3s ease both' }}>
-          <Link to="/shop"
-            className="bg-primary text-white px-7 md:px-9 py-3.5 md:py-4 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-white hover:text-brown transition-all duration-300 shadow-lg shadow-primary/40">
+          <Link to="/#products"
+            className="rounded-full bg-primary px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 transition-all duration-300 hover:bg-white hover:text-brown md:px-9 md:py-4">
             Shop Coffee →
           </Link>
-          <Link to="/about"
-            className="border-2 border-white/50 text-white px-7 md:px-9 py-3.5 md:py-4 rounded-full font-bold text-sm uppercase tracking-wider hover:border-primary hover:text-primary transition-all duration-300 backdrop-blur-sm">
+          <Link to="/about#story"
+            className="rounded-full border-2 border-white/50 px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white backdrop-blur-sm transition-all duration-300 hover:border-primary hover:text-primary md:px-9 md:py-4">
             Our Story
           </Link>
         </div>
       </div>
-
     </section>
   )
 }
@@ -191,10 +184,10 @@ export default function Home() {
             Legacy Coffee was founded out of a passion for both great coffee and community transformation. Rooted in the fertile soils of Western Uganda, our journey began as a family effort to uplift farmers who struggled to earn fair returns from their harvests. Today, we combine tradition, innovation, and social impact to create coffee that not only delights but also empowers.
           </p>
           <Link
-            to="/about"
+            to="/#products"
             className="mt-7 inline-flex items-center rounded-full bg-primary px-7 py-3 font-semibold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            Read More
+            Explore Our Coffee
           </Link>
         </div>
       </section>
@@ -213,7 +206,7 @@ export default function Home() {
       </div>
 
       {/* ── ABOUT ───────────────────────────────────────────── */}
-      <section className="relative bg-peach-light py-16 md:py-14 px-5 md:px-8 overflow-hidden">
+      <section id="story" className="relative bg-peach-light py-16 md:py-14 px-5 md:px-8 overflow-hidden">
         <div className="absolute -top-36 -left-36 w-80 h-80 rounded-full border-2 border-peach-mid/60" />
         <div className="absolute -top-32 -left-32 w-64 h-64 rounded-full"
           style={{ background: '#C4581A' }} />
