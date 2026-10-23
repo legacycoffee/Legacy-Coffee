@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 
 function CountUp({ target, suffix }) {
@@ -168,6 +168,14 @@ function OurCoffeeSection() {
 }
 
 export default function AboutUs() {
+  const location = useLocation()
+
+  useEffect(() => {
+    if (location.hash === '#patrick-story') {
+      document.getElementById('patrick-story')?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [location.hash])
+
   return (
     <div className="home-page overflow-x-hidden">
 
@@ -176,20 +184,22 @@ export default function AboutUs() {
 
       {/* ── LEGACY COFFEE INTRO ─────────────────────────────── */}
       <section className="bg-white px-6 py-14 md:py-16">
-        <div className="mx-auto max-w-4xl text-center">
-          <h2 className="mb-5 text-3xl font-black leading-tight text-brown md:text-4xl">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="mb-5 text-center text-3xl font-black leading-tight text-brown md:text-4xl">
             Legacy Coffee
           </h2>
-          <p className="mx-auto max-w-3xl text-base leading-relaxed text-brown/75 md:text-lg">
+          <p className="mx-auto max-w-3xl text-left text-base leading-relaxed text-brown/75 md:text-lg">
             Legacy Coffee was founded out of a passion for both great coffee and community transformation. Rooted in the fertile soils of Western Uganda, our journey began as a family effort to uplift farmers who struggled to earn fair returns from their harvests. Today, we combine tradition, innovation, and social impact to create coffee that not only delights but also empowers.
           </p>
-          <div className="mt-7 flex flex-col items-center gap-4 md:flex-row md:justify-center">
-            <Link
-              to="/about/patrick-muhereza"
-              className="inline-flex items-center justify-center text-left text-base font-semibold text-primary underline decoration-2 underline-offset-4 transition-colors hover:text-brown md:text-lg"
-            >
-              Read Patrick Muhereza is Elevating Uganda’s Robusta Coffee
-            </Link>
+          <div className="mx-auto mt-5 max-w-3xl space-y-4 text-left text-base leading-relaxed text-brown/75 md:text-lg">
+            <p className="w-full text-left">
+              At Legacy Coffee, our mission is to redefine the coffee value chain in Uganda, starting in the Rwenzori region. While Uganda produces premium coffee, its quality often suffers due to broken value chains and one-off transactions between buyers and farmers, leading to high price volatility and unreliable markets.
+            </p>
+            <p className="w-full text-left">
+              Our model is different. With more than 90% of Ugandan coffee farmers being smallholders, we bring them together in a cooperative setting. This approach allows us to equip them with advanced post-harvest processing techniques at the farm level. By fostering a relationship-based supply chain, we ensure consistent pricing and a stable market for over 1,000 smallholder coffee producers. This commitment to transparency, traceability, and relationship-based trade gives us greater control over quality, while giving farmers price stability through long-term contracts and reduced vulnerability to market speculation.
+            </p>
+          </div>
+          <div className="mt-7 text-center">
             <Link
               to="/#products"
               className="inline-flex items-center rounded-full bg-primary px-7 py-3 font-semibold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -354,6 +364,15 @@ export default function AboutUs() {
               </article>
             ))}
           </div>
+
+          <div id="patrick-story" className="mt-10 text-center">
+            <Link
+              to="/about/patrick-muhereza"
+              className="inline-flex text-base font-semibold text-primary underline decoration-2 underline-offset-4 transition-colors hover:text-brown focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary md:text-lg"
+            >
+              Read How Patrick Muhereza is Elevating Uganda’s Robusta Coffee
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -379,6 +398,25 @@ export default function AboutUs() {
 
       {/* ── OUR COFFEE ───────────────────────────────────────── */}
       <OurCoffeeSection />
+
+      {/* ── FARMER TRANSFORMATION VIDEO ─────────────────────── */}
+      <section className="bg-white px-6 py-16 md:py-20">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="mb-8 text-center text-3xl font-black leading-tight text-brown md:text-4xl">
+            Watch and hear from Patrick
+          </h2>
+          <div className="aspect-video overflow-hidden rounded-2xl shadow-lg">
+            <iframe
+              className="h-full w-full"
+              src="https://www.youtube-nocookie.com/embed/_tfrzsu8rLs?vq=hd1080"
+              title="How Legacy Coffee is transforming small holder farmers"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      </section>
 
     </div>
   )
