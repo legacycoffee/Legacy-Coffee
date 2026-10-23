@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
@@ -19,6 +20,18 @@ import AuthPage from './pages/AuthPage'
 import PatrickStoryPage from './pages/PatrickStoryPage'
 import { AuthProvider } from './context/AuthContext.jsx'
 
+function ScrollToTop() {
+  const { pathname, hash } = useLocation()
+
+  useEffect(() => {
+    if (!hash) {
+      window.scrollTo(0, 0)
+    }
+  }, [pathname, hash])
+
+  return null
+}
+
 function Layout({ children }) {
   return (
     <>
@@ -32,6 +45,7 @@ function Layout({ children }) {
 export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <ScrollToTop />
       <CartProvider>
         <AuthProvider>
           <Routes>
