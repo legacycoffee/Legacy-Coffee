@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 
@@ -12,6 +12,8 @@ function formatNotificationDate(value) {
 
 export default function NotificationsPage() {
   const { isAuthenticated, token } = useAuth()
+  const navigate = useNavigate()
+  const { notificationId } = useParams()
   const [notifications, setNotifications] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -25,7 +27,9 @@ export default function NotificationsPage() {
       setSelectedId(currentId => (
         data.results.some(notification => notification.id === currentId)
           ? currentId
-          : data.results[0]?.id ?? null
+          : window.matchMedia('(min-width: 1024px)').matches
+            ? data.results[0]?.id ?? null
+            : null
       ))
     } catch (requestError) {
       setError(requestError.message)
@@ -38,10 +42,24 @@ export default function NotificationsPage() {
     if (isAuthenticated) loadNotifications()
   }, [isAuthenticated, loadNotifications])
 
+  useEffect(() => {
+    if (notificationId) {
+      setSelectedId(Number(notificationId))
+    } else if (!window.matchMedia('(min-width: 1024px)').matches) {
+      setSelectedId(null)
+    }
+  }, [notificationId])
+
   const selectedNotification = notifications.find(item => item.id === selectedId)
 
   const openNotification = notification => {
     setSelectedId(notification.id)
+    navigate(`/notifications/${notification.id}`)
+  }
+
+  const closeNotification = () => {
+    setSelectedId(null)
+    navigate('/notifications')
   }
 
   useEffect(() => {
@@ -137,7 +155,7 @@ export default function NotificationsPage() {
               <article>
                 <button
                   type="button"
-                  onClick={() => setSelectedId(null)}
+                  onClick={closeNotification}
                   className="mb-5 text-sm font-semibold text-primary hover:underline lg:hidden"
                 >
                   ← Back to notifications

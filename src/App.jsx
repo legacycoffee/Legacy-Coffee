@@ -60,6 +60,7 @@ export default function App() {
             <Route path="/my-orders" element={<Layout><MyOrdersPage /></Layout>} />
             <Route path="/my-account" element={<Layout><MyAccountPage /></Layout>} />
             <Route path="/notifications" element={<Layout><NotificationsPage /></Layout>} />
+            <Route path="/notifications/:notificationId" element={<Layout><NotificationsPage /></Layout>} />
             <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
             <Route path="/signin" element={<Layout><AuthPage mode="signin" /></Layout>} />
             <Route path="/signup" element={<Layout><AuthPage mode="signup" /></Layout>} />
