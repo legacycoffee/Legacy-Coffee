@@ -13,9 +13,18 @@ export default function ContactUs() {
   return (
     <div>
       {/* Hero */}
-      <section className="bg-peach py-20 px-6 text-center">
-        <h1 className="text-4xl font-bold text-primary mb-4">Contact Us</h1>
-        <p className="text-brown max-w-xl mx-auto">We'd love to hear from you. Reach out for any inquiries, orders, or collaborations.</p>
+      <section className="relative isolate flex min-h-[320px] items-center justify-center overflow-hidden px-6 py-20 text-center">
+        <img
+          src="https://res.cloudinary.com/vgko5mna/image/upload/v1792767454/contact_image.png"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+        />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-brown/55" />
+        <div className="relative">
+          <h1 className="mb-4 text-4xl font-bold text-white">Contact Us</h1>
+          <p className="mx-auto max-w-xl text-white/90">We'd love to hear from you. Reach out for any inquiries, orders, or collaborations.</p>
+        </div>
       </section>
 
       <section className="py-16 px-6 bg-white">
