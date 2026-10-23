@@ -112,7 +112,7 @@ export default function Navbar() {
                 <LuUserRound aria-hidden="true" size={21} />
               </button>
               {accountOpen && (
-                <div id="account-menu" className="absolute left-1/2 top-full z-[60] mt-2 max-h-[calc(100vh-6rem)] w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto border border-peach-mid/60 bg-peach p-4 text-left shadow-xl sm:p-5">
+                <div id="account-menu" className="absolute left-1/2 top-full z-[60] mt-2 max-h-[calc(100vh-6rem)] w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto border border-peach-mid/60 bg-white p-4 text-left shadow-xl sm:p-5">
                   {isAuthenticated ? (
                     <>
                       <nav aria-label="Account links">
