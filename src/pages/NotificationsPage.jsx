@@ -98,7 +98,7 @@ export default function NotificationsPage() {
           <section
             aria-label="Notification list"
             className={`border border-peach-mid/50 bg-white shadow-sm ${
-              selectedNotification ? 'hidden lg:block' : ''
+              notificationId ? 'hidden lg:block' : ''
             }`}
           >
             <h2 className="border-b border-peach-mid/40 px-5 py-4 font-bold text-black">All notifications</h2>
@@ -148,7 +148,7 @@ export default function NotificationsPage() {
           <section
             aria-label="Selected notification"
             className={`border border-peach-mid/50 bg-white p-5 shadow-sm sm:p-7 ${
-              selectedNotification ? '' : 'hidden lg:block'
+              notificationId ? '' : 'hidden lg:block'
             }`}
           >
             {selectedNotification ? (
