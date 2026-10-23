@@ -13,7 +13,7 @@ export default function PartnerWithUs() {
 
   return (
     <div className="bg-[#fffdfa]">
-      <section className="relative isolate min-h-[680px] overflow-hidden bg-[#351a08] lg:min-h-[calc(100svh-5rem)]">
+      <section className="home-page relative isolate min-h-[680px] overflow-hidden bg-[#351a08] lg:min-h-[calc(100svh-5rem)]">
         <img
           src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792508243/coffee_farm.jpg"
           alt=""
@@ -58,40 +58,80 @@ export default function PartnerWithUs() {
             d="M390 535C335 545 295 570 265 610C235 650 220 705 195 760H390V535Z"
           />
         </svg>
-        <div className="relative z-10 mx-auto grid min-h-[680px] max-w-[1580px] grid-cols-1 items-center gap-10 px-6 pb-20 pt-16 md:px-10 lg:min-h-[calc(100svh-5rem)] lg:px-12 lg:pb-16 lg:pt-8">
+        <div className="relative z-10 mx-auto flex min-h-[680px] max-w-[1580px] flex-col items-center justify-center gap-10 px-6 pb-20 pt-16 md:px-10 lg:min-h-[calc(100svh-5rem)] lg:px-12 lg:pb-16 lg:pt-8">
           <div className="relative z-10 mx-auto max-w-[980px] text-center">
-            <p className="mb-3 text-lg font-bold uppercase tracking-[0.25em] text-primary sm:text-xl md:text-2xl">
+            <p
+              className="mb-3 text-lg font-bold uppercase tracking-[0.25em] text-primary sm:text-xl md:mb-4 md:text-2xl"
+              style={{ animation: 'fadeUp 0.7s ease both' }}
+            >
               Let’s build together
             </p>
             <h1
-              className="mb-5 text-4xl font-black leading-[1.1] text-brown sm:text-5xl"
+              className="mb-4 font-black leading-[1.1] text-white md:mb-5"
+              style={{ animation: 'fadeUp 0.8s 0.1s ease both' }}
             >
               Partnerships
-              <span className="block text-primary">
-                That Create Lasting Value
-              </span>
+              <br />
+              <span className="text-primary">That Create Lasting Value</span>
             </h1>
-            <p className="mx-auto mb-7 max-w-[560px] text-sm leading-relaxed text-brown/80 md:text-lg">
+            <p
+              className="mx-auto mb-8 max-w-2xl px-2 text-sm leading-relaxed text-white/80 md:mb-10 md:text-lg"
+              style={{ animation: 'fadeUp 0.8s 0.2s ease both' }}
+            >
               We work with cafés, restaurants, hotels, retailers and individuals who share our passion for exceptional coffee.
             </p>
           </div>
-
           <a
             href="#partnership-form"
-            className="relative z-10 inline-flex items-center justify-self-center gap-5 rounded-full bg-white px-8 py-4 text-sm font-bold uppercase tracking-wider text-primary transition-colors hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:px-9 md:py-4"
+            className="relative z-10 inline-flex items-center justify-self-center gap-5 rounded-full bg-primary px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 transition-all duration-300 hover:bg-white hover:text-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:px-9 md:py-4"
           >
             Partner With Us <span aria-hidden="true">→</span>
           </a>
         </div>
       </section>
 
+      <section className="bg-[#fff8ee] px-6 py-14 md:py-18">
+        <div className="mx-auto max-w-6xl space-y-8 text-left text-base leading-relaxed text-brown/90 md:text-xl">
+          <p>
+            At Legacy Coffee, we believe that great coffee begins with empowered farmers.
+            <br className="hidden md:block" /> In a market that has long rewarded volume over value, we are driving a shift, supporting smallholders to produce premium Robusta that commands higher prices and competes globally.
+          </p>
+          <p>
+            Our model blends training, mentorship, sustainability, and fair pricing to unlock opportunities for farmers like Monica in Rwibaale, who can now sell pre-booked coffee at fair prices, invest in land, and expand her farm.
+          </p>
+          <p>
+            We welcome collaborations with donors, NGOs, restaurants, hotels, exporters, and institutions. Whether through bulk orders, corporate gifting, or joint community projects, together we can make a greater impact.
+          </p>
+          <div className="pt-2">
+            <h2 className="mb-5 text-3xl font-normal leading-tight text-primary md:text-4xl">
+              Your Investment helps us;
+            </h2>
+            <ul className="space-y-1 text-base leading-relaxed md:text-xl">
+              <li className="flex items-start gap-3">
+                <span aria-hidden="true" className="mt-[0.65em] h-2 w-2 shrink-0 rounded-full bg-primary" />
+                <span>Train more coffee farmers &amp; producers at our Kyenjojo learning site</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span aria-hidden="true" className="mt-[0.65em] h-2 w-2 shrink-0 rounded-full bg-primary" />
+                <span>Invest in eco-friendly processing and traceable sourcing</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span aria-hidden="true" className="mt-[0.65em] h-2 w-2 shrink-0 rounded-full bg-primary" />
+                <span>Connect farmers to premium international buyers</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span aria-hidden="true" className="mt-[0.65em] h-2 w-2 shrink-0 rounded-full bg-primary" />
+                <span>Expand Uganda’s presence in the global coffee value chain</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       <section id="partnerships" className="bg-peach-light px-6 py-16 md:py-20">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto mb-12 max-w-3xl text-center">
-            <h1 className="mb-4 text-3xl font-black text-brown md:text-4xl">Partnerships</h1>
-            <p className="text-base leading-relaxed text-brown/75 md:text-lg">
-              Legacy Coffee welcomes collaborations with Donors, NGOs, restaurants, hotels, exporters, and institutions. Whether through bulk orders, corporate gifting, or joint community projects, together we can make a greater impact.
-            </p>
+            <h1 className="mb-4 text-3xl font-black text-brown md:text-4xl">Our Partners</h1>
           </div>
           <div className="overflow-hidden">
             <div className="partner-logo-track flex w-max items-center">
