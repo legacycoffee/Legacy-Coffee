@@ -1,11 +1,13 @@
 from django.db.models import Avg, Count
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Product, Review, WishlistItem
-from .serializers import ProductSerializer, ReviewSerializer, WishlistItemSerializer
+from .services import has_completed_purchase
+from .serializers import ProductSerializer, ReviewSerializer, ShareEventSerializer, WishlistItemSerializer
 
 
 class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -41,6 +43,24 @@ class ReviewListCreateView(generics.ListCreateAPIView):
         serializer.save(user=self.request.user)
 
 
+class ReviewEligibilityView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        product = get_object_or_404(
+            Product,
+            slug=request.query_params.get('product'),
+            is_active=True,
+        )
+        has_purchased = has_completed_purchase(request.user, product)
+        has_reviewed = Review.objects.filter(product=product, user=request.user).exists()
+        return Response({
+            'has_purchased': has_purchased,
+            'has_reviewed': has_reviewed,
+            'can_review': has_purchased and not has_reviewed,
+        })
+
+
 class WishlistView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -68,3 +88,8 @@ class WishlistView(APIView):
         if not deleted_count:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ShareEventCreateView(generics.CreateAPIView):
+    serializer_class = ShareEventSerializer
+    permission_classes = [permissions.AllowAny]

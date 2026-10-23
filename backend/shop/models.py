@@ -55,3 +55,26 @@ class WishlistItem(models.Model):
 
     def __str__(self):
         return f'{self.user} — {self.product}'
+
+
+class ShareEvent(models.Model):
+    class Channel(models.TextChoices):
+        WHATSAPP = 'whatsapp', 'WhatsApp'
+        NATIVE = 'native', 'Native share sheet'
+
+    product = models.ForeignKey(
+        Product,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='share_events',
+    )
+    product_slug = models.SlugField(max_length=120)
+    product_name = models.CharField(max_length=160)
+    channel = models.CharField(max_length=20, choices=Channel.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at',)
+
+    def __str__(self):
+        return f'{self.product_name} shared via {self.get_channel_display()}'

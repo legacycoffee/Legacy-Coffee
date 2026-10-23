@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { products, formatPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
+import { apiRequest } from '../context/api.js'
 import ProductImage from '../components/ProductImage.jsx'
+
+const quoteInputClass = 'mt-1.5 w-full border border-peach-mid bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors placeholder:text-black/40 focus:border-primary focus:ring-2 focus:ring-primary/20'
+const quoteLabelClass = 'block text-sm font-medium text-black'
 
 const heroImages = [
   'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=2000&auto=format&fit=crop&q=85',
@@ -12,8 +16,11 @@ const heroImages = [
 
 export default function Home() {
   const { addToCart } = useCart()
-  const [form, setForm] = useState({ name: '', email: '', product: products[0]?.name ?? '', quantity: '', message: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', product: products[0]?.name ?? '', quantity: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
+  const [submittedRequest, setSubmittedRequest] = useState(null)
+  const [submitError, setSubmitError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [addedProduct, setAddedProduct] = useState('')
   const [currentHeroImage, setCurrentHeroImage] = useState(0)
 
@@ -24,9 +31,35 @@ export default function Home() {
     return () => window.clearInterval(timer)
   }, [])
 
-  const handleSubmit = event => {
+  const handleSubmit = async event => {
     event.preventDefault()
-    setSubmitted(true)
+    setSubmitError('')
+    setIsSubmitting(true)
+    try {
+      const result = await apiRequest('/inquiries/', {
+        method: 'POST',
+        body: {
+          kind: 'quote',
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          product: form.product,
+          quantity: form.quantity,
+          subject: `Quote request for ${form.product}`,
+          message: form.message || `Please provide a tailored quote for ${form.quantity} of ${form.product}.`,
+        },
+      })
+      setSubmittedRequest(result)
+      setSubmitted(true)
+    } catch (error) {
+      setSubmitError(error.message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleFormChange = event => {
+    setForm(current => ({ ...current, [event.target.name]: event.target.value }))
   }
 
   const handleAddToCart = product => {
@@ -142,39 +175,78 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="quote" className="bg-peach-light px-6 py-14 sm:py-16">
-        <div className="mx-auto max-w-2xl">
-          <p className="mb-2 text-center text-xs font-bold uppercase tracking-[0.18em] text-primary">For your business</p>
-          <h2 className="mb-2 text-center text-3xl font-bold text-brown">Need a larger order?</h2>
-          <p className="mb-8 text-center text-sm leading-relaxed text-brown/75">Request a tailored quote.</p>
+      <section id="quote" className="relative overflow-hidden bg-[#f8eee3] px-4 py-14 sm:px-6 sm:py-20">
+        <div aria-hidden="true" className="absolute -right-24 -top-28 h-80 w-80 rounded-full border-[36px] border-primary/10" />
+        <div className="relative mx-auto max-w-6xl">
+          <div className="grid items-center gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
+            <div className="max-w-lg">
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-primary">For your business</p>
+              <h2 className="text-3xl font-bold leading-tight text-brown sm:text-4xl">Need a larger order?</h2>
+              <p className="mt-3 text-base leading-relaxed text-brown/75">
+                Tell us what you need and we’ll prepare a tailored quote for your business.
+              </p>
+              <ul className="mt-6 space-y-3 text-sm text-brown/80">
+                <li className="flex items-start gap-3">
+                  <span aria-hidden="true" className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">✓</span>
+                  Bulk coffee for cafés, restaurants, hotels, and teams
+                </li>
+                <li className="flex items-start gap-3">
+                  <span aria-hidden="true" className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">✓</span>
+                  Product and quantity options to fit your needs
+                </li>
+                <li className="flex items-start gap-3">
+                  <span aria-hidden="true" className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">✓</span>
+                  Our team will follow up to discuss the details
+                </li>
+              </ul>
+            </div>
 
           {submitted ? (
-            <div className="rounded-xl bg-white p-8 text-center">
-              <div className="mb-4 text-5xl">✅</div>
-              <h3 className="mb-2 text-xl font-bold text-primary">Quote Request Sent!</h3>
-              <p className="text-sm text-brown">We'll get back to you within 24 hours.</p>
+            <div role="status" className="border border-peach-mid/50 bg-white p-6 shadow-sm sm:p-9">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-2xl text-green-800">✓</div>
+              <h3 className="text-xl font-bold text-brown">Your quote request is in</h3>
+              <p className="mt-2 text-sm leading-relaxed text-brown/75">
+                Thanks, {submittedRequest?.name}. Our team will contact you at {submittedRequest?.email} to discuss your request.
+              </p>
+              {submittedRequest?.id && <p className="mt-4 text-xs text-brown/60">Request reference: #{submittedRequest.id}</p>}
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-peach-mid/40 bg-white p-5 shadow-sm sm:p-8">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <input required placeholder="Your Name" value={form.name} onChange={event => setForm({ ...form, name: event.target.value })}
-                  className="rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
-                <input required type="email" placeholder="Email Address" value={form.email} onChange={event => setForm({ ...form, email: event.target.value })}
-                  className="rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
+            <form onSubmit={handleSubmit} className="space-y-4 border border-peach-mid/50 bg-white p-5 shadow-sm sm:p-8">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label htmlFor="quote-name" className={quoteLabelClass}>
+                  Your name
+                  <input id="quote-name" name="name" autoComplete="name" required value={form.name} onChange={handleFormChange} placeholder="e.g. Alex Namusoke" className={quoteInputClass} />
+                </label>
+                <label htmlFor="quote-email" className={quoteLabelClass}>
+                  Email address
+                  <input id="quote-email" name="email" type="email" autoComplete="email" required value={form.email} onChange={handleFormChange} placeholder="you@example.com" className={quoteInputClass} />
+                </label>
+                <label htmlFor="quote-phone" className={quoteLabelClass}>
+                  Phone number <span className="font-normal text-black/55">(optional)</span>
+                  <input id="quote-phone" name="phone" type="tel" autoComplete="tel" value={form.phone} onChange={handleFormChange} placeholder="+256 700 000 000" className={quoteInputClass} />
+                </label>
+                <label htmlFor="quote-product" className={quoteLabelClass}>
+                  Coffee product
+                  <select id="quote-product" name="product" required value={form.product} onChange={handleFormChange} className={quoteInputClass}>
+                    {products.map(product => <option key={product.id} value={product.name}>{product.name} · {product.weight}</option>)}
+                  </select>
+                </label>
+                <label htmlFor="quote-quantity" className={`${quoteLabelClass} sm:col-span-2`}>
+                  Quantity needed
+                  <input id="quote-quantity" name="quantity" required value={form.quantity} onChange={handleFormChange} placeholder="e.g. 50 bags or 100 kg" className={quoteInputClass} />
+                </label>
+                <label htmlFor="quote-message" className={`${quoteLabelClass} sm:col-span-2`}>
+                  Tell us a little more <span className="font-normal text-black/55">(optional)</span>
+                  <textarea id="quote-message" name="message" rows={4} value={form.message} onChange={handleFormChange} placeholder="Share your business needs, delivery location, or any questions." className={`${quoteInputClass} resize-y`} />
+                </label>
               </div>
-              <select required value={form.product} onChange={event => setForm({ ...form, product: event.target.value })}
-                className="w-full rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary">
-                {products.slice(0, 2).map(product => <option key={product.id} value={product.name}>{product.name}</option>)}
-              </select>
-              <input required placeholder="Quantity (e.g. 50kg)" value={form.quantity} onChange={event => setForm({ ...form, quantity: event.target.value })}
-                className="w-full rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
-              <textarea rows={4} placeholder="Additional message..." value={form.message} onChange={event => setForm({ ...form, message: event.target.value })}
-                className="w-full resize-none rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
-              <button type="submit" className="w-full rounded bg-primary py-3 font-semibold text-white transition-opacity hover:opacity-90">
-                Submit Quote Request
+              {submitError && <p role="alert" className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{submitError}</p>}
+              <button type="submit" disabled={isSubmitting} className="w-full bg-[#F58537] px-5 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#e8742b] disabled:cursor-wait disabled:opacity-60 sm:w-auto">
+                {isSubmitting ? 'Sending request…' : 'Request my quote'}
               </button>
             </form>
           )}
+          </div>
         </div>
       </section>
     </div>

@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 def generate_order_reference():
@@ -29,6 +30,14 @@ class Order(models.Model):
     delivery_address = models.CharField(max_length=250)
     delivery_city = models.CharField(max_length=120)
     delivery_notes = models.TextField(blank=True)
+    delivery_latitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True,
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+    )
+    delivery_longitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True,
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+    )
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     total = models.DecimalField(max_digits=14, decimal_places=0, default=0)
     created_at = models.DateTimeField(auto_now_add=True)

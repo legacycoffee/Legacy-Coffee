@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from inquiries.models import Inquiry
 from newsletter.models import Subscriber
 from orders.models import Order
-from shop.models import Product
+from shop.models import Product, ShareEvent
 from .serializers import InquiryInboxSerializer, OrderInboxSerializer
 
 
@@ -22,6 +22,7 @@ class DashboardSummaryView(APIView):
             'inquiries': Inquiry.objects.count(),
             'new_inquiries': Inquiry.objects.filter(status=Inquiry.Status.NEW).count(),
             'active_subscribers': Subscriber.objects.filter(is_active=True).count(),
+            'product_shares': ShareEvent.objects.count(),
         })
 
 

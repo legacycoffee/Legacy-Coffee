@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Product, Review, WishlistItem
+from .models import Product, Review, ShareEvent, WishlistItem
 
 
 @admin.register(Product)
@@ -22,3 +22,11 @@ class ReviewAdmin(admin.ModelAdmin):
 class WishlistItemAdmin(admin.ModelAdmin):
     list_display = ('user', 'product', 'created_at')
     search_fields = ('user__email', 'product__name')
+
+
+@admin.register(ShareEvent)
+class ShareEventAdmin(admin.ModelAdmin):
+    list_display = ('product_name', 'product_slug', 'channel', 'created_at')
+    list_filter = ('channel', 'created_at')
+    search_fields = ('product_name', 'product_slug')
+    readonly_fields = ('product', 'product_slug', 'product_name', 'channel', 'created_at')

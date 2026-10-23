@@ -31,6 +31,7 @@ class DashboardApiTests(APITestCase):
         response = self.client.get('/api/dashboard/')
         self.assertEqual(response.status_code, 200)
         self.assertIn('pending_orders', response.data)
+        self.assertIn('product_shares', response.data)
 
     def test_staff_can_read_order_and_inquiry_inboxes(self):
         order = Order.objects.create(

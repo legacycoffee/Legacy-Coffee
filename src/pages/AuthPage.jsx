@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { LuCoffee, LuLockKeyhole } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
+import { getCurrentCoordinates } from '../context/geolocation.js'
 
 const inputClass = 'mt-1.5 w-full border border-peach-mid px-3.5 py-3 text-sm text-black outline-none placeholder:text-black/40 focus:border-primary focus:ring-2 focus:ring-primary/20'
 
@@ -10,8 +11,15 @@ export default function AuthPage({ mode }) {
   const { isAuthenticated, signIn, signUp } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ username: '', email: '', password: '', first_name: '', last_name: '' })
+  const [form, setForm] = useState({
+    username: '', email: '', password: '', first_name: '', last_name: '',
+    delivery_address: '', delivery_city: '', delivery_notes: '',
+    location_latitude: '', location_longitude: '',
+  })
   const [error, setError] = useState('')
+  const [locationError, setLocationError] = useState('')
+  const [locationStatus, setLocationStatus] = useState('')
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const destination = location.state?.from || '/checkout'
 
@@ -23,6 +31,21 @@ export default function AuthPage({ mode }) {
     setForm(current => ({ ...current, [event.target.name]: event.target.value }))
   }
 
+  const fetchLocation = async () => {
+    setLocationError('')
+    setLocationStatus('')
+    setIsFetchingLocation(true)
+    try {
+      const coordinates = await getCurrentCoordinates()
+      setForm(current => ({ ...current, ...coordinates }))
+      setLocationStatus(`Device coordinates captured: ${coordinates.location_latitude}, ${coordinates.location_longitude}`)
+    } catch (requestError) {
+      setLocationError(requestError.message)
+    } finally {
+      setIsFetchingLocation(false)
+    }
+  }
+
   const handleSubmit = async event => {
     event.preventDefault()
     setError('')
@@ -30,7 +53,11 @@ export default function AuthPage({ mode }) {
 
     try {
       if (isSignUp) {
-        await signUp(form)
+        await signUp({
+          ...form,
+          location_latitude: form.location_latitude || null,
+          location_longitude: form.location_longitude || null,
+        })
       } else {
         await signIn({ email: form.email, password: form.password })
       }
@@ -63,7 +90,9 @@ export default function AuthPage({ mode }) {
               {isSignUp ? 'Create your account' : 'Welcome back'}
             </h1>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/85">
-              Sign in or create an account to send your coffee order request and keep your details ready for next time.
+              {isSignUp
+                ? 'Create an account to send your coffee order request and keep your details ready for next time.'
+                : 'Sign in to send your coffee order request and access your saved details.'}
             </p>
           </div>
           <p className="relative text-xs text-white/75">Proudly sourced from Western Uganda.</p>
@@ -99,6 +128,36 @@ export default function AuthPage({ mode }) {
                   Username
                   <input id="signup-username" required autoComplete="username" name="username" value={form.username} onChange={handleChange} className={inputClass} />
                 </label>
+                <div className="border-t border-peach-mid/40 pt-4">
+                  <p className="font-semibold text-black">Delivery location <span className="font-normal text-black/55">(optional)</span></p>
+                  <p className="mt-1 text-xs leading-relaxed text-black/60">
+                    Save an address for checkout, or capture device coordinates. Coordinates stay with your account and are not sent to a geocoding service.
+                  </p>
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <label className="block text-sm font-medium text-black" htmlFor="signup-delivery-city">
+                      Town or city
+                      <input id="signup-delivery-city" autoComplete="address-level2" name="delivery_city" value={form.delivery_city} onChange={handleChange} className={inputClass} />
+                    </label>
+                    <label className="block text-sm font-medium text-black sm:col-span-2" htmlFor="signup-delivery-address">
+                      Street address
+                      <input id="signup-delivery-address" autoComplete="street-address" name="delivery_address" value={form.delivery_address} onChange={handleChange} className={inputClass} />
+                    </label>
+                    <label className="block text-sm font-medium text-black sm:col-span-2" htmlFor="signup-delivery-notes">
+                      Delivery notes
+                      <textarea id="signup-delivery-notes" name="delivery_notes" rows={2} value={form.delivery_notes} onChange={handleChange} className={`${inputClass} resize-y`} />
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isFetchingLocation}
+                    onClick={fetchLocation}
+                    className="mt-3 border border-primary px-4 py-2.5 text-sm font-semibold text-primary hover:bg-peach-light/40 disabled:opacity-60"
+                  >
+                    {isFetchingLocation ? 'Fetching location…' : 'Fetch device location'}
+                  </button>
+                  {locationError && <p role="alert" className="mt-2 text-sm text-red-700">{locationError}</p>}
+                  {locationStatus && <p role="status" className="mt-2 text-sm text-green-700">{locationStatus}</p>}
+                </div>
               </>
             )}
             <label className="block text-sm font-medium text-black" htmlFor="auth-email">

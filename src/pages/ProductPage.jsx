@@ -1,23 +1,85 @@
-import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { LuChevronRight, LuHeart, LuShare2, LuStar } from 'react-icons/lu'
 import { products, formatPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
+import { useAuth } from '../context/useAuth.js'
+import { apiRequest } from '../context/api.js'
 import ProductImage from '../components/ProductImage.jsx'
 
 export default function ProductPage() {
   const { productId } = useParams()
   const product = products.find(item => item.id === productId)
   const { addToCart } = useCart()
+  const { isAuthenticated, token } = useAuth()
+  const location = useLocation()
   const navigate = useNavigate()
   const [quantity, setQuantity] = useState(1)
+  const [cartMessage, setCartMessage] = useState('')
   const [showDetails, setShowDetails] = useState(false)
-  const [isWishlisted, setIsWishlisted] = useState(false)
+  const [wishlistProductIds, setWishlistProductIds] = useState([])
+  const [wishlistMessage, setWishlistMessage] = useState('')
+  const [isWishlistSaving, setIsWishlistSaving] = useState(false)
   const [shareMessage, setShareMessage] = useState('')
+  const [showShareOptions, setShowShareOptions] = useState(false)
   const [reviewRating, setReviewRating] = useState(0)
   const [reviewText, setReviewText] = useState('')
-  const [reviews, setReviews] = useState([])
+  const [reviewData, setReviewData] = useState(null)
+  const [reviewError, setReviewError] = useState('')
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false)
   const [showAllReviews, setShowAllReviews] = useState(false)
+  const isWishlisted = Boolean(isAuthenticated && wishlistProductIds.includes(productId))
+  const currentReviewData = reviewData?.productId === productId ? reviewData : null
+  const reviews = currentReviewData?.reviews ?? []
+  const reviewEligibility = currentReviewData?.eligibility ?? null
+
+  useEffect(() => {
+    if (!token || !product) return undefined
+
+    let isCurrent = true
+    apiRequest('/shop/wishlist/', { token })
+      .then(items => {
+        if (isCurrent) {
+          setWishlistProductIds(items.map(item => item.product.id))
+          setWishlistMessage('')
+        }
+      })
+      .catch(error => {
+        if (isCurrent) setWishlistMessage(`Could not load your wishlist: ${error.message}`)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [product, token])
+
+  useEffect(() => {
+    if (!product) return undefined
+
+    let isCurrent = true
+    const reviewsRequest = apiRequest(`/shop/products/${product.id}/reviews/`)
+    const eligibilityRequest = token
+      ? apiRequest(`/shop/reviews/eligibility/?product=${encodeURIComponent(product.id)}`, { token })
+      : Promise.resolve(null)
+
+    Promise.all([reviewsRequest, eligibilityRequest])
+      .then(([nextReviews, eligibility]) => {
+        if (isCurrent) {
+          setReviewData({ productId: product.id, reviews: nextReviews, eligibility })
+          setReviewError('')
+        }
+      })
+      .catch(error => {
+        if (isCurrent) {
+          setReviewData({ productId: product.id, reviews: [], eligibility: null })
+          setReviewError(`Could not load product reviews: ${error.message}`)
+        }
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [product, token])
 
   if (!product) {
     return (
@@ -31,38 +93,124 @@ export default function ProductPage() {
 
   const handleAddToCart = () => {
     addToCart(product, quantity)
-    navigate('/cart')
+    setCartMessage(`${quantity} ${quantity === 1 ? 'item' : 'items'} added to your cart.`)
   }
 
   const handleBuyNow = () => {
     addToCart(product, quantity)
-    navigate('/checkout')
+    navigate('/cart')
   }
 
-  const handleShare = async () => {
-    const shareData = {
-      title: product.name,
-      text: product.description,
-      url: window.location.href,
+  const handleReviewSubmit = async event => {
+    event.preventDefault()
+    setReviewError('')
+    setIsSubmittingReview(true)
+    try {
+      const review = await apiRequest('/shop/reviews/', {
+        method: 'POST',
+        token,
+        body: {
+          product: product.id,
+          rating: reviewRating,
+          text: reviewText.trim(),
+        },
+      })
+      setReviewData(current => current?.productId === product.id
+        ? {
+          ...current,
+          reviews: [review, ...current.reviews],
+          eligibility: { has_purchased: true, has_reviewed: true, can_review: false },
+        }
+        : current)
+      setReviewRating(0)
+      setReviewText('')
+    } catch (error) {
+      setReviewError(error.message)
+    } finally {
+      setIsSubmittingReview(false)
+    }
+  }
+
+  const handleToggleWishlist = async () => {
+    if (!isAuthenticated) {
+      navigate('/signin', { state: { from: location.pathname } })
+      return
     }
 
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData)
-        setShareMessage('Product shared.')
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          setShareMessage('Unable to share this product.')
-        }
+    setWishlistMessage('')
+    setIsWishlistSaving(true)
+    try {
+      if (isWishlisted) {
+        await apiRequest(`/shop/wishlist/${product.id}/`, { method: 'DELETE', token })
+        setWishlistProductIds(current => current.filter(id => id !== product.id))
+      } else {
+        await apiRequest('/shop/wishlist/', {
+          method: 'POST',
+          token,
+          body: { product_id: product.id },
+        })
+        setWishlistProductIds(current => current.includes(product.id) ? current : [...current, product.id])
       }
+    } catch (error) {
+      setWishlistMessage(`Could not update your wishlist: ${error.message}`)
+    } finally {
+      setIsWishlistSaving(false)
+    }
+  }
+
+  const productUrl = window.location.href
+  const imageUrl = new URL(product.image, window.location.href).href
+  const shareText = `${product.name}\n${product.description}\nProduct link: ${productUrl}\nProduct image: ${imageUrl}`
+
+  const handleImageShare = async () => {
+    if (!navigator.share || !navigator.canShare) {
+      setShareMessage('This browser cannot attach the product image. Choose Share to WhatsApp to send its image link.')
+      return
+    }
+
+    let imageFile
+    try {
+      const response = await fetch(imageUrl)
+      if (!response.ok) throw new Error(`Image request failed with status ${response.status}.`)
+      const imageBlob = await response.blob()
+      if (!imageBlob.type.startsWith('image/')) throw new Error('Product image response is not an image.')
+      const extension = imageBlob.type.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg'
+      imageFile = new File([imageBlob], `${product.id}.${extension}`, { type: imageBlob.type })
+    } catch {
+      setShareMessage('Could not load the product image. Choose Share to WhatsApp to send its image link.')
+      return
+    }
+
+    if (!navigator.canShare({ files: [imageFile] })) {
+      setShareMessage('This browser cannot attach the product image. Choose Share to WhatsApp to send its image link.')
       return
     }
 
     try {
-      await navigator.clipboard.writeText(shareData.url)
-      setShareMessage('Product link copied.')
-    } catch {
-      setShareMessage('Unable to copy the product link.')
+      await navigator.share({ files: [imageFile], title: product.name, text: shareText })
+      const tracked = await recordShare('native')
+      setShareMessage(tracked
+        ? 'Product image and details shared. This browser may handle the caption differently.'
+        : 'Product was shared, but share tracking failed.')
+      setShowShareOptions(false)
+    } catch (error) {
+      if (error.name !== 'AbortError') setShareMessage('Unable to share the product image.')
+    }
+  }
+
+  const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`
+
+  const recordShare = async channel => {
+    try {
+      await apiRequest('/shop/share-events/', {
+        method: 'POST',
+        token,
+        body: { product_id: product.id, channel },
+      })
+      return true
+    } catch (error) {
+      setShareMessage(`Product share tracking failed: ${error.message}`)
+      return false
     }
   }
 
@@ -76,50 +224,82 @@ export default function ProductPage() {
 
   return (
     <section className="bg-[#fffdfa] px-4 py-4 sm:px-6 sm:py-6">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-7xl lg:max-w-5xl">
         <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 text-sm text-brown/60 sm:mb-5">
           <Link to="/" className="font-medium transition-colors hover:text-primary">Home</Link>
           <span aria-hidden="true">/</span>
           <span className="truncate text-brown" aria-current="page">{product.name}</span>
         </nav>
 
-        <div className="grid items-center gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-peach-light shadow-sm">
+        <div className="grid items-center gap-6 lg:grid-cols-2 lg:gap-10">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-peach-light shadow-sm lg:w-full lg:max-w-[400px] lg:justify-self-center">
             <ProductImage product={product} className="transition-transform duration-700 hover:scale-[1.03]" />
             <button
               type="button"
               aria-label={`Share ${product.name}`}
-              onClick={handleShare}
+              aria-expanded={showShareOptions}
+              aria-controls="product-share-options"
+              onClick={() => {
+                setShareMessage('')
+                setShowShareOptions(current => !current)
+              }}
               className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border border-black bg-white text-black shadow-sm transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:left-6 sm:top-6"
             >
               <LuShare2 aria-hidden="true" className="h-5 w-5" />
             </button>
+            {showShareOptions && (
+              <div id="product-share-options" className="absolute left-4 top-[4.25rem] z-10 w-64 border border-peach-mid bg-white p-3 shadow-lg sm:left-6">
+                <p className="mb-2 text-xs font-semibold text-brown">Share this product</p>
+                <a
+                  href={whatsappShareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    setShowShareOptions(false)
+                    void recordShare('whatsapp').then(tracked => {
+                      if (tracked) setShareMessage('WhatsApp share recorded.')
+                    })
+                  }}
+                  className="mb-2 block bg-[#25D366] px-3 py-2.5 text-center text-sm font-bold text-white hover:bg-[#1eae54]"
+                >
+                  Share to WhatsApp
+                </a>
+                <button
+                  type="button"
+                  onClick={handleImageShare}
+                  className="block w-full border border-black px-3 py-2.5 text-sm font-semibold text-black hover:bg-peach-light"
+                >
+                  Share image with details
+                </button>
+              </div>
+            )}
             <button
               type="button"
               aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
               aria-pressed={isWishlisted}
-              onClick={() => setIsWishlisted(current => !current)}
-              className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border border-black bg-white text-red-600 shadow-sm transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:right-6 sm:top-6"
+              disabled={isWishlistSaving}
+              onClick={handleToggleWishlist}
+              className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border border-black bg-white text-red-600 shadow-sm transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60 sm:right-6 sm:top-6"
             >
               <LuHeart aria-hidden="true" className={`h-5 w-5 ${isWishlisted ? 'fill-current' : ''}`} />
             </button>
           </div>
 
-          <div className="py-1">
-            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.12em] text-brown/60">{product.roast}</p>
-            <h1 className="max-w-xl text-2xl font-bold leading-tight tracking-tight text-brown sm:text-3xl">
+          <div className="py-1 lg:mx-auto lg:w-full lg:max-w-[400px] lg:py-0">
+            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.12em] text-brown/60 lg:mb-1">{product.roast}</p>
+            <h1 className="max-w-xl text-2xl font-bold leading-tight tracking-tight text-brown sm:text-3xl lg:text-2xl">
               {product.name}
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-brown/75 sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-brown/75 sm:text-base lg:mt-2 lg:text-sm lg:leading-5">
               {product.description}
             </p>
 
-            <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-peach-mid/50 pb-4">
-              <div className="flex items-baseline gap-2 justify-self-start">
-                <p className="text-xl font-bold tracking-tight text-brown sm:text-2xl">{formatPrice(product.price)}</p>
-                <p className="text-xs text-brown/60 sm:text-sm">per {product.weight}</p>
+            <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-peach-mid/50 pb-4 lg:mt-3 lg:flex lg:flex-col lg:items-start lg:gap-3 lg:pb-3">
+              <div className="flex items-baseline gap-2 justify-self-start lg:flex-nowrap">
+                <p className="text-xl font-bold tracking-tight text-brown sm:text-2xl lg:whitespace-nowrap">{formatPrice(product.price)}</p>
+                <p className="text-xs text-brown/60 sm:text-sm lg:whitespace-nowrap">per {product.weight}</p>
               </div>
-              <div className="flex items-center justify-self-center overflow-hidden border border-black bg-white">
+              <div className="flex items-center justify-self-center overflow-hidden border border-black bg-white lg:shrink-0">
                 <button
                   type="button"
                   aria-label="Decrease quantity"
@@ -151,7 +331,7 @@ export default function ProductPage() {
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3 lg:mt-3">
               <button
                 type="button"
                 onClick={handleAddToCart}
@@ -167,21 +347,33 @@ export default function ProductPage() {
                 Buy Now
               </button>
             </div>
-            <div className="mt-2 flex justify-end">
+            {cartMessage && (
+              <p role="status" aria-live="polite" className="mt-3 text-sm text-brown">
+                {cartMessage}{' '}
+                <Link to="/cart" className="font-semibold text-primary underline underline-offset-2">View cart</Link>
+              </p>
+            )}
+            <div className="mt-2 flex justify-end lg:mt-1">
               <button
                 type="button"
-                onClick={handleShare}
+                aria-expanded={showShareOptions}
+                aria-controls="product-share-options"
+                onClick={() => {
+                  setShareMessage('')
+                  setShowShareOptions(current => !current)
+                }}
                 className="flex min-h-11 items-center justify-center gap-2 rounded-[5px] border border-black bg-white px-3 py-2 text-xs font-semibold text-brown transition-colors hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-sm"
               >
                 <LuShare2 aria-hidden="true" className="h-4 w-4" />
                 Share
               </button>
             </div>
-            <p role="status" aria-live="polite" className="mt-2 min-h-5 text-xs text-brown/70">{shareMessage}</p>
+            {shareMessage && <p role="status" aria-live="polite" className="mt-2 min-h-5 text-xs text-brown/70">{shareMessage}</p>}
+            {wishlistMessage && <p role="status" aria-live="polite" className="mt-2 min-h-5 text-xs text-red-700">{wishlistMessage}</p>}
           </div>
         </div>
 
-        <div className="mt-5 border-y border-black">
+        <div className="relative mt-5 border-y border-black lg:ml-auto lg:max-w-[400px]">
           <button
             type="button"
             aria-expanded={showDetails}
@@ -193,7 +385,7 @@ export default function ProductPage() {
             <LuChevronRight aria-hidden="true" className={`h-5 w-5 transition-transform ${showDetails ? 'rotate-90' : ''}`} />
           </button>
           {showDetails && (
-            <div id="product-details" className="space-y-2 pb-3 text-sm leading-5 text-black">
+            <div id="product-details" className="space-y-2 pb-3 text-sm leading-5 text-black lg:absolute lg:right-0 lg:top-full lg:z-20 lg:w-full lg:border lg:border-peach-mid/60 lg:bg-white lg:p-4 lg:shadow-lg">
               <p>{product.details}</p>
               <p><span className="font-semibold">Tasting notes:</span> {product.tastingNotes}</p>
             </div>
@@ -229,7 +421,10 @@ export default function ProductPage() {
             ))}
           </div>
 
-          {reviews.length > 0 ? (
+          {reviewError && <p role="alert" className="mb-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{reviewError}</p>}
+          {!currentReviewData ? (
+            <p role="status" className="mb-4 text-sm text-black/65">Loading reviews…</p>
+          ) : reviews.length > 0 ? (
             <>
               <ul className="divide-y divide-peach-mid/50">
                 {visibleReviews.map(review => (
@@ -257,49 +452,53 @@ export default function ProductPage() {
             <p className="mb-4 text-sm text-black">Be the first to review this coffee.</p>
           )}
 
-          <form
-            onSubmit={event => {
-              event.preventDefault()
-              if (reviewRating === 0 || !reviewText.trim()) return
-              setReviews(current => [...current, { id: Date.now(), rating: reviewRating, text: reviewText.trim() }])
-              setReviewRating(0)
-              setReviewText('')
-            }}
-            className="border border-peach-mid/50 bg-white p-3 sm:p-4"
-          >
-            <label className="block text-xs font-semibold text-black">Your rating</label>
-            <div className="mt-1 flex gap-1" role="group" aria-label="Choose a rating from 1 to 5 stars">
-              {[1, 2, 3, 4, 5].map(rating => (
-                <button
-                  key={rating}
-                  type="button"
-                  aria-label={`${rating} ${rating === 1 ? 'star' : 'stars'}`}
-                  aria-pressed={reviewRating === rating}
-                  onClick={() => setReviewRating(rating)}
-                  className="p-0.5 text-[#F58537] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
-                >
-                  <LuStar aria-hidden="true" className={`h-5 w-5 ${reviewRating >= rating ? 'fill-current' : ''}`} />
-                </button>
-              ))}
-            </div>
-            <label htmlFor="product-review" className="mt-3 block text-xs font-semibold text-black">Your review</label>
-            <textarea
-              id="product-review"
-              required
-              rows={2}
-              value={reviewText}
-              onChange={event => setReviewText(event.target.value)}
-              placeholder="Share your experience with this coffee"
-              className="mt-1 w-full rounded border border-peach-mid px-3 py-2 text-sm text-black outline-none focus:border-primary"
-            />
-            <button
-              type="submit"
-              disabled={reviewRating === 0 || !reviewText.trim()}
-              className="mt-2 border border-black bg-[#F58537] px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Submit review
-            </button>
-          </form>
+          {!isAuthenticated ? (
+            <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black">
+              <Link to="/signin" state={{ from: location.pathname }} className="font-semibold text-primary underline">Sign in</Link>
+              {' '}and complete a purchase to rate or review this coffee.
+            </p>
+          ) : !currentReviewData || !reviewEligibility ? null : reviewEligibility.can_review ? (
+            <form onSubmit={handleReviewSubmit} className="border border-peach-mid/50 bg-white p-3 sm:p-4">
+              <p className="mb-3 text-xs text-black/65">Verified customers with a fulfilled order can leave one review for this coffee.</p>
+              <label className="block text-xs font-semibold text-black">Your rating</label>
+              <div className="mt-1 flex gap-1" role="group" aria-label="Choose a rating from 1 to 5 stars">
+                {[1, 2, 3, 4, 5].map(rating => (
+                  <button
+                    key={rating}
+                    type="button"
+                    aria-label={`${rating} ${rating === 1 ? 'star' : 'stars'}`}
+                    aria-pressed={reviewRating === rating}
+                    onClick={() => setReviewRating(rating)}
+                    className="p-0.5 text-[#F58537] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
+                  >
+                    <LuStar aria-hidden="true" className={`h-5 w-5 ${reviewRating >= rating ? 'fill-current' : ''}`} />
+                  </button>
+                ))}
+              </div>
+              <label htmlFor="product-review" className="mt-3 block text-xs font-semibold text-black">Your review</label>
+              <textarea
+                id="product-review"
+                required
+                maxLength={2000}
+                rows={2}
+                value={reviewText}
+                onChange={event => setReviewText(event.target.value)}
+                placeholder="Share your experience with this coffee"
+                className="mt-1 w-full rounded border border-peach-mid px-3 py-2 text-sm text-black outline-none focus:border-primary"
+              />
+              <button
+                type="submit"
+                disabled={reviewRating === 0 || !reviewText.trim() || isSubmittingReview}
+                className="mt-2 border border-black bg-[#F58537] px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSubmittingReview ? 'Submitting…' : 'Submit review'}
+              </button>
+            </form>
+          ) : reviewEligibility?.has_reviewed ? (
+            <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black/70">You’ve already reviewed this coffee.</p>
+          ) : (
+            <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black/70">You can rate and review this coffee after an order containing it has been fulfilled.</p>
+          )}
 
         </section>
 

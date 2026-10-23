@@ -132,6 +132,7 @@ export default function AdminDashboard() {
     { label: 'Pending orders', value: summary.pending_orders },
     { label: 'All requests', value: summary.inquiries },
     { label: 'New requests', value: summary.new_inquiries },
+    { label: 'Product shares', value: summary.product_shares },
   ] : []
   const isLoading = !summary && !dataError
 
@@ -173,7 +174,7 @@ export default function AdminDashboard() {
         {activeTab === 'Overview' && (
           <section aria-labelledby="overview-heading">
             <h1 id="overview-heading" className="mb-6 text-2xl font-bold text-stone-900">Dashboard overview</h1>
-            <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
               {stats.map(stat => (
                 <div key={stat.label} className="border border-stone-100 bg-white p-4 shadow-sm sm:p-5">
                   <p className="text-2xl font-bold text-[#b94d0b]">{stat.value}</p>

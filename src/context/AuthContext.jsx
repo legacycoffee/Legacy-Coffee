@@ -55,6 +55,16 @@ export function AuthProvider({ children }) {
     return data.user
   }, [saveAuth])
 
+  const updateUser = useCallback(user => {
+    if (!auth?.token) return
+    saveAuth({ token: auth.token, user })
+  }, [auth, saveAuth])
+
+  const clearAuth = useCallback(() => {
+    localStorage.removeItem(AUTH_STORAGE_KEY)
+    setAuth(null)
+  }, [])
+
   const signOut = useCallback(async () => {
     try {
       if (auth?.token) {
@@ -73,7 +83,9 @@ export function AuthProvider({ children }) {
     signIn,
     signUp,
     signOut,
-  }), [auth, signIn, signUp, signOut])
+    updateUser,
+    clearAuth,
+  }), [auth, signIn, signUp, signOut, updateUser, clearAuth])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

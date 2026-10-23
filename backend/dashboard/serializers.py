@@ -19,7 +19,8 @@ class OrderInboxSerializer(serializers.ModelSerializer):
         model = Order
         fields = (
             'reference', 'customer_name', 'customer_email', 'customer_phone',
-            'delivery_address', 'delivery_city', 'delivery_notes', 'status',
+            'delivery_address', 'delivery_city', 'delivery_notes',
+            'delivery_latitude', 'delivery_longitude', 'status',
             'total', 'items', 'created_at',
         )
 

@@ -25,6 +25,39 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = ('product_name', 'weight', 'unit_price', 'quantity', 'line_total')
 
 
+class OrderHistoryItemSerializer(serializers.ModelSerializer):
+    line_total = serializers.DecimalField(max_digits=14, decimal_places=0, read_only=True)
+    product_image = serializers.SerializerMethodField()
+    product_image_alt = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OrderItem
+        fields = (
+            'product_name', 'weight', 'unit_price', 'quantity', 'line_total',
+            'product_image', 'product_image_alt',
+        )
+
+    def get_product_image(self, item):
+        return item.product.image if item.product else None
+
+    def get_product_image_alt(self, item):
+        return item.product.image_alt if item.product else item.product_name
+
+
+class OrderHistorySerializer(serializers.ModelSerializer):
+    status_label = serializers.CharField(source='get_status_display', read_only=True)
+    items = OrderHistoryItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = (
+            'reference', 'customer_name', 'customer_email', 'customer_phone',
+            'status', 'status_label', 'total', 'created_at',
+            'delivery_address', 'delivery_city', 'delivery_notes',
+            'delivery_latitude', 'delivery_longitude', 'items',
+        )
+
+
 class OrderCreateSerializer(serializers.ModelSerializer):
     items = OrderItemInputSerializer(many=True, write_only=True, allow_empty=False)
     order_items = OrderItemSerializer(source='items', many=True, read_only=True)
@@ -34,6 +67,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         fields = (
             'reference', 'customer_name', 'customer_email', 'customer_phone',
             'delivery_address', 'delivery_city', 'delivery_notes', 'status',
+            'delivery_latitude', 'delivery_longitude',
             'total', 'order_items', 'items', 'created_at',
         )
         read_only_fields = ('reference', 'status', 'total', 'order_items', 'created_at')
@@ -49,6 +83,15 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         order_items = validated_data.pop('items')
         user = self.context['request'].user
         validated_data['customer_email'] = user.email
+        user.delivery_address = validated_data['delivery_address']
+        user.delivery_city = validated_data['delivery_city']
+        user.delivery_notes = validated_data.get('delivery_notes', '')
+        user.location_latitude = validated_data.get('delivery_latitude')
+        user.location_longitude = validated_data.get('delivery_longitude')
+        user.save(update_fields=(
+            'delivery_address', 'delivery_city', 'delivery_notes',
+            'location_latitude', 'location_longitude',
+        ))
         order = Order.objects.create(
             user=user,
             **validated_data,

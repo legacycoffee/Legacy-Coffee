@@ -1,7 +1,8 @@
 from django.db import models
 from rest_framework import serializers
 
-from .models import Product, Review, WishlistItem
+from .services import has_completed_purchase
+from .models import Product, Review, ShareEvent, WishlistItem
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -48,6 +49,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             if Review.objects.filter(product=attrs['product'], user=request.user).exists():
                 raise serializers.ValidationError('You have already reviewed this product.')
+            if not has_completed_purchase(request.user, attrs['product']):
+                raise serializers.ValidationError('You can review this product after an order containing it has been fulfilled.')
         return attrs
 
 
@@ -64,3 +67,26 @@ class WishlistItemSerializer(serializers.ModelSerializer):
         model = WishlistItem
         fields = ('id', 'product', 'product_id', 'created_at')
         read_only_fields = ('id', 'product', 'created_at')
+
+
+class ShareEventSerializer(serializers.ModelSerializer):
+    product_id = serializers.SlugRelatedField(
+        source='product',
+        slug_field='slug',
+        queryset=Product.objects.filter(is_active=True),
+        write_only=True,
+    )
+
+    class Meta:
+        model = ShareEvent
+        fields = ('id', 'product_id', 'channel', 'created_at')
+        read_only_fields = ('id', 'created_at')
+
+    def create(self, validated_data):
+        product = validated_data['product']
+        return ShareEvent.objects.create(
+            product=product,
+            product_slug=product.slug,
+            product_name=product.name,
+            channel=validated_data['channel'],
+        )

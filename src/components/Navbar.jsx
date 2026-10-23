@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { FiChevronDown, FiX } from 'react-icons/fi'
-import { LuShoppingCart } from 'react-icons/lu'
+import {
+  LuShoppingCart,
+  LuUserRound,
+} from 'react-icons/lu'
 import { useCart } from '../context/useCart.js'
 import { useAuth } from '../context/useAuth.js'
 
@@ -16,10 +19,19 @@ export default function Navbar() {
   const { cartCount } = useCart()
   const { isAuthenticated, user, signOut } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const [dropdown, setDropdown] = useState(null)
   const [scrolled, setScrolled] = useState(false)
   const [openMobileDropdown, setOpenMobileDropdown] = useState(null)
   const [authMessage, setAuthMessage] = useState('')
+  const accountMenuRef = useRef(null)
+  const accountLinks = [
+    { label: 'Profile', to: '/profile#profile-heading' },
+    { label: 'Change location', to: '/profile#location-heading' },
+    { label: 'Change details', to: '/profile#change-details-heading' },
+    { label: 'My orders', to: '/my-orders' },
+    { label: 'Delete account', to: '/profile#account-actions-heading' },
+  ]
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -32,6 +44,19 @@ export default function Navbar() {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
+
+  useEffect(() => {
+    if (!accountOpen) return
+
+    const handlePointerDown = event => {
+      if (!accountMenuRef.current?.contains(event.target)) {
+        setAccountOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [accountOpen])
 
   return (
     <>
@@ -75,24 +100,75 @@ export default function Navbar() {
           </ul>
 
           <div className="absolute right-14 top-1/2 flex -translate-y-1/2 items-center gap-3 md:static md:translate-y-0">
-            {isAuthenticated ? (
-              <>
-                <span className="hidden max-w-28 truncate text-xs font-medium text-brown lg:block">
-                  {user?.first_name || user?.email}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => signOut().catch(() => setAuthMessage('Signed out locally; the server session could not be cleared.'))}
-                  className="hidden text-xs font-semibold text-brown underline underline-offset-2 hover:text-primary md:inline"
-                >
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <Link to="/signin" className="hidden text-xs font-semibold text-brown underline underline-offset-2 hover:text-primary md:inline">
-                Sign in
-              </Link>
-            )}
+            <div ref={accountMenuRef} className="relative hidden md:block">
+              <button
+                type="button"
+                aria-label="My account"
+                aria-expanded={accountOpen}
+                aria-controls="account-menu"
+                onClick={() => setAccountOpen(open => !open)}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/40 text-brown transition-colors hover:bg-peach-light hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:h-10 md:w-10 md:bg-transparent"
+              >
+                <LuUserRound aria-hidden="true" size={21} />
+              </button>
+              {accountOpen && (
+                <div id="account-menu" className="absolute left-1/2 top-full z-[60] mt-2 max-h-[calc(100vh-6rem)] w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto border border-peach-mid/60 bg-peach p-4 text-left shadow-xl sm:p-5">
+                  {isAuthenticated ? (
+                    <>
+                      <nav aria-label="Account links">
+                        {accountLinks.map(({ label, to }) => (
+                          <Link
+                            key={label}
+                            to={to}
+                            onClick={() => setAccountOpen(false)}
+                            className={`block px-2 py-2 text-sm font-semibold transition-colors hover:bg-peach-light hover:text-primary ${
+                              label === 'Delete account' ? 'text-red-700' : 'text-brown'
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              {label === 'Profile' && user?.profile_photo && (
+                                <img
+                                  src={user.profile_photo}
+                                  alt=""
+                                  className="h-6 w-6 rounded-full object-cover"
+                                />
+                              )}
+                              {label}
+                            </span>
+                          </Link>
+                        ))}
+                      </nav>
+                      <div className="mt-4 border-t border-peach-mid/40 pt-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAccountOpen(false)
+                            signOut().catch(() => setAuthMessage('Signed out locally; the server session could not be cleared.'))
+                          }}
+                          className="block w-full px-2 py-2 text-left text-sm font-semibold text-brown/70 transition-colors hover:bg-peach-light hover:text-primary"
+                        >
+                          Sign out
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-brown">Welcome to Legacy Coffee</p>
+                      <p className="mt-1 text-sm text-brown/65">Sign in to view your account and orders. You can create an account from the sign-in page.</p>
+                      <div className="mt-4">
+                        <Link
+                          to="/signin"
+                          onClick={() => setAccountOpen(false)}
+                          className="block bg-primary px-3 py-2 text-center text-sm font-semibold text-white hover:bg-brown"
+                        >
+                          Sign in
+                        </Link>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
             <Link
               to="/cart"
               aria-label={`Shopping cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
@@ -173,16 +249,36 @@ export default function Navbar() {
               </div>
             ))}
             {isAuthenticated ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false)
-                  signOut().catch(() => setAuthMessage('Signed out locally; the server session could not be cleared.'))
-                }}
-                className="w-full rounded-xl px-4 py-3.5 text-left text-base font-semibold text-brown transition-colors hover:bg-peach-light"
-              >
-                Sign out
-              </button>
+              <>
+                <NavLink
+                  to="/my-account"
+                  className={({ isActive }) =>
+                    `block rounded-xl px-4 py-3.5 text-base font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-brown hover:bg-peach-light'}`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
+                  My account
+                </NavLink>
+                <NavLink
+                  to="/my-orders"
+                  className={({ isActive }) =>
+                    `block rounded-xl px-4 py-3.5 text-base font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-brown hover:bg-peach-light'}`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
+                  My orders
+                </NavLink>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    signOut().catch(() => setAuthMessage('Signed out locally; the server session could not be cleared.'))
+                  }}
+                  className="w-full rounded-xl px-4 py-3.5 text-left text-base font-semibold text-brown transition-colors hover:bg-peach-light"
+                >
+                  Sign out
+                </button>
+              </>
             ) : (
               <>
                 <NavLink
@@ -193,15 +289,6 @@ export default function Navbar() {
                   onClick={() => setMenuOpen(false)}
                 >
                   Sign in
-                </NavLink>
-                <NavLink
-                  to="/signup"
-                  className={({ isActive }) =>
-                    `block rounded-xl px-4 py-3.5 text-base font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-brown hover:bg-peach-light'}`
-                  }
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Create account
                 </NavLink>
               </>
             )}
