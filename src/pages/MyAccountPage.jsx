@@ -1,4 +1,5 @@
 import { Link, Navigate } from 'react-router-dom'
+import { LuUserRound } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 
 const accountLinks = [
