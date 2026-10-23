@@ -79,7 +79,7 @@ body {
 }
 
 .hero-slide-image {
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 .hero-slide-active {
@@ -87,7 +87,7 @@ body {
 }
 
 @keyframes hero-zoom-out {
-  from { transform: scale(1.1); }
+  from { transform: scale(1.15); }
   to { transform: scale(1); }
 }
 

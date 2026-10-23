@@ -44,7 +44,7 @@ export default function Home() {
             src={image}
             alt=""
             aria-hidden="true"
-            className={`hero-slide-image absolute inset-0 h-full w-full object-cover object-[62%_center] transition-opacity duration-1000 ease-in-out ${index === currentHeroImage ? 'hero-slide-active z-[1] opacity-100' : 'z-0 opacity-0'}`}
+            className={`hero-slide-image absolute inset-0 h-full w-full object-cover object-center md:object-[62%_center] transition-opacity duration-1000 ease-in-out ${index === currentHeroImage ? 'hero-slide-active z-[1] opacity-100' : 'z-0 opacity-0'}`}
           />
         ))}
         <div

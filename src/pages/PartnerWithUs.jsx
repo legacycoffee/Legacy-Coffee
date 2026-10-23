@@ -41,23 +41,6 @@ export default function PartnerWithUs() {
             d="M1920 350C1760 376 1650 430 1555 505C1460 580 1404 666 1345 760H1920V350Z"
           />
         </svg>
-        <svg
-          aria-hidden="true"
-          className="absolute inset-0 z-0 h-full w-full md:hidden"
-          viewBox="0 0 390 760"
-          preserveAspectRatio="none"
-        >
-          <path
-            fill="#fff8ee"
-            fillOpacity="0.65"
-            d="M0 0H390V390C340 435 300 440 255 470C205 505 180 548 130 580C85 610 40 610 0 585V0Z"
-          />
-          <path
-            fill="#F58537"
-            fillOpacity="0.6"
-            d="M390 535C335 545 295 570 265 610C235 650 220 705 195 760H390V535Z"
-          />
-        </svg>
         <div className="relative z-10 mx-auto flex min-h-[680px] max-w-[1580px] flex-col items-center justify-center gap-10 px-6 pb-20 pt-16 md:px-10 lg:min-h-[calc(100svh-5rem)] lg:px-12 lg:pb-16 lg:pt-8">
           <div className="relative z-10 mx-auto max-w-[980px] text-center">
             <p
