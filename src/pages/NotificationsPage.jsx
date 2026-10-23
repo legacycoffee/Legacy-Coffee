@@ -38,6 +38,8 @@ export default function NotificationsPage() {
     if (isAuthenticated) loadNotifications()
   }, [isAuthenticated, loadNotifications])
 
+  const selectedNotification = notifications.find(item => item.id === selectedId)
+
   const openNotification = notification => {
     setSelectedId(notification.id)
   }
@@ -64,8 +66,6 @@ export default function NotificationsPage() {
   if (!isAuthenticated) {
     return <Navigate to="/signin" replace state={{ from: '/notifications' }} />
   }
-
-  const selectedNotification = notifications.find(item => item.id === selectedId)
 
   return (
     <section className="min-h-[60vh] bg-[#fffdfa] px-4 py-9 sm:px-6 sm:py-12">
