@@ -77,7 +77,12 @@ export default function NotificationsPage() {
         {error && <p role="alert" className="mt-5 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
 
         <div className="mt-7 grid min-h-[28rem] gap-4 lg:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.6fr)]">
-          <section aria-label="Notification list" className="border border-peach-mid/50 bg-white shadow-sm">
+          <section
+            aria-label="Notification list"
+            className={`border border-peach-mid/50 bg-white shadow-sm ${
+              selectedNotification ? 'hidden lg:block' : ''
+            }`}
+          >
             <h2 className="border-b border-peach-mid/40 px-5 py-4 font-bold text-black">All notifications</h2>
             {isLoading ? (
               <p className="px-5 py-6 text-sm text-black/60">Loading notifications…</p>
@@ -122,9 +127,21 @@ export default function NotificationsPage() {
             )}
           </section>
 
-          <section aria-label="Selected notification" className="border border-peach-mid/50 bg-white p-5 shadow-sm sm:p-7">
+          <section
+            aria-label="Selected notification"
+            className={`border border-peach-mid/50 bg-white p-5 shadow-sm sm:p-7 ${
+              selectedNotification ? '' : 'hidden lg:block'
+            }`}
+          >
             {selectedNotification ? (
               <article>
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(null)}
+                  className="mb-5 text-sm font-semibold text-primary hover:underline lg:hidden"
+                >
+                  ← Back to notifications
+                </button>
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
                   {selectedNotification.is_read ? 'Notification' : 'New notification'}
                 </p>
