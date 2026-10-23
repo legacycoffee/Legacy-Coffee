@@ -27,7 +27,7 @@ export default function PartnerWithUs() {
         <div className="relative z-10 mx-auto flex min-h-[680px] max-w-[1580px] flex-col items-center justify-center gap-10 px-6 pb-20 pt-16 md:px-10 lg:min-h-[calc(100svh-5rem)] lg:px-12 lg:pb-16 lg:pt-8">
           <div className="relative z-10 mx-auto max-w-[980px] text-center">
             <p
-              className="mb-3 text-lg font-bold uppercase tracking-[0.25em] text-primary sm:text-xl md:mb-4 md:text-2xl"
+              className="mb-3 text-lg font-bold uppercase tracking-[0.25em] text-white sm:text-xl md:mb-4 md:text-2xl"
               style={{ animation: 'fadeUp 0.7s ease both' }}
             >
               Let’s build together
