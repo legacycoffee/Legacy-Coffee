@@ -170,7 +170,9 @@ export default function Navbar() {
                                   className="h-6 w-6 rounded-full object-cover"
                                 />
                               )}
-                              {label}
+                              {label === 'Notifications' && unreadCount > 0
+                                ? `Notifications (${unreadCount})`
+                                : label}
                             </span>
                           </Link>
                         ))}
