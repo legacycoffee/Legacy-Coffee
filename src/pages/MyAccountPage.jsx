@@ -1,5 +1,5 @@
 import { Link, Navigate } from 'react-router-dom'
-import { LuUserRound } from 'react-icons/lu'
+import { LuTrash2, LuUserRound } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 
 const accountLinks = [
@@ -70,11 +70,20 @@ export default function MyAccountPage() {
               <Link
                 key={label}
                 to={to}
-                className="flex items-center justify-between gap-4 border border-peach-mid/50 bg-white p-4 text-black shadow-sm transition-colors hover:border-primary/50 hover:bg-peach-light/30"
+                className={`flex items-center justify-between gap-4 border border-peach-mid/50 bg-white p-4 shadow-sm transition-colors hover:bg-peach-light/30 ${
+                  label === 'Delete account'
+                    ? 'text-red-700 hover:border-red-300 hover:text-red-800'
+                    : 'text-black hover:border-primary/50'
+                }`}
               >
-                <span className="min-w-0">
+                <span className="flex min-w-0 items-center gap-3">
+                  {label === 'Delete account' && (
+                    <LuTrash2 aria-hidden="true" className="h-5 w-5 shrink-0 text-red-700" />
+                  )}
+                  <span className="min-w-0">
                   <span className="block text-sm font-semibold">{label}</span>
                   <span className="mt-0.5 block text-xs text-black/60">{description}</span>
+                  </span>
                 </span>
               </Link>
             ))}
