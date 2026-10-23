@@ -14,6 +14,7 @@ import ConfirmationPage from './pages/ConfirmationPage'
 import MyOrdersPage from './pages/MyOrdersPage'
 import MyAccountPage from './pages/MyAccountPage'
 import ProfilePage from './pages/ProfilePage'
+import NotificationsPage from './pages/NotificationsPage'
 import { CartProvider } from './context/CartContext.jsx'
 import AuthPage from './pages/AuthPage'
 import PatrickStoryPage from './pages/PatrickStoryPage'
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
             <Route path="/my-orders" element={<Layout><MyOrdersPage /></Layout>} />
             <Route path="/my-account" element={<Layout><MyAccountPage /></Layout>} />
+            <Route path="/notifications" element={<Layout><NotificationsPage /></Layout>} />
             <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
             <Route path="/signin" element={<Layout><AuthPage mode="signin" /></Layout>} />
             <Route path="/signup" element={<Layout><AuthPage mode="signup" /></Layout>} />

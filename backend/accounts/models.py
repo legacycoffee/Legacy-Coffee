@@ -22,3 +22,28 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+class Notification(models.Model):
+    class Kind(models.TextChoices):
+        WELCOME = 'welcome', 'Welcome'
+        SIGN_IN = 'sign_in', 'Sign in'
+        ORDER_SUBMITTED = 'order_submitted', 'Order submitted'
+        ORDER_STATUS = 'order_status', 'Order status'
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+    )
+    kind = models.CharField(max_length=32, choices=Kind.choices)
+    title = models.CharField(max_length=160)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at', '-id')
+
+    def __str__(self):
+        return f'{self.title} ({self.user.email})'

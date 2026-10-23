@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { FiChevronDown, FiX } from 'react-icons/fi'
 import {
   LuShoppingCart,
@@ -7,6 +7,7 @@ import {
 } from 'react-icons/lu'
 import { useCart } from '../context/useCart.js'
 import { useAuth } from '../context/useAuth.js'
+import { apiRequest } from '../context/api.js'
 
 const navLinks = [
   { label: 'Home', to: '/' },
@@ -17,16 +18,19 @@ const navLinks = [
 
 export default function Navbar() {
   const { cartCount } = useCart()
-  const { isAuthenticated, user, signOut } = useAuth()
+  const { isAuthenticated, user, token, signOut } = useAuth()
+  const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [dropdown, setDropdown] = useState(null)
   const [scrolled, setScrolled] = useState(false)
   const [openMobileDropdown, setOpenMobileDropdown] = useState(null)
   const [authMessage, setAuthMessage] = useState('')
+  const [unreadCount, setUnreadCount] = useState(0)
   const accountMenuRef = useRef(null)
   const accountLinks = [
     { label: 'Profile', to: '/profile#profile-heading' },
+    { label: 'Notifications', to: '/notifications' },
     { label: 'Change location', to: '/profile#location-heading' },
     { label: 'Change details', to: '/profile#change-details-heading' },
     { label: 'My orders', to: '/my-orders' },
@@ -38,6 +42,31 @@ export default function Navbar() {
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      setUnreadCount(0)
+      return
+    }
+
+    let isCurrent = true
+    const loadUnreadCount = async () => {
+      try {
+        const data = await apiRequest('/auth/notifications/', { token })
+        if (isCurrent) setUnreadCount(data.unread_count)
+      } catch (requestError) {
+        if (isCurrent) setAuthMessage(requestError.message)
+      }
+    }
+    const refreshUnreadCount = () => loadUnreadCount()
+
+    loadUnreadCount()
+    window.addEventListener('legacy-notifications-updated', refreshUnreadCount)
+    return () => {
+      isCurrent = false
+      window.removeEventListener('legacy-notifications-updated', refreshUnreadCount)
+    }
+  }, [isAuthenticated, token, location.pathname])
 
   // prevent body scroll when menu open
   useEffect(() => {
@@ -107,9 +136,17 @@ export default function Navbar() {
                 aria-expanded={accountOpen}
                 aria-controls="account-menu"
                 onClick={() => setAccountOpen(open => !open)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/40 text-brown transition-colors hover:bg-peach-light hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:h-10 md:w-10 md:bg-transparent"
+                className="relative inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/40 text-brown transition-colors hover:bg-peach-light hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:h-10 md:w-10 md:bg-transparent"
               >
                 <LuUserRound aria-hidden="true" size={21} />
+                {unreadCount > 0 && (
+                  <span
+                    aria-label={`${unreadCount} unread notifications`}
+                    className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-peach"
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </button>
               {accountOpen && (
                 <div id="account-menu" className="absolute left-1/2 top-full z-[60] mt-2 max-h-[calc(100vh-6rem)] w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto border border-peach-mid/60 bg-white p-4 text-left shadow-xl sm:p-5">

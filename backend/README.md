@@ -34,6 +34,7 @@ Create the first staff superuser from the backend environment with `py backend\m
 - `GET /api/health/`
 - `POST /api/auth/register/`, `POST /api/auth/login/`, `POST /api/auth/logout/`, `GET|PATCH /api/auth/me/`
 - `POST /api/auth/profile-photo/` (authenticated multipart upload; stores the image in Cloudinary)
+- `GET /api/auth/notifications/`, `PATCH /api/auth/notifications/{id}/read/` (authenticated customer notifications and unread count)
 - `GET /api/shop/products/`, `GET /api/shop/products/{slug}/`, `GET /api/shop/products/{slug}/reviews/`
 - `GET|POST /api/shop/reviews/?product={slug}`, `GET /api/shop/reviews/eligibility/?product={slug}` (posting and eligibility require authentication; review submission additionally requires a fulfilled order containing the product)
 - `GET|POST /api/shop/wishlist/`, `DELETE /api/shop/wishlist/{slug}/` (token authentication)
@@ -50,3 +51,4 @@ Wishlist items are private to the signed-in account. Product share events record
 Customers can submit one review per product only after an order containing that product has been marked fulfilled. Pending or confirmed order requests do not qualify.
 
 The React storefront has sign-in and sign-up pages and submits authenticated order requests to this API. The cart and product catalog still use localStorage and local product data. Set `VITE_API_URL` in the frontend environment to override the default `http://127.0.0.1:8000/api` API URL.
+Account notifications are created for new-account welcome messages, successful sign-ins, order submissions, and order status changes to confirmed, fulfilled, or cancelled. Each account can access only its own notifications; opening a notification marks it as read.

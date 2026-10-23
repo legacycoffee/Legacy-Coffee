@@ -1,0 +1,50 @@
+from django.db.models.signals import post_save, pre_save
+from django.dispatch import receiver
+
+from accounts.models import Notification
+from orders.models import Order
+
+
+@receiver(pre_save, sender=Order)
+def remember_order_status(sender, instance, **kwargs):
+    if instance.pk:
+        instance._previous_status = (
+            sender.objects.filter(pk=instance.pk)
+            .values_list('status', flat=True)
+            .first()
+        )
+    else:
+        instance._previous_status = None
+
+
+@receiver(post_save, sender=Order)
+def notify_order_events(sender, instance, created, **kwargs):
+    if not instance.user_id:
+        return
+
+    if created:
+        Notification.objects.create(
+            user=instance.user,
+            kind=Notification.Kind.ORDER_SUBMITTED,
+            title='Order submitted',
+            message=f'Your order {instance.reference} has been received and is pending confirmation.',
+        )
+        return
+
+    if getattr(instance, '_previous_status', None) == instance.status:
+        return
+
+    status_messages = {
+        Order.Status.CONFIRMED: ('Order confirmed', 'has been confirmed'),
+        Order.Status.FULFILLED: ('Order fulfilled', 'has been fulfilled'),
+        Order.Status.CANCELLED: ('Order cancelled', 'has been cancelled'),
+    }
+    notification = status_messages.get(instance.status)
+    if notification:
+        title, message = notification
+        Notification.objects.create(
+            user=instance.user,
+            kind=Notification.Kind.ORDER_STATUS,
+            title=title,
+            message=f'Your order {instance.reference} {message}.',
+        )

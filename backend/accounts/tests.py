@@ -10,6 +10,7 @@ from django.test import override_settings
 from rest_framework.test import APITestCase
 
 from accounts.services import upload_profile_photo
+from accounts.models import Notification
 from orders.models import Order
 
 
@@ -73,6 +74,10 @@ class AuthenticationApiTests(APITestCase):
         self.assertEqual(response.data['user']['delivery_address'], '1 Coffee Road')
         self.assertEqual(response.data['user']['location_latitude'], '0.347600')
         self.assertTrue(get_user_model().objects.filter(email='customer@example.com').exists())
+        self.assertEqual(
+            Notification.objects.filter(user__email='customer@example.com').values_list('kind', flat=True).get(),
+            Notification.Kind.WELCOME,
+        )
 
     def test_login_and_profile_require_valid_credentials(self):
         user = get_user_model().objects.create_user(
@@ -86,7 +91,47 @@ class AuthenticationApiTests(APITestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {response.data['token']}")
+        notifications = self.client.get('/api/auth/notifications/')
+        self.assertEqual(notifications.status_code, 200)
+        self.assertEqual(notifications.data['unread_count'], 1)
+        self.assertEqual(notifications.data['results'][0]['kind'], Notification.Kind.SIGN_IN)
         self.assertEqual(self.client.get('/api/auth/me/').status_code, 200)
+
+    def test_notifications_are_private_and_opening_one_marks_it_read(self):
+        user = get_user_model().objects.create_user(
+            username='customer',
+            email='customer@example.com',
+            password='StrongPassword!2026',
+        )
+        other_user = get_user_model().objects.create_user(
+            username='another-customer',
+            email='another@example.com',
+            password='StrongPassword!2026',
+        )
+        notification = Notification.objects.create(
+            user=user,
+            kind=Notification.Kind.WELCOME,
+            title='Welcome',
+            message='Welcome to Legacy Coffee.',
+        )
+
+        self.client.force_authenticate(other_user)
+        self.assertEqual(self.client.get('/api/auth/notifications/').data['results'], [])
+        self.assertEqual(
+            self.client.patch(f'/api/auth/notifications/{notification.pk}/read/').status_code,
+            404,
+        )
+
+        self.client.force_authenticate(user)
+        response = self.client.patch(f'/api/auth/notifications/{notification.pk}/read/')
+
+        self.assertEqual(response.status_code, 200)
+        notification.refresh_from_db()
+        self.assertTrue(notification.is_read)
+        self.assertEqual(self.client.get('/api/auth/notifications/').data['unread_count'], 0)
+
+    def test_notifications_require_authentication(self):
+        self.assertEqual(self.client.get('/api/auth/notifications/').status_code, 401)
 
     def test_profile_requires_authentication(self):
         self.assertEqual(self.client.get('/api/auth/me/').status_code, 401)

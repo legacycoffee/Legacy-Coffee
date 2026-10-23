@@ -4,6 +4,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .models import Notification
 from .serializers import (
     LoginSerializer,
     CurrentPasswordSerializer,
@@ -24,6 +25,12 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         token, _ = Token.objects.get_or_create(user=user)
+        Notification.objects.create(
+            user=user,
+            kind=Notification.Kind.WELCOME,
+            title='Welcome to Legacy Coffee',
+            message='Your account is ready. You can manage your profile, delivery location, and orders here.',
+        )
         return Response(
             {'token': token.key, 'user': UserSerializer(user).data},
             status=status.HTTP_201_CREATED,
@@ -38,7 +45,45 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, _ = Token.objects.get_or_create(user=user)
+        Notification.objects.create(
+            user=user,
+            kind=Notification.Kind.SIGN_IN,
+            title='Welcome back',
+            message='You have successfully signed in to your Legacy Coffee account.',
+        )
         return Response({'token': token.key, 'user': UserSerializer(user).data})
+
+
+class NotificationListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        notifications = request.user.notifications.all()
+        return Response({
+            'results': [{
+                'id': notification.pk,
+                'kind': notification.kind,
+                'title': notification.title,
+                'message': notification.message,
+                'is_read': notification.is_read,
+                'created_at': notification.created_at,
+            } for notification in notifications],
+            'unread_count': notifications.filter(is_read=False).count(),
+        })
+
+
+class NotificationReadView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        updated = request.user.notifications.filter(pk=pk, is_read=False).update(is_read=True)
+        if not updated and not request.user.notifications.filter(pk=pk).exists():
+            return Response({'detail': 'Notification not found.'}, status=status.HTTP_404_NOT_FOUND)
+        notification = request.user.notifications.get(pk=pk)
+        return Response({
+            'id': notification.pk,
+            'is_read': notification.is_read,
+        })
 
 
 class LogoutView(APIView):

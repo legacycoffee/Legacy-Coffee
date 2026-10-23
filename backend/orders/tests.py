@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 
+from accounts.models import Notification
 from shop.models import Product
 
 from .models import Order
@@ -53,6 +54,28 @@ class OrderApiTests(APITestCase):
         self.assertEqual(self.user.delivery_city, 'Kampala')
         self.assertEqual(str(self.user.location_longitude), '32.582500')
         self.assertEqual(response.data['order_items'][0]['unit_price'], '18000')
+        notification = Notification.objects.get(user=self.user)
+        self.assertEqual(notification.kind, Notification.Kind.ORDER_SUBMITTED)
+        self.assertIn(order.reference, notification.message)
+
+    def test_order_status_changes_create_customer_notification(self):
+        self.client.force_authenticate(self.user)
+        self.client.post('/api/orders/', self.payload, format='json')
+        order = Order.objects.get()
+
+        order.status = Order.Status.CONFIRMED
+        order.save()
+        order.status = Order.Status.FULFILLED
+        order.save()
+
+        notifications = list(
+            Notification.objects.filter(user=self.user).order_by('created_at')
+        )
+        self.assertEqual(len(notifications), 3)
+        self.assertEqual(
+            [notification.title for notification in notifications],
+            ['Order submitted', 'Order confirmed', 'Order fulfilled'],
+        )
 
     def test_order_rejects_invalid_quantity_and_duplicate_products(self):
         self.client.force_authenticate(self.user)
