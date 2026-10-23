@@ -100,6 +100,13 @@ export default function NotificationsPage() {
                         className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${notification.is_read ? 'bg-transparent' : 'bg-red-600'}`}
                       />
                       <span className="min-w-0 flex-1">
+                        {notification.details?.items?.[0]?.image && (
+                          <img
+                            src={notification.details.items[0].image}
+                            alt={notification.details.items[0].image_alt || notification.details.items[0].name}
+                            className="mb-2 h-12 w-12 rounded object-cover"
+                          />
+                        )}
                         <span className={`block text-sm ${notification.is_read ? 'font-medium' : 'font-bold'} text-black`}>
                           {notification.title}
                         </span>
@@ -126,6 +133,79 @@ export default function NotificationsPage() {
                   {formatNotificationDate(selectedNotification.created_at)}
                 </time>
                 <p className="mt-6 whitespace-pre-line text-sm leading-7 text-black/75">{selectedNotification.message}</p>
+                {selectedNotification.details?.reference && (
+                  <div className="mt-6 border-t border-peach-mid/40 pt-5">
+                    <h3 className="font-bold text-black">Order details</h3>
+                    <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+                      <div>
+                        <dt className="text-xs font-semibold text-black/55">Order reference</dt>
+                        <dd className="mt-1 font-semibold text-black">{selectedNotification.details.reference}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-black/55">Order status</dt>
+                        <dd className="mt-1 capitalize text-black">{selectedNotification.details.status}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-black/55">Customer</dt>
+                        <dd className="mt-1 text-black">{selectedNotification.details.customer_name}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-black/55">Email</dt>
+                        <dd className="mt-1 break-all text-black">{selectedNotification.details.customer_email}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-black/55">Phone</dt>
+                        <dd className="mt-1 text-black">{selectedNotification.details.customer_phone}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-black/55">Delivery location</dt>
+                        <dd className="mt-1 text-black">
+                          {[selectedNotification.details.delivery_address, selectedNotification.details.delivery_city].filter(Boolean).join(', ')}
+                        </dd>
+                      </div>
+                      {selectedNotification.details.delivery_notes && (
+                        <div className="sm:col-span-2">
+                          <dt className="text-xs font-semibold text-black/55">Delivery notes</dt>
+                          <dd className="mt-1 whitespace-pre-line text-black">{selectedNotification.details.delivery_notes}</dd>
+                        </div>
+                      )}
+                      {(selectedNotification.details.delivery_latitude || selectedNotification.details.delivery_longitude) && (
+                        <div className="sm:col-span-2">
+                          <dt className="text-xs font-semibold text-black/55">Delivery coordinates</dt>
+                          <dd className="mt-1 text-black">
+                            {[selectedNotification.details.delivery_latitude, selectedNotification.details.delivery_longitude].filter(Boolean).join(', ')}
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+
+                    <h3 className="mt-6 font-bold text-black">Items</h3>
+                    <ul className="mt-3 divide-y divide-peach-mid/30 border-y border-peach-mid/30">
+                      {selectedNotification.details.items.map((item, index) => (
+                        <li key={`${item.name}-${index}`} className="flex items-center gap-4 py-4">
+                          {item.image ? (
+                            <img src={item.image} alt={item.image_alt || item.name} className="h-16 w-16 shrink-0 rounded object-cover" />
+                          ) : (
+                            <div aria-hidden="true" className="h-16 w-16 shrink-0 bg-peach-light" />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-black">{item.name}</p>
+                            <p className="mt-1 text-xs text-black/60">
+                              {item.weight} · {item.quantity} × UGX {Number(item.unit_price).toLocaleString()}
+                            </p>
+                          </div>
+                          <p className="shrink-0 text-sm font-semibold text-black">
+                            UGX {Number(item.line_total).toLocaleString()}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-4 flex justify-between gap-4 text-base font-bold text-black">
+                      <span>Order total</span>
+                      <span>UGX {Number(selectedNotification.details.total).toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
               </article>
             ) : (
               <div className="flex h-full min-h-52 items-center justify-center text-center text-sm text-black/55">

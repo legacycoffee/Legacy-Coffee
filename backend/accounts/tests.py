@@ -95,6 +95,7 @@ class AuthenticationApiTests(APITestCase):
         self.assertEqual(notifications.status_code, 200)
         self.assertEqual(notifications.data['unread_count'], 1)
         self.assertEqual(notifications.data['results'][0]['kind'], Notification.Kind.SIGN_IN)
+        self.assertEqual(notifications.data['results'][0]['details'], {})
         self.assertEqual(self.client.get('/api/auth/me/').status_code, 200)
 
     def test_notifications_are_private_and_opening_one_marks_it_read(self):

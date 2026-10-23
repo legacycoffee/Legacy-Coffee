@@ -39,6 +39,7 @@ class Notification(models.Model):
     kind = models.CharField(max_length=32, choices=Kind.choices)
     title = models.CharField(max_length=160)
     message = models.TextField()
+    details = models.JSONField(default=dict, blank=True)
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

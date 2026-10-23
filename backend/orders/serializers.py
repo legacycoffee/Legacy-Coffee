@@ -3,6 +3,8 @@ from decimal import Decimal
 from django.db import transaction
 from rest_framework import serializers
 
+from accounts.models import Notification
+from accounts.notifications import create_order_notification
 from shop.models import Product
 
 from .models import Order, OrderItem
@@ -110,4 +112,10 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             total += item.line_total
         order.total = total
         order.save(update_fields=('total', 'updated_at'))
+        create_order_notification(
+            order,
+            kind=Notification.Kind.ORDER_SUBMITTED,
+            title='Order submitted',
+            message=f'Your order {order.reference} has been received and is pending confirmation.',
+        )
         return order

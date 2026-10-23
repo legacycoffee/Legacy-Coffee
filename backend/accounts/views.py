@@ -65,6 +65,7 @@ class NotificationListView(APIView):
                 'kind': notification.kind,
                 'title': notification.title,
                 'message': notification.message,
+                'details': notification.details,
                 'is_read': notification.is_read,
                 'created_at': notification.created_at,
             } for notification in notifications],
