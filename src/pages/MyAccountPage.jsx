@@ -1,20 +1,12 @@
 import { Link, Navigate } from 'react-router-dom'
-import {
-  LuArrowRight,
-  LuMapPin,
-  LuPackage,
-  LuUserRound,
-  LuUserRoundPen,
-  LuTrash2,
-} from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 
 const accountLinks = [
-  { label: 'Profile', description: 'View your personal information', to: '/profile#profile-heading', Icon: LuUserRound },
-  { label: 'Change location', description: 'Edit your saved delivery address', to: '/profile#location-heading', Icon: LuMapPin },
-  { label: 'Change details', description: 'Update your name or password', to: '/profile#change-details-heading', Icon: LuUserRoundPen },
-  { label: 'My orders', description: 'View order history and status', to: '/my-orders', Icon: LuPackage },
-  { label: 'Delete account', description: 'Account actions and deletion', to: '/profile#account-actions-heading', Icon: LuTrash2 },
+  { label: 'Profile', description: 'View your personal information', to: '/profile#profile-heading' },
+  { label: 'Change location', description: 'Edit your saved delivery address', to: '/profile#location-heading' },
+  { label: 'Change details', description: 'Update your name or password', to: '/profile#change-details-heading' },
+  { label: 'My orders', description: 'View order history and status', to: '/my-orders' },
+  { label: 'Delete account', description: 'Account actions and deletion', to: '/profile#account-actions-heading' },
 ]
 
 export default function MyAccountPage() {
@@ -73,20 +65,16 @@ export default function MyAccountPage() {
           </section>
 
           <nav aria-label="Account links" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            {accountLinks.map(({ label, description, to, Icon }) => (
+            {accountLinks.map(({ label, description, to }) => (
               <Link
                 key={label}
                 to={to}
                 className="flex items-center justify-between gap-4 border border-peach-mid/50 bg-white p-4 text-black shadow-sm transition-colors hover:border-primary/50 hover:bg-peach-light/30"
               >
-                <span className="flex min-w-0 items-center gap-3">
-                  <Icon aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold">{label}</span>
-                    <span className="mt-0.5 block text-xs text-black/60">{description}</span>
-                  </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold">{label}</span>
+                  <span className="mt-0.5 block text-xs text-black/60">{description}</span>
                 </span>
-                <LuArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
               </Link>
             ))}
           </nav>
