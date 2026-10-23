@@ -29,12 +29,9 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0)
   const accountMenuRef = useRef(null)
   const accountLinks = [
-    { label: 'Profile', to: '/profile#profile-heading' },
+    { label: 'My account', to: '/my-account' },
     { label: 'Notifications', to: '/notifications' },
-    { label: 'Change location', to: '/profile#location-heading' },
-    { label: 'Change details', to: '/profile#change-details-heading' },
     { label: 'My orders', to: '/my-orders' },
-    { label: 'Delete account', to: '/profile#account-actions-heading' },
   ]
 
   useEffect(() => {
@@ -158,17 +155,19 @@ export default function Navbar() {
                             key={label}
                             to={to}
                             onClick={() => setAccountOpen(false)}
-                            className={`block px-2 py-2 text-sm font-semibold transition-colors hover:bg-peach-light hover:text-primary ${
-                              label === 'Delete account' ? 'text-red-700' : 'text-brown'
-                            }`}
+                            className="block px-2 py-2 text-sm font-semibold text-brown transition-colors hover:bg-peach-light hover:text-primary"
                           >
                             <span className="flex items-center gap-2">
-                              {label === 'Profile' && user?.profile_photo && (
-                                <img
-                                  src={user.profile_photo}
-                                  alt=""
-                                  className="h-6 w-6 rounded-full object-cover"
-                                />
+                              {label === 'My account' && (
+                                user?.profile_photo ? (
+                                  <img
+                                    src={user.profile_photo}
+                                    alt=""
+                                    className="h-6 w-6 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <LuUserRound aria-hidden="true" className="h-5 w-5" />
+                                )
                               )}
                               {label === 'Notifications' && unreadCount > 0 ? (
                                 <>
@@ -186,7 +185,7 @@ export default function Navbar() {
                             setAccountOpen(false)
                             signOut().catch(() => setAuthMessage('Signed out locally; the server session could not be cleared.'))
                           }}
-                          className="block w-full px-2 py-2 text-left text-sm font-semibold text-brown/70 transition-colors hover:bg-peach-light hover:text-primary"
+                          className="block w-full px-2 py-2 text-left text-sm font-bold text-red-700 transition-colors hover:bg-red-50 hover:text-red-800"
                         >
                           Sign out
                         </button>
