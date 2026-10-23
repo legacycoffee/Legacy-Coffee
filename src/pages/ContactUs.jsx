@@ -56,18 +56,6 @@ export default function ContactUs() {
               </div>
             </div>
 
-            {/* Map */}
-            <div className="mt-8 rounded-xl overflow-hidden shadow">
-              <iframe
-                title="Legacy Coffee Location"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127672!2d30.6!3d0.6!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x177d5b9b0b0b0b0b%3A0x0!2sKyenjojo%20District%2C%20Uganda!5e0!3m2!1sen!2sug!4v1"
-                width="100%"
-                height="250"
-                className="border-0"
-                allowFullScreen
-                loading="lazy"
-              />
-            </div>
           </div>
 
           {/* Contact Form */}
@@ -94,6 +82,19 @@ export default function ContactUs() {
                 </button>
               </form>
             )}
+          </div>
+
+          {/* Map */}
+          <div className="mt-8 overflow-hidden rounded-xl shadow md:col-start-1 md:row-start-2">
+            <iframe
+              title="Legacy Coffee Location"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127672!2d30.6!3d0.6!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x177d5b9b0b0b0b0b%3A0x0!2sKyenjojo%20District%2C%20Uganda!5e0!3m2!1sen!2sug!4v1"
+              width="100%"
+              height="250"
+              className="border-0"
+              allowFullScreen
+              loading="lazy"
+            />
           </div>
         </div>
       </section>
