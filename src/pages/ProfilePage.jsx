@@ -387,7 +387,7 @@ export default function ProfilePage() {
                   className={inputClass}
                 />
               </label>
-              <label className="block text-sm font-medium text-black sm:col-span-2" htmlFor="profile-delivery-address">
+              <label className="block text-sm font-medium text-black" htmlFor="profile-delivery-address">
                 Street address
                 <input
                   id="profile-delivery-address"
