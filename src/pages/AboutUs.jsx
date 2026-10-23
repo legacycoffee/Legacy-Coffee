@@ -183,12 +183,20 @@ export default function AboutUs() {
           <p className="mx-auto max-w-3xl text-base leading-relaxed text-brown/75 md:text-lg">
             Legacy Coffee was founded out of a passion for both great coffee and community transformation. Rooted in the fertile soils of Western Uganda, our journey began as a family effort to uplift farmers who struggled to earn fair returns from their harvests. Today, we combine tradition, innovation, and social impact to create coffee that not only delights but also empowers.
           </p>
-          <Link
-            to="/#products"
-            className="mt-7 inline-flex items-center rounded-full bg-primary px-7 py-3 font-semibold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            Explore Our Coffee
-          </Link>
+          <div className="mt-7 flex flex-col items-center gap-4 md:flex-row md:justify-center">
+            <Link
+              to="/about/patrick-muhereza"
+              className="inline-flex items-center justify-center text-left text-base font-semibold text-primary underline decoration-2 underline-offset-4 transition-colors hover:text-brown md:text-lg"
+            >
+              Read Patrick Muhereza is Elevating Uganda’s Robusta Coffee
+            </Link>
+            <Link
+              to="/#products"
+              className="inline-flex items-center rounded-full bg-primary px-7 py-3 font-semibold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              Explore Our Coffee
+            </Link>
+          </div>
         </div>
       </section>
 

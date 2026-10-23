@@ -13,6 +13,7 @@ import CheckoutPage from './pages/CheckoutPage'
 import ConfirmationPage from './pages/ConfirmationPage'
 import { CartProvider } from './context/CartContext.jsx'
 import AuthPage from './pages/AuthPage'
+import PatrickStoryPage from './pages/PatrickStoryPage'
 import { AuthProvider } from './context/AuthContext.jsx'
 
 function Layout({ children }) {
@@ -33,6 +34,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Layout><Home /></Layout>} />
             <Route path="/about" element={<Layout><AboutUs /></Layout>} />
+            <Route path="/about/patrick-muhereza" element={<Layout><PatrickStoryPage /></Layout>} />
             <Route path="/shop" element={<Navigate to="/" replace />} />
             <Route path="/products/:productId" element={<Layout><ProductPage /></Layout>} />
             <Route path="/cart" element={<Layout><CartPage /></Layout>} />
