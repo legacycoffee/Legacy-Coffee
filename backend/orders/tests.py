@@ -57,21 +57,7 @@ class OrderApiTests(APITestCase):
         notification = Notification.objects.get(user=self.user)
         self.assertEqual(notification.kind, Notification.Kind.ORDER_SUBMITTED)
         self.assertIn(order.reference, notification.message)
-        self.assertEqual(notification.details['reference'], order.reference)
-        self.assertEqual(notification.details['customer_name'], 'Coffee Customer')
-        self.assertEqual(notification.details['customer_email'], self.user.email)
-        self.assertEqual(notification.details['delivery_address'], '1 Coffee Road')
-        self.assertEqual(notification.details['delivery_city'], 'Kampala')
-        self.assertEqual(notification.details['total'], '36000')
-        self.assertEqual(notification.details['items'], [{
-            'name': 'Arabica',
-            'weight': '1kg',
-            'unit_price': '18000',
-            'quantity': 2,
-            'line_total': '36000',
-            'image': 'https://example.com/coffee.jpg',
-            'image_alt': 'Coffee',
-        }])
+        self.assertEqual(notification.details, {'reference': order.reference})
 
     def test_order_status_changes_create_customer_notification(self):
         self.client.force_authenticate(self.user)
@@ -91,10 +77,10 @@ class OrderApiTests(APITestCase):
             [notification.title for notification in notifications],
             ['Order submitted', 'Order confirmed', 'Order fulfilled'],
         )
-        self.assertEqual(
-            [notification.details['status'] for notification in notifications],
-            [Order.Status.PENDING, Order.Status.CONFIRMED, Order.Status.FULFILLED],
-        )
+        self.assertTrue(all(
+            notification.details == {'reference': order.reference}
+            for notification in notifications
+        ))
 
     def test_order_rejects_invalid_quantity_and_duplicate_products(self):
         self.client.force_authenticate(self.user)

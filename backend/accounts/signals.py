@@ -26,17 +26,16 @@ def notify_order_events(sender, instance, created, **kwargs):
     if getattr(instance, '_previous_status', None) == instance.status:
         return
 
-    status_messages = {
-        Order.Status.CONFIRMED: ('Order confirmed', 'has been confirmed'),
-        Order.Status.FULFILLED: ('Order fulfilled', 'has been fulfilled'),
-        Order.Status.CANCELLED: ('Order cancelled', 'has been cancelled'),
+    status_titles = {
+        Order.Status.CONFIRMED: 'Order confirmed',
+        Order.Status.FULFILLED: 'Order fulfilled',
+        Order.Status.CANCELLED: 'Order cancelled',
     }
-    notification = status_messages.get(instance.status)
-    if notification:
-        title, message = notification
+    title = status_titles.get(instance.status)
+    if title:
         create_order_notification(
             instance,
             kind=Notification.Kind.ORDER_STATUS,
             title=title,
-            message=f'Your order {instance.reference} {message}.',
+            message=f'Order number: {instance.reference}',
         )

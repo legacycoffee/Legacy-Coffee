@@ -116,6 +116,6 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             order,
             kind=Notification.Kind.ORDER_SUBMITTED,
             title='Order submitted',
-            message=f'Your order {order.reference} has been received and is pending confirmation.',
+            message=f'Order number: {order.reference}',
         )
         return order
