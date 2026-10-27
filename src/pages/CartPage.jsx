@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom'
 import { LuArrowLeft, LuMinus, LuPlus, LuShoppingBag, LuTrash2 } from 'react-icons/lu'
 import { formatPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
+import { useAuth } from '../context/useAuth.js'
 import ProductImage from '../components/ProductImage.jsx'
 
 export default function CartPage() {
   const { items, cartTotal, updateQuantity, removeFromCart } = useCart()
+  const { isAuthenticated } = useAuth()
   const cartCount = items.reduce((total, item) => total + item.quantity, 0)
 
   if (items.length === 0) {
@@ -39,22 +41,31 @@ export default function CartPage() {
         <div className="grid items-start gap-6 lg:grid-cols-[1fr_340px] lg:gap-8">
           <div className="space-y-3">
             {items.map(item => (
-              <article key={item.id} className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-3 border border-peach-mid/50 bg-white p-3 shadow-sm sm:grid-cols-[88px_minmax(0,1fr)] sm:gap-4 sm:p-4 md:grid-cols-[88px_minmax(0,1fr)_auto_auto_auto] md:gap-5">
+              <article key={item.id} className="grid grid-cols-[72px_minmax(0,1fr)] items-center gap-x-3 gap-y-3 border border-peach-mid/50 bg-white p-3 sm:grid-cols-[88px_minmax(0,1fr)] sm:gap-x-4 sm:p-4 md:grid-cols-[96px_minmax(0,1fr)_auto] md:gap-5">
                 <Link to={`/products/${item.id}`} className="row-span-2 aspect-square overflow-hidden bg-peach-light md:row-span-1" aria-label={`View ${item.name}`}>
-                  <ProductImage product={item} className="transition-transform duration-300 hover:scale-105" />
+                  <ProductImage product={item} objectFit="contain" className="transition-transform duration-300 hover:scale-105" />
                 </Link>
-                <div className="min-w-0">
-                  <Link to={`/products/${item.id}`} className="font-bold leading-snug text-brown transition-colors hover:text-primary">{item.name}</Link>
-                  <p className="mt-1 text-xs text-brown/65">{item.weight} · {formatPrice(item.price)} each</p>
+                <div className="col-start-2 row-start-1 min-w-0 md:col-start-2 md:row-start-1">
+                  <p className="truncate text-[10px] font-bold uppercase tracking-[0.14em] text-brown/65">Legacy Coffee</p>
+                  <Link to={`/products/${item.id}`} title={item.name} className="mt-0.5 block truncate text-sm font-bold leading-snug text-brown transition-colors hover:text-primary sm:text-base">{item.name}</Link>
+                  <p className="mt-1 truncate text-sm font-bold text-brown">{formatPrice(item.price * item.quantity)}</p>
+                  <p className="text-xs text-brown/65">{formatPrice(item.price)} each · {item.weight}</p>
+                  <p className="mt-1 text-xs text-brown/65">Delivery fee confirmed by our team.</p>
+                  {!isAuthenticated && (
+                    <p className="mt-1 text-xs text-brown/65">
+                      Have an account?{' '}
+                      <Link to="/signin" state={{ from: '/cart' }} className="font-semibold text-primary underline underline-offset-2 hover:text-primary-dark">Sign in</Link>
+                    </p>
+                  )}
                 </div>
-                <div className="col-start-2 flex min-w-0 items-center justify-between gap-2 sm:gap-3 md:col-start-auto md:contents">
-                  <div className="inline-flex h-9 items-center border border-black">
+                <div className="col-span-2 row-start-2 flex items-center justify-between gap-3 md:col-span-1 md:col-start-3 md:row-start-1 md:justify-self-end">
+                  <div className="inline-flex h-9 items-center overflow-hidden border border-peach-mid/70">
                     <button
                       type="button"
                       aria-label={`Decrease quantity of ${item.name}`}
                       disabled={item.quantity <= 1}
                       onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                      className="flex h-full w-9 items-center justify-center bg-black text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="flex h-full w-9 items-center justify-center bg-white text-brown transition-colors hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       <LuMinus aria-hidden="true" className="h-3.5 w-3.5" />
                     </button>
@@ -66,27 +77,25 @@ export default function CartPage() {
                       max="99"
                       value={item.quantity}
                       onChange={event => updateQuantity(item.id, Math.max(1, Math.min(99, Number(event.target.value) || 1)))}
-                      className="h-full w-10 border-x border-black text-center text-sm font-semibold text-brown outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+                      className="h-full w-10 border-x border-peach-mid/70 text-center text-sm font-semibold text-brown outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                     />
                     <button
                       type="button"
                       aria-label={`Increase quantity of ${item.name}`}
                       disabled={item.quantity >= 99}
                       onClick={() => updateQuantity(item.id, Math.min(99, item.quantity + 1))}
-                      className="flex h-full w-9 items-center justify-center bg-black text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="flex h-full w-9 items-center justify-center bg-white text-brown transition-colors hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       <LuPlus aria-hidden="true" className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <p className="shrink-0 text-xs font-bold text-brown sm:text-sm">{formatPrice(item.price * item.quantity)}</p>
                   <button
                     type="button"
                     onClick={() => removeFromCart(item.id)}
                     aria-label={`Remove ${item.name} from cart`}
-                    className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-red-700 transition-colors hover:text-red-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:gap-1.5"
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center text-primary-dark transition-colors hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   >
-                    <LuTrash2 aria-hidden="true" className="h-3.5 w-3.5" />
-                    Remove
+                    <LuTrash2 aria-hidden="true" className="h-4 w-4" />
                   </button>
                 </div>
               </article>
