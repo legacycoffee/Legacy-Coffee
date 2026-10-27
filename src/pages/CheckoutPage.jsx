@@ -6,7 +6,6 @@ import { useCart } from '../context/useCart.js'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import ProductImage from '../components/ProductImage.jsx'
-import { getCurrentCoordinates } from '../context/geolocation.js'
 
 const inputClass = 'mt-1.5 w-full border border-peach-mid bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors placeholder:text-black/40 focus:border-primary focus:ring-2 focus:ring-primary/20'
 const labelClass = 'block text-sm font-medium text-black'
@@ -26,9 +25,6 @@ export default function CheckoutPage() {
     location_longitude: user?.location_longitude || '',
   }))
   const [submitError, setSubmitError] = useState('')
-  const [locationError, setLocationError] = useState('')
-  const [locationStatus, setLocationStatus] = useState('')
-  const [isFetchingLocation, setIsFetchingLocation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const cartCount = items.reduce((total, item) => total + item.quantity, 0)
 
@@ -37,35 +33,6 @@ export default function CheckoutPage() {
   }
 
   const handleChange = event => setCustomer(current => ({ ...current, [event.target.name]: event.target.value }))
-  const fetchLocation = async () => {
-    setLocationError('')
-    setLocationStatus('')
-    setIsFetchingLocation(true)
-    try {
-      const coordinates = await getCurrentCoordinates()
-      const updatedUser = await apiRequest('/auth/me/', {
-        method: 'PATCH',
-        token,
-        body: {
-          delivery_address: customer.address,
-          delivery_city: customer.city,
-          delivery_notes: customer.notes,
-          ...coordinates,
-        },
-      })
-      updateUser(updatedUser)
-      setCustomer(current => ({
-        ...current,
-        location_latitude: updatedUser.location_latitude || '',
-        location_longitude: updatedUser.location_longitude || '',
-      }))
-      setLocationStatus('Device coordinates were fetched and saved to your account.')
-    } catch (error) {
-      setLocationError(error.message)
-    } finally {
-      setIsFetchingLocation(false)
-    }
-  }
 
   const handleSubmit = async event => {
     event.preventDefault()
@@ -200,26 +167,6 @@ export default function CheckoutPage() {
                   Delivery notes <span className="font-normal text-black">(optional)</span>
                   <textarea id="checkout-notes" name="notes" value={customer.notes} onChange={handleChange} rows={3} placeholder="Helpful directions or delivery instructions" className={`${inputClass} resize-y`} />
                 </label>
-              </div>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-peach-mid/40 pt-4">
-                <div>
-                  <p className="text-xs text-black/60">Device location is optional. Coordinates are not sent to a geocoding service.</p>
-                  {customer.location_latitude && customer.location_longitude && (
-                    <p className="mt-1 text-xs text-black/70">
-                      Coordinates: {customer.location_latitude}, {customer.location_longitude}
-                    </p>
-                  )}
-                  {locationError && <p role="alert" className="mt-1 text-sm text-red-700">{locationError}</p>}
-                  {locationStatus && <p role="status" className="mt-1 text-sm text-green-700">{locationStatus}</p>}
-                </div>
-                <button
-                  type="button"
-                  disabled={isFetchingLocation}
-                  onClick={fetchLocation}
-                  className="border border-primary px-4 py-3 text-sm font-semibold text-primary hover:bg-peach-light/40 disabled:opacity-60"
-                >
-                  {isFetchingLocation ? 'Fetching location…' : 'Fetch device location'}
-                </button>
               </div>
             </section>
 
