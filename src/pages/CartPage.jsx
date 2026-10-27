@@ -58,8 +58,8 @@ export default function CartPage() {
                     </p>
                   )}
                 </div>
-                <div className="col-span-2 row-start-2 flex items-center justify-between gap-3 md:col-span-1 md:col-start-3 md:row-start-1 md:justify-self-end">
-                  <div className="inline-flex h-9 items-center overflow-hidden border border-peach-mid/70">
+                <div className="col-span-2 row-start-2 flex w-full flex-nowrap items-center justify-end gap-2 md:col-span-1 md:col-start-3 md:row-start-1 md:justify-self-end">
+                  <div className="inline-flex h-9 shrink-0 items-center overflow-hidden border border-peach-mid/70">
                     <button
                       type="button"
                       aria-label={`Decrease quantity of ${item.name}`}
