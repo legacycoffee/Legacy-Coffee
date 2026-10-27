@@ -61,15 +61,15 @@ export default function CartPage() {
                   </div>
                 </div>
                 <div className="col-start-3 row-start-1 inline-flex shrink-0 items-center gap-1 self-start md:col-start-3 md:row-start-1 md:justify-self-end">
-                  <div className="inline-flex h-8 shrink-0 items-center overflow-hidden rounded-md border border-peach-mid/70 sm:h-9">
+                  <div className="inline-flex h-9 shrink-0 items-center gap-0.5 rounded-lg border border-peach-mid/70 bg-peach-light/50 p-1 shadow-sm">
                     <button
                       type="button"
                       aria-label={`Decrease quantity of ${item.name}`}
                       disabled={item.quantity <= 1}
                       onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                      className="flex h-full w-6 items-center justify-center bg-white text-brown transition-colors hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40 sm:w-9"
+                      className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-brown transition-colors hover:bg-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      <LuMinus aria-hidden="true" className="h-3.5 w-3.5" />
+                      <LuMinus aria-hidden="true" className="h-3 w-3" />
                     </button>
                     <label className="sr-only" htmlFor={`quantity-${item.id}`}>Quantity of {item.name}</label>
                     <input
@@ -79,16 +79,16 @@ export default function CartPage() {
                       max="99"
                       value={item.quantity}
                       onChange={event => updateQuantity(item.id, Math.max(1, Math.min(99, Number(event.target.value) || 1)))}
-                      className="h-full w-7 border-x border-peach-mid/70 text-center text-sm font-semibold text-brown outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:w-10"
+                      className="h-7 w-8 appearance-none bg-transparent text-center text-sm font-bold tabular-nums text-brown outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                     />
                     <button
                       type="button"
                       aria-label={`Increase quantity of ${item.name}`}
                       disabled={item.quantity >= 99}
                       onClick={() => updateQuantity(item.id, Math.min(99, item.quantity + 1))}
-                      className="flex h-full w-6 items-center justify-center bg-white text-brown transition-colors hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40 sm:w-9"
+                      className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-brown transition-colors hover:bg-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      <LuPlus aria-hidden="true" className="h-3.5 w-3.5" />
+                      <LuPlus aria-hidden="true" className="h-3 w-3" />
                     </button>
                   </div>
                   <button
