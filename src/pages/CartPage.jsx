@@ -41,25 +41,27 @@ export default function CartPage() {
         <div className="grid items-start gap-6 lg:grid-cols-[1fr_340px] lg:gap-8">
           <div className="space-y-3">
             {items.map(item => (
-              <article key={item.id} className="flex items-start gap-2 border border-peach-mid/50 bg-white p-2.5 sm:gap-4 sm:p-4 md:grid md:grid-cols-[96px_minmax(0,1fr)_auto] md:gap-5">
-                <Link to={`/products/${item.id}`} className="w-14 shrink-0 aspect-square overflow-hidden bg-peach-light sm:w-[88px] md:w-24" aria-label={`View ${item.name}`}>
+              <article key={item.id} className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-3 rounded-xl border border-peach-mid/50 bg-white p-3 shadow-sm transition-shadow hover:shadow-md sm:grid-cols-[80px_minmax(0,1fr)_auto] sm:gap-x-4 sm:p-4 md:grid-cols-[96px_minmax(0,1fr)_auto] md:items-center md:gap-5">
+                <Link to={`/products/${item.id}`} className="col-start-1 row-start-1 aspect-square w-14 shrink-0 overflow-hidden rounded-lg bg-peach-light sm:w-20 md:w-24" aria-label={`View ${item.name}`}>
                   <ProductImage product={item} objectFit="contain" className="transition-transform duration-300 hover:scale-105" />
                 </Link>
-                <div className="min-w-0 flex-1 md:col-start-2 md:row-start-1">
-                  <p className="truncate text-[10px] font-bold uppercase tracking-[0.14em] text-brown/65">Legacy Coffee</p>
-                  <Link to={`/products/${item.id}`} title={item.name} className="mt-0.5 block truncate text-xs font-bold leading-snug text-brown transition-colors hover:text-primary sm:text-sm md:text-base">{item.name}</Link>
-                  <p className="mt-1 truncate text-sm font-bold text-brown">{formatPrice(item.price * item.quantity)}</p>
-                  <p className="text-xs text-brown/65">{formatPrice(item.price)} each · {item.weight}</p>
-                  <p className="mt-1 text-xs text-brown/65">Delivery fee confirmed by our team.</p>
-                  {!isAuthenticated && (
-                    <p className="mt-1 text-xs text-brown/65">
-                      Have an account?{' '}
-                      <Link to="/signin" state={{ from: '/cart' }} className="font-semibold text-primary underline underline-offset-2 hover:text-primary-dark">Sign in</Link>
-                    </p>
-                  )}
+                <div className="col-start-2 row-start-1 min-w-0 md:col-start-2">
+                  <p className="truncate text-[9px] font-bold uppercase tracking-[0.12em] text-brown/65 sm:text-[10px]">Legacy Coffee</p>
+                  <Link to={`/products/${item.id}`} title={item.name} className="mt-0.5 block truncate text-xs font-bold leading-snug text-brown transition-colors hover:text-primary sm:text-sm">{item.name}</Link>
+                  <p className="mt-1 truncate text-sm font-bold leading-tight text-brown sm:text-base">{formatPrice(item.price * item.quantity)}</p>
+                  <p className="mt-0.5 truncate text-[10px] text-brown/65 sm:text-xs">{formatPrice(item.price)} each · {item.weight}</p>
+                  <div className="mt-1.5 hidden md:block">
+                    <p className="text-xs text-brown/65">Delivery fee confirmed by our team.</p>
+                    {!isAuthenticated && (
+                      <p className="mt-1 text-xs text-brown/65">
+                        Have an account?{' '}
+                        <Link to="/signin" state={{ from: '/cart' }} className="font-semibold text-primary underline underline-offset-2 hover:text-primary-dark">Sign in</Link>
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="inline-flex shrink-0 items-center gap-1 self-start md:col-start-3 md:row-start-1 md:justify-self-end">
-                  <div className="inline-flex h-8 shrink-0 items-center overflow-hidden border border-peach-mid/70 sm:h-9">
+                <div className="col-start-3 row-start-1 inline-flex shrink-0 items-center gap-1 self-start md:col-start-3 md:row-start-1 md:justify-self-end">
+                  <div className="inline-flex h-8 shrink-0 items-center overflow-hidden rounded-md border border-peach-mid/70 sm:h-9">
                     <button
                       type="button"
                       aria-label={`Decrease quantity of ${item.name}`}
@@ -93,10 +95,19 @@ export default function CartPage() {
                     type="button"
                     onClick={() => removeFromCart(item.id)}
                     aria-label={`Remove ${item.name} from cart`}
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-primary-dark transition-colors hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-10 sm:w-10"
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-primary-dark transition-colors hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-10 sm:w-10"
                   >
                     <LuTrash2 aria-hidden="true" className="h-4 w-4" />
                   </button>
+                </div>
+                <div className="col-span-3 row-start-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-peach-mid/40 pt-2 md:hidden">
+                  <p className="text-[11px] text-brown/65 sm:text-xs">Delivery fee confirmed by our team.</p>
+                  {!isAuthenticated && (
+                    <p className="text-[11px] text-brown/65 sm:text-xs">
+                      Have an account?{' '}
+                      <Link to="/signin" state={{ from: '/cart' }} className="font-semibold text-primary underline underline-offset-2 hover:text-primary-dark">Sign in</Link>
+                    </p>
+                  )}
                 </div>
               </article>
             ))}
