@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { apiRequest } from '../context/api.js'
 import { useCart } from '../context/useCart.js'
 import ProductImage from '../components/ProductImage.jsx'
-import { formatPrice, products } from '../data/products.js'
+import { formatPrice } from '../data/products.js'
+import useProducts from '../hooks/useProducts.js'
 
 const inputClass = 'mt-1.5 w-full border border-peach-mid bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors placeholder:text-black/40 focus:border-primary focus:ring-2 focus:ring-primary/20'
 const labelClass = 'block text-sm font-medium text-black'
@@ -11,34 +11,17 @@ const labelClass = 'block text-sm font-medium text-black'
 export default function WholesalePage() {
   const navigate = useNavigate()
   const { items, addWholesaleItems } = useCart()
+  const { products, isLoading: isProductsLoading, error: productsError } = useProducts()
   const [contactDetails, setContactDetails] = useState({
     name: '',
     business_name: '',
   })
   const [quantities, setQuantities] = useState({})
-  const [wholesalePrices, setWholesalePrices] = useState({})
   const [submitError, setSubmitError] = useState('')
 
-  useEffect(() => {
-    let isCurrent = true
-    apiRequest('/shop/products/')
-      .then(data => {
-        if (isCurrent) {
-          setWholesalePrices(Object.fromEntries(
-            data.results.map(product => [product.id, product.wholesale_price]),
-          ))
-        }
-      })
-      .catch(() => {})
-
-    return () => {
-      isCurrent = false
-    }
-  }, [])
-
   const selectedProducts = products.filter(product => quantities[product.id] !== undefined)
-  const getUnitPrice = product => wholesalePrices[product.id] ?? product.price
-  const hasWholesalePrice = product => wholesalePrices[product.id] != null
+  const getUnitPrice = product => product.wholesalePrice ?? product.price
+  const hasWholesalePrice = product => product.wholesalePrice != null
   const estimatedTotal = selectedProducts.reduce(
     (total, product) => total + getUnitPrice(product) * (Number(quantities[product.id]) || 0),
     0,
@@ -106,6 +89,11 @@ export default function WholesalePage() {
       <section className="px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-7xl">
           <form onSubmit={handleOrderNow} className="space-y-6">
+            {isProductsLoading && <p role="status" className="text-sm text-brown/70">Loading products…</p>}
+            {productsError && <p role="alert" className="text-sm text-red-700">Could not load products: {productsError}</p>}
+            {!isProductsLoading && !productsError && products.length === 0 && (
+              <p className="text-sm text-brown/70">No products are currently available.</p>
+            )}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {products.map(product => (
                 <article
@@ -181,7 +169,7 @@ export default function WholesalePage() {
                 Estimated total: <strong className="text-base">{formatPrice(estimatedTotal)}</strong>
                 <span className="mt-1 block text-xs text-brown/65">Final pricing and delivery will be confirmed by our team.</span>
               </p>
-              <button type="submit" disabled={!selectedProducts.length} className="w-full bg-primary px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
+              <button type="submit" disabled={isProductsLoading || Boolean(productsError) || !selectedProducts.length} className="w-full bg-primary px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
                 Order now
               </button>
             </div>

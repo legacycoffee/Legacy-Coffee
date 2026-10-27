@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { products, formatPrice } from '../data/products.js'
+import { formatPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
 import ProductImage from '../components/ProductImage.jsx'
+import useProducts from '../hooks/useProducts.js'
 
 const heroImages = [
   'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=2000&auto=format&fit=crop&q=85',
@@ -12,6 +13,7 @@ const heroImages = [
 
 export default function Home() {
   const { addToCart } = useCart()
+  const { products, isLoading: isProductsLoading, error: productsError } = useProducts()
   const [addedProduct, setAddedProduct] = useState('')
   const [currentHeroImage, setCurrentHeroImage] = useState(0)
 
@@ -103,35 +105,43 @@ export default function Home() {
               <h2 className="text-2xl font-bold text-brown sm:text-3xl">Order your favorite coffee</h2>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
-            {products.map(product => (
-              <article key={product.id} className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-peach-mid/40 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
-                <Link to={`/products/${product.id}`} aria-label={`View ${product.name}`} className="flex flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary">
-                  <div className="relative block aspect-[4/3] w-full overflow-hidden bg-peach-light">
-                    <ProductImage product={product} className="transition-transform duration-500 sm:group-hover:scale-105" />
-                    <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-brown shadow-sm sm:left-3 sm:top-3 sm:text-xs">
-                      {product.weight}
-                    </span>
-                  </div>
-                  <div className="flex flex-1 flex-col p-3 sm:p-4 lg:p-5">
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary sm:text-xs">{product.roast}</p>
-                    <p className="mb-2 text-sm font-bold leading-snug text-brown group-hover:text-primary sm:text-base lg:text-lg">{product.name}</p>
-                    <p className="mb-4 flex-1 text-xs leading-relaxed text-brown/70 sm:text-sm">{product.description}</p>
-                    <p className="mt-auto text-lg font-bold text-brown sm:text-xl">{formatPrice(product.price)}</p>
-                  </div>
-                </Link>
-                <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5 lg:pb-5">
-                  <button
-                    type="button"
-                    onClick={() => handleAddToCart(product)}
-                    className="w-full rounded-lg bg-primary px-3 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-sm"
-                  >
-                    {addedProduct === product.id ? 'Added!' : 'Add to cart'}
-                  </button>
+          {isProductsLoading ? (
+                <p role="status" className="text-sm text-brown/70">Loading products…</p>
+          ) : productsError ? (
+                <p role="alert" className="mb-5 text-sm text-red-700">Could not load products: {productsError}</p>
+          ) : products.length === 0 ? (
+                <p className="text-sm text-brown/70">No products are currently available.</p>
+          ) : (
+                <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+                  {products.map(product => (
+                    <article key={product.id} className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-peach-mid/40 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+                      <Link to={`/products/${product.id}`} aria-label={`View ${product.name}`} className="flex flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary">
+                        <div className="relative block aspect-[4/3] w-full overflow-hidden bg-peach-light">
+                          <ProductImage product={product} className="transition-transform duration-500 sm:group-hover:scale-105" />
+                          <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-brown shadow-sm sm:left-3 sm:top-3 sm:text-xs">
+                            {product.weight}
+                          </span>
+                        </div>
+                        <div className="flex flex-1 flex-col p-3 sm:p-4 lg:p-5">
+                          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary sm:text-xs">{product.roast}</p>
+                          <p className="mb-2 text-sm font-bold leading-snug text-brown group-hover:text-primary sm:text-base lg:text-lg">{product.name}</p>
+                          <p className="mb-4 flex-1 text-xs leading-relaxed text-brown/70 sm:text-sm">{product.description}</p>
+                          <p className="mt-auto text-lg font-bold text-brown sm:text-xl">{formatPrice(product.price)}</p>
+                        </div>
+                      </Link>
+                      <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5 lg:pb-5">
+                        <button
+                          type="button"
+                          onClick={() => handleAddToCart(product)}
+                          className="w-full rounded-lg bg-primary px-3 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-sm"
+                        >
+                          {addedProduct === product.id ? 'Added!' : 'Add to cart'}
+                        </button>
+                      </div>
+                    </article>
+                  ))}
                 </div>
-              </article>
-            ))}
-          </div>
+          )}
         </div>
       </section>
 

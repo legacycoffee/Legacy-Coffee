@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { LuChevronRight, LuHeart, LuShare2, LuStar } from 'react-icons/lu'
-import { products, formatPrice } from '../data/products.js'
+import { formatPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import ProductImage from '../components/ProductImage.jsx'
+import useProducts from '../hooks/useProducts.js'
 
 export default function ProductPage() {
   const { productId } = useParams()
+  const { products, isLoading: isProductsLoading, error: productsError } = useProducts()
   const product = products.find(item => item.id === productId)
   const { addToCart } = useCart()
   const { isAuthenticated, token } = useAuth()
@@ -79,6 +81,20 @@ export default function ProductPage() {
       isCurrent = false
     }
   }, [product, token])
+
+  if (isProductsLoading) {
+    return <section role="status" className="px-6 py-20 text-center text-brown">Loading product…</section>
+  }
+
+  if (productsError) {
+    return (
+      <section role="alert" className="px-6 py-20 text-center">
+        <h1 className="mb-3 text-3xl font-bold text-primary">Products unavailable</h1>
+        <p className="mb-6 text-brown">Could not load this product: {productsError}</p>
+        <Link to="/" className="rounded bg-primary px-6 py-3 font-semibold text-white">Back to home</Link>
+      </section>
+    )
+  }
 
   if (!product) {
     return (
