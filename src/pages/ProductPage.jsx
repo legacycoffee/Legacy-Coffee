@@ -294,12 +294,12 @@ export default function ProductPage() {
               {product.description}
             </p>
 
-            <div className="mt-4 grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-3 border-b border-peach-mid/50 pb-4 lg:mt-3 lg:grid-cols-[1fr_auto_1fr] lg:gap-x-3 lg:pb-3">
-              <div className="col-start-1 row-start-1 flex items-baseline gap-2 justify-self-start border-b border-peach-mid/50 pb-3 lg:col-span-3 lg:pb-3">
+            <div className="mt-4 grid grid-cols-[1fr_auto] items-center gap-2 border-b border-peach-mid/50 pb-4 lg:mt-3 lg:flex lg:flex-col lg:items-start lg:gap-3 lg:pb-3">
+              <div className="flex items-baseline gap-2 justify-self-start">
                 <p className="text-xl font-bold tracking-tight text-brown sm:text-2xl lg:whitespace-nowrap">{formatPrice(product.price)}</p>
                 <p className="text-xs text-brown/60 sm:text-sm lg:whitespace-nowrap">per {product.weight}</p>
               </div>
-              <div className="col-start-2 row-start-1 flex items-center justify-self-center overflow-hidden border border-black bg-white lg:col-start-2 lg:row-start-2">
+              <div className="col-start-2 flex items-center justify-self-center overflow-hidden border border-black bg-white lg:self-center">
                 <button
                   type="button"
                   aria-label="Decrease quantity"
@@ -329,17 +329,20 @@ export default function ProductPage() {
                   +
                 </button>
               </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3 lg:mt-3">
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="col-start-1 row-start-2 min-h-12 bg-[#F58537] px-2 py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537] sm:px-6 sm:text-sm lg:col-start-1 lg:row-start-3"
+                className="min-h-12 bg-[#F58537] px-2 py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537] sm:px-6 sm:text-sm"
               >
                 Add to cart
               </button>
               <button
                 type="button"
                 onClick={handleBuyNow}
-                className="col-start-2 row-start-2 min-h-12 border border-black bg-white px-2 py-3 text-xs font-bold text-[#d96f26] transition-colors hover:bg-[#fff3e9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537] sm:px-6 sm:text-sm lg:col-start-3 lg:row-start-3"
+                className="min-h-12 border border-black bg-white px-2 py-3 text-xs font-bold text-[#d96f26] transition-colors hover:bg-[#fff3e9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537] sm:px-6 sm:text-sm"
               >
                 Buy Now
               </button>
