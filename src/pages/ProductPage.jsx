@@ -332,14 +332,14 @@ export default function ProductPage() {
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="col-start-1 row-start-2 min-h-12 bg-[#F58537] px-2 py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537] sm:px-6 sm:text-sm lg:col-start-1"
+                className="col-start-1 row-start-2 min-h-12 bg-[#F58537] px-2 py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537] sm:px-6 sm:text-sm lg:col-start-1 lg:row-start-3"
               >
                 Add to cart
               </button>
               <button
                 type="button"
                 onClick={handleBuyNow}
-                className="col-start-2 row-start-2 min-h-12 border border-black bg-white px-2 py-3 text-xs font-bold text-[#d96f26] transition-colors hover:bg-[#fff3e9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537] sm:px-6 sm:text-sm lg:col-start-3"
+                className="col-start-2 row-start-2 min-h-12 border border-black bg-white px-2 py-3 text-xs font-bold text-[#d96f26] transition-colors hover:bg-[#fff3e9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537] sm:px-6 sm:text-sm lg:col-start-3 lg:row-start-3"
               >
                 Buy Now
               </button>
