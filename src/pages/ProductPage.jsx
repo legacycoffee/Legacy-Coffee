@@ -21,7 +21,6 @@ export default function ProductPage() {
   const [wishlistMessage, setWishlistMessage] = useState('')
   const [isWishlistSaving, setIsWishlistSaving] = useState(false)
   const [shareMessage, setShareMessage] = useState('')
-  const [showShareOptions, setShowShareOptions] = useState(false)
   const [reviewRating, setReviewRating] = useState(0)
   const [reviewText, setReviewText] = useState('')
   const [reviewData, setReviewData] = useState(null)
@@ -159,79 +158,29 @@ export default function ProductPage() {
   }
 
   const productUrl = window.location.href
-  const imageUrl = new URL(product.image, window.location.href).href
-  const shareText = `${product.name}\n${product.description}\nProduct link: ${productUrl}\nProduct image: ${imageUrl}`
-  const encodedProductUrl = encodeURIComponent(productUrl)
-  const encodedShareText = encodeURIComponent(`${product.name} - ${product.description}`)
-  const socialShareLinks = [
-    { label: 'Share to Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${encodedProductUrl}` },
-    { label: 'Share to X', href: `https://twitter.com/intent/tweet?text=${encodedShareText}&url=${encodedProductUrl}` },
-    { label: 'Share to Telegram', href: `https://t.me/share/url?url=${encodedProductUrl}&text=${encodedShareText}` },
-    { label: 'Share to LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedProductUrl}` },
-    { label: 'Share to Reddit', href: `https://www.reddit.com/submit?url=${encodedProductUrl}&title=${encodeURIComponent(product.name)}` },
-    { label: 'Share by email', href: `mailto:?subject=${encodeURIComponent(product.name)}&body=${encodeURIComponent(`${product.description}\n\n${productUrl}`)}` },
-  ]
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(productUrl)
-      setShareMessage('Product link copied. You can paste it into any app.')
-      setShowShareOptions(false)
-    } catch {
-      setShareMessage('Could not copy the link. Copy it from your browser address bar instead.')
-    }
-  }
 
   const handleNativeShare = async () => {
+    setShareMessage('')
+    if (!navigator.share) {
+      try {
+        await navigator.clipboard.writeText(productUrl)
+        setShareMessage('Sharing is not supported here, so the product link was copied.')
+      } catch {
+        setShareMessage('Sharing is not supported here. Copy the product link from your browser address bar.')
+      }
+      return
+    }
+
     try {
       await navigator.share({ title: product.name, text: product.description, url: productUrl })
       const tracked = await recordShare('native')
       setShareMessage(tracked
         ? 'Product link shared.'
         : 'Product was shared, but share tracking failed.')
-      setShowShareOptions(false)
     } catch (error) {
       if (error.name !== 'AbortError') setShareMessage('Unable to share the product link.')
     }
   }
-
-  const handleImageShare = async () => {
-    if (!navigator.share || !navigator.canShare) {
-      setShareMessage('This browser cannot attach the product image. Choose a sharing option below to send the link.')
-      return
-    }
-
-    let imageFile
-    try {
-      const response = await fetch(imageUrl)
-      if (!response.ok) throw new Error(`Image request failed with status ${response.status}.`)
-      const imageBlob = await response.blob()
-      if (!imageBlob.type.startsWith('image/')) throw new Error('Product image response is not an image.')
-      const extension = imageBlob.type.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg'
-      imageFile = new File([imageBlob], `${product.id}.${extension}`, { type: imageBlob.type })
-    } catch {
-      setShareMessage('Could not load the product image. Choose a sharing option below to send the link.')
-      return
-    }
-
-    if (!navigator.canShare({ files: [imageFile] })) {
-      setShareMessage('This browser cannot attach the product image. Choose a sharing option below to send the link.')
-      return
-    }
-
-    try {
-      await navigator.share({ files: [imageFile], title: product.name, text: shareText })
-      const tracked = await recordShare('native')
-      setShareMessage(tracked
-        ? 'Product image and details shared. This browser may handle the caption differently.'
-        : 'Product was shared, but share tracking failed.')
-      setShowShareOptions(false)
-    } catch (error) {
-      if (error.name !== 'AbortError') setShareMessage('Unable to share the product image.')
-    }
-  }
-
-  const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`
 
   const recordShare = async channel => {
     try {
@@ -270,72 +219,11 @@ export default function ProductPage() {
             <button
               type="button"
               aria-label={`Share ${product.name}`}
-              aria-expanded={showShareOptions}
-              aria-controls="product-share-options"
-              onClick={() => {
-                setShareMessage('')
-                setShowShareOptions(current => !current)
-              }}
+              onClick={handleNativeShare}
               className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border border-black bg-white text-black shadow-sm transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:left-6 sm:top-6"
             >
               <LuShare2 aria-hidden="true" className="h-5 w-5" />
             </button>
-            {showShareOptions && (
-              <div id="product-share-options" className="absolute left-4 top-[4.25rem] z-10 max-h-[min(28rem,calc(100%-5rem))] w-72 max-w-[calc(100%-2rem)] overflow-y-auto border border-peach-mid bg-white p-3 shadow-lg sm:left-6">
-                <p className="mb-2 text-xs font-semibold text-brown">Share this product</p>
-                <a
-                  href={whatsappShareUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => {
-                    setShowShareOptions(false)
-                    void recordShare('whatsapp').then(tracked => {
-                      if (tracked) setShareMessage('WhatsApp share recorded.')
-                    })
-                  }}
-                  className="mb-2 block bg-[#25D366] px-3 py-2.5 text-center text-sm font-bold text-white hover:bg-[#1eae54] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                >
-                  Share to WhatsApp
-                </a>
-                <div className="grid grid-cols-2 gap-2">
-                  {socialShareLinks.map(({ label, href }) => (
-                    <a
-                      key={label}
-                      href={href}
-                      target={href.startsWith('mailto:') ? undefined : '_blank'}
-                      rel={href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
-                      onClick={() => setShowShareOptions(false)}
-                      className="flex min-h-10 items-center justify-center border border-peach-mid px-2 py-2 text-center text-xs font-semibold text-brown hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                    >
-                      {label}
-                    </a>
-                  ))}
-                </div>
-                {navigator.share && (
-                  <button
-                    type="button"
-                    onClick={handleNativeShare}
-                    className="mt-2 block min-h-10 w-full border border-black px-3 py-2 text-sm font-semibold text-black hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  >
-                    More sharing apps…
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="mt-2 block min-h-10 w-full border border-black px-3 py-2 text-sm font-semibold text-black hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                >
-                  Copy product link
-                </button>
-                <button
-                  type="button"
-                  onClick={handleImageShare}
-                  className="mt-2 block w-full border border-black px-3 py-2.5 text-sm font-semibold text-black hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                >
-                  Share image with details
-                </button>
-              </div>
-            )}
             <button
               type="button"
               aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -419,12 +307,7 @@ export default function ProductPage() {
             <div className="mt-2 flex justify-end lg:mt-1">
               <button
                 type="button"
-                aria-expanded={showShareOptions}
-                aria-controls="product-share-options"
-                onClick={() => {
-                  setShareMessage('')
-                  setShowShareOptions(current => !current)
-                }}
+                onClick={handleNativeShare}
                 className="flex min-h-11 items-center justify-center gap-2 rounded-[5px] border border-black bg-white px-3 py-2 text-xs font-semibold text-brown transition-colors hover:bg-peach-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-sm"
               >
                 <LuShare2 aria-hidden="true" className="h-4 w-4" />
