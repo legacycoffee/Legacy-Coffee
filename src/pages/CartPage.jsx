@@ -42,7 +42,7 @@ export default function CartPage() {
           <div className="divide-y divide-peach-mid/60 border-y border-peach-mid/60">
             {items.map(item => (
               <article key={item.id} className="grid grid-cols-[68px_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-3 py-4 first:pt-0 last:pb-0 sm:grid-cols-[92px_minmax(0,1fr)_auto] sm:gap-x-4 md:grid-cols-[112px_minmax(0,1fr)_auto] md:items-center md:gap-5">
-                <Link to={`/products/${item.id}`} className="col-start-1 row-start-1 aspect-square w-[68px] shrink-0 overflow-hidden rounded-lg bg-peach-light p-1.5 sm:w-[92px] sm:p-2 md:w-28 md:p-3" aria-label={`View ${item.name}`}>
+                <Link to={`/products/${item.id}`} className="col-start-1 row-start-1 aspect-square w-[68px] shrink-0 overflow-hidden rounded-lg bg-white p-1.5 sm:w-[92px] sm:p-2 md:w-28 md:p-3" aria-label={`View ${item.name}`}>
                   <ProductImage product={item} objectFit="contain" />
                 </Link>
                 <div className="col-start-2 row-start-1 min-w-0 md:col-start-2">
