@@ -18,11 +18,32 @@ from orders.models import Order
 
 class InitialAdminCommandTests(TestCase):
     @patch.dict(os.environ, {
+        'INITIAL_ADMIN_EMAIL': 'existing-account@example.com',
+        'INITIAL_ADMIN_USERNAME': 'initial-admin',
+        'INITIAL_ADMIN_PASSWORD': 'VeryStrong!Initial2026',
+    })
+    def test_promotes_existing_account_to_initial_superuser(self):
+        existing_user = get_user_model().objects.create_user(
+            username='existing-user',
+            email='existing-account@example.com',
+            password='OriginalStrong!2026',
+        )
+
+        call_command('create_initial_admin')
+
+        existing_user.refresh_from_db()
+        self.assertEqual(existing_user.username, 'initial-admin')
+        self.assertTrue(existing_user.is_active)
+        self.assertTrue(existing_user.is_staff)
+        self.assertTrue(existing_user.is_superuser)
+        self.assertTrue(existing_user.check_password('VeryStrong!Initial2026'))
+
+    @patch.dict(os.environ, {
         'INITIAL_ADMIN_EMAIL': 'initial-admin@example.com',
         'INITIAL_ADMIN_USERNAME': 'initial-admin',
         'INITIAL_ADMIN_PASSWORD': 'VeryStrong!Initial2026',
     })
-    def test_creates_initial_superuser_and_does_not_reset_password(self):
+    def test_creates_initial_superuser_and_does_not_reset_it_on_restart(self):
         call_command('create_initial_admin')
 
         admin = get_user_model().objects.get(email='initial-admin@example.com')

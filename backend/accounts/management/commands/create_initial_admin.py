@@ -27,18 +27,25 @@ class Command(BaseCommand):
         if user_model.objects.filter(is_superuser=True).exists():
             self.stdout.write('A superuser already exists; skipping initial admin creation.')
             return
-        if user_model.objects.filter(email=email).exists():
-            raise CommandError(
-                f'An account already exists for {email}. Use a different INITIAL_ADMIN_EMAIL.',
-            )
         try:
             validate_password(password)
         except ValidationError as error:
             raise CommandError(f'INITIAL_ADMIN_PASSWORD is not strong enough: {" ".join(error.messages)}') from error
 
-        user_model.objects.create_superuser(
-            email=email,
-            username=username,
-            password=password,
-        )
-        self.stdout.write(self.style.SUCCESS(f'Created initial superuser {email}.'))
+        admin = user_model.objects.filter(email=email).first()
+        if admin:
+            admin.username = username
+            admin.set_password(password)
+            admin.is_active = True
+            admin.is_staff = True
+            admin.is_superuser = True
+            admin.save(update_fields=('username', 'password', 'is_active', 'is_staff', 'is_superuser'))
+            action = 'Promoted existing account to initial superuser'
+        else:
+            user_model.objects.create_superuser(
+                email=email,
+                username=username,
+                password=password,
+            )
+            action = 'Created initial superuser'
+        self.stdout.write(self.style.SUCCESS(f'{action} {email}.'))
