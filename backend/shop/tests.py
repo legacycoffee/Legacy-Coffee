@@ -1,8 +1,37 @@
+from io import StringIO
+
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
+from django.test import TestCase
 from rest_framework.test import APITestCase
 
 from orders.models import Order, OrderItem
 from .models import Product, Review, ShareEvent, WishlistItem
+
+
+class SeedProductsCommandTests(TestCase):
+    def test_skip_existing_seeds_missing_products_without_overwriting_existing(self):
+        existing_product = Product.objects.create(
+            slug='robusta-blend',
+            name='Custom product name',
+            weight='500g',
+            price=25000,
+            description='Custom description.',
+            details='Custom details.',
+            tasting_notes='Custom notes.',
+            roast='Dark roast',
+            image='https://example.com/custom.jpg',
+            image_alt='Custom coffee',
+        )
+        output = StringIO()
+
+        call_command('seed_products', skip_existing=True, stdout=output)
+
+        existing_product.refresh_from_db()
+        self.assertEqual(existing_product.name, 'Custom product name')
+        self.assertTrue(Product.objects.filter(slug='single-origin-arabica').exists())
+        self.assertEqual(Product.objects.count(), 4)
+        self.assertIn('Skipped: robusta-blend', output.getvalue())
 
 
 class ShopApiTests(APITestCase):

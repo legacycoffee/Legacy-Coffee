@@ -59,9 +59,20 @@ PRODUCTS = (
 class Command(BaseCommand):
     help = 'Create or update the starter products from the storefront.'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--skip-existing',
+            action='store_true',
+            help='Create missing starter products without changing existing products.',
+        )
+
     def handle(self, *args, **options):
         for product_data in PRODUCTS:
             slug = product_data['slug']
-            _, created = Product.objects.update_or_create(slug=slug, defaults=product_data)
-            action = 'Created' if created else 'Updated'
+            if options['skip_existing']:
+                _, created = Product.objects.get_or_create(slug=slug, defaults=product_data)
+                action = 'Created' if created else 'Skipped'
+            else:
+                _, created = Product.objects.update_or_create(slug=slug, defaults=product_data)
+                action = 'Created' if created else 'Updated'
             self.stdout.write(f'{action}: {slug}')

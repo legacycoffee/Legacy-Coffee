@@ -11,7 +11,7 @@ The backend is a standalone repository, so create a Railway service from `gadget
 3. Set `DJANGO_SECRET_KEY` to a new, long random secret and set `DJANGO_DEBUG` to `false`.
 4. The current backend domain is `legacy-production-48e0.up.railway.app`; set `DJANGO_ALLOWED_HOSTS` to that hostname only (without `https://`).
 5. Set `CORS_ALLOWED_ORIGINS` to `https://legacycoffee.github.io` (the origin only; do not include `/Legacy-Coffee/`). Set the Cloudinary variables if profile photo uploads are needed.
-6. Deploy. The Procfile runs migrations and collects static files before starting Gunicorn.
+6. Deploy. The Procfile runs migrations, creates any missing starter products, collects static files, then starts Gunicorn. Existing products are left unchanged.
 
 The GitHub Pages workflow builds the frontend with `VITE_API_URL=https://legacy-production-48e0.up.railway.app/api`. Railway's filesystem is ephemeral; use the PostgreSQL service rather than the local SQLite database for production data. Do not set `DATABASE_URL` to SQLite or commit real secrets.
 
