@@ -5,6 +5,7 @@ import Footer from './components/Footer'
 import Home from './pages/Home'
 import AboutUs from './pages/AboutUs'
 import PartnerWithUs from './pages/PartnerWithUs'
+import WholesalePage from './pages/WholesalePage'
 import ContactUs from './pages/ContactUs'
 import Newsletter from './pages/Newsletter'
 import AdminDashboard from './pages/AdminDashboard'
@@ -66,6 +67,7 @@ export default function App() {
             <Route path="/signup" element={<Layout><AuthPage mode="signup" /></Layout>} />
             <Route path="/confirm" element={<Layout><ConfirmationPage /></Layout>} />
             <Route path="/partner" element={<Layout><PartnerWithUs /></Layout>} />
+            <Route path="/wholesale" element={<Layout><WholesalePage /></Layout>} />
             <Route path="/contact" element={<Layout><ContactUs /></Layout>} />
             <Route path="/newsletter" element={<Layout><Newsletter /></Layout>} />
             <Route path="/admin" element={<AdminDashboard />} />

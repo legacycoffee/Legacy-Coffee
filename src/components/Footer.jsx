@@ -6,6 +6,7 @@ const menuLinks = [
   { label: 'Home', to: '/' },
   { label: 'About Us', to: '/about' },
   { label: 'Partner With Us', to: '/partner' },
+  { label: 'Wholesale', to: '/wholesale' },
   { label: 'Contact Us', to: '/contact' },
   { label: 'Newsletter', to: '/newsletter' },
 ]

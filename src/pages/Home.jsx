@@ -130,6 +130,12 @@ export default function Home() {
               >
                 Partner With Us
               </Link>
+              <Link
+                to="/wholesale"
+                className="inline-flex items-center justify-center rounded-full border border-primary bg-primary/10 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                Buy in Wholesale
+              </Link>
             </div>
           </div>
         </div>
