@@ -1,5 +1,5 @@
 export default function ProductImage({ product, className = '', objectFit = 'cover' }) {
-  const objectFitClass = objectFit === 'contain' ? 'object-contain' : 'object-cover'
+  const objectFitClass = objectFit === 'contain' ? 'object-contain' : 'object-contain sm:object-cover'
 
   return (
     <img

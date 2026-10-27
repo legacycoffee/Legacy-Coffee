@@ -8,7 +8,7 @@ const inputClass = 'mt-1.5 w-full border border-peach-mid px-3.5 py-3 text-sm te
 
 export default function AuthPage({ mode }) {
   const isSignUp = mode === 'signup'
-  const { isAuthenticated, signIn, signUp } = useAuth()
+  const { isAuthenticated, user, signIn, signUp } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [form, setForm] = useState({
@@ -22,9 +22,10 @@ export default function AuthPage({ mode }) {
   const [isFetchingLocation, setIsFetchingLocation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const destination = location.state?.from || '/checkout'
+  const authenticatedDestination = !isSignUp && user?.is_staff ? '/admin' : destination
 
   if (isAuthenticated) {
-    return <Navigate to={destination} replace />
+    return <Navigate to={authenticatedDestination} replace />
   }
 
   const handleChange = event => {
@@ -58,10 +59,11 @@ export default function AuthPage({ mode }) {
           location_latitude: form.location_latitude || null,
           location_longitude: form.location_longitude || null,
         })
+        navigate(destination, { replace: true })
       } else {
-        await signIn({ email: form.email, password: form.password })
+        const signedInUser = await signIn({ email: form.email, password: form.password })
+        navigate(signedInUser.is_staff ? '/admin' : destination, { replace: true })
       }
-      navigate(destination, { replace: true })
     } catch (requestError) {
       setError(requestError.message)
     } finally {

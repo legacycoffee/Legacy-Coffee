@@ -90,6 +90,7 @@ class AuthenticationApiTests(APITestCase):
             'password': 'StrongPassword!2026',
         })
         self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.data['user']['is_staff'])
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {response.data['token']}")
         notifications = self.client.get('/api/auth/notifications/')
         self.assertEqual(notifications.status_code, 200)
@@ -97,6 +98,22 @@ class AuthenticationApiTests(APITestCase):
         self.assertEqual(notifications.data['results'][0]['kind'], Notification.Kind.SIGN_IN)
         self.assertEqual(notifications.data['results'][0]['details'], {})
         self.assertEqual(self.client.get('/api/auth/me/').status_code, 200)
+
+    def test_staff_login_identifies_staff_account_for_admin_routing(self):
+        staff_user = get_user_model().objects.create_user(
+            username='staff',
+            email='staff@example.com',
+            password='StrongPassword!2026',
+            is_staff=True,
+        )
+
+        response = self.client.post('/api/auth/login/', {
+            'email': staff_user.email,
+            'password': 'StrongPassword!2026',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data['user']['is_staff'])
 
     def test_notifications_are_private_and_opening_one_marks_it_read(self):
         user = get_user_model().objects.create_user(

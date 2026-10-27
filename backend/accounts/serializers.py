@@ -15,8 +15,9 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'username', 'email', 'first_name', 'last_name',
             'delivery_address', 'delivery_city', 'delivery_notes',
             'location_latitude', 'location_longitude', 'profile_photo',
+            'is_staff',
         )
-        read_only_fields = ('id', 'username', 'email')
+        read_only_fields = ('id', 'username', 'email', 'is_staff')
 
     def validate_profile_photo(self, value):
         if value and urlparse(value).hostname != 'res.cloudinary.com':

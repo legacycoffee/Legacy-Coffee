@@ -7,6 +7,7 @@ PRODUCTS = (
     {
         'slug': 'single-origin-arabica',
         'name': 'Single Origin Arabica',
+        'coffee_type': 'arabica',
         'weight': '1kg',
         'price': 50000,
         'description': 'A light roast with bright fruity notes from the Kyenjojo highlands.',
@@ -19,6 +20,7 @@ PRODUCTS = (
     {
         'slug': 'robusta-blend',
         'name': 'Robusta Blend',
+        'coffee_type': 'blend',
         'weight': '500g',
         'price': 25000,
         'description': 'Bold and earthy, with a rich body that is perfect for espresso lovers.',
@@ -31,6 +33,7 @@ PRODUCTS = (
     {
         'slug': 'premium-export-grade',
         'name': 'Premium Export Grade',
+        'coffee_type': 'green',
         'weight': '5kg',
         'price': 80,
         'is_active': False,
@@ -44,6 +47,7 @@ PRODUCTS = (
     {
         'slug': 'roasted-ground-coffee',
         'name': 'Roasted Ground Coffee',
+        'coffee_type': 'ground',
         'weight': '250g',
         'price': 15000,
         'description': 'Ready-to-brew medium roast coffee, smooth and balanced.',

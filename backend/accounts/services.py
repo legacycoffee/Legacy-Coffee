@@ -29,30 +29,32 @@ class CloudinaryUploadError(APIException):
     default_code = 'cloudinary_upload_failed'
 
 
-def upload_profile_photo(uploaded_file, user_id):
+def upload_cloudinary_image(uploaded_file, public_id, field_name='photo', image_label='image'):
     cloud_name = getattr(settings, 'CLOUDINARY_CLOUD_NAME', '')
     api_key = getattr(settings, 'CLOUDINARY_API_KEY', '')
     api_secret = getattr(settings, 'CLOUDINARY_API_SECRET', '')
     if not all((cloud_name, api_key, api_secret)):
-        raise CloudinaryConfigurationError()
+        raise CloudinaryConfigurationError(
+            f'{image_label.capitalize()} uploads are not configured. Set the Cloudinary server credentials and try again.',
+        )
 
     content_type = uploaded_file.content_type
     signature = ALLOWED_IMAGE_TYPES.get(content_type)
     if not signature:
-        raise ValidationError({'photo': 'Upload a JPEG, PNG, or WebP image.'})
+        raise ValidationError({field_name: 'Upload a JPEG, PNG, or WebP image.'})
 
     image_data = uploaded_file.read(MAX_PROFILE_PHOTO_BYTES + 1)
     if len(image_data) > MAX_PROFILE_PHOTO_BYTES:
-        raise ValidationError({'photo': 'Choose an image smaller than 5 MB.'})
+        raise ValidationError({field_name: 'Choose an image smaller than 5 MB.'})
     if not image_data.startswith(signature):
-        raise ValidationError({'photo': 'The uploaded file does not match its image type.'})
+        raise ValidationError({field_name: 'The uploaded file does not match its image type.'})
     if content_type == 'image/webp' and image_data[8:12] != b'WEBP':
-        raise ValidationError({'photo': 'The uploaded file is not a valid WebP image.'})
+        raise ValidationError({field_name: 'The uploaded file is not a valid WebP image.'})
 
     timestamp = int(time.time())
     parameters = {
         'overwrite': 'true',
-        'public_id': f'profile-photos/user-{user_id}',
+        'public_id': public_id,
         'timestamp': str(timestamp),
     }
     signature_payload = '&'.join(
@@ -104,5 +106,22 @@ def upload_profile_photo(uploaded_file, user_id):
 
     secure_url = result.get('secure_url') if isinstance(result, dict) else None
     if not secure_url or not secure_url.startswith('https://res.cloudinary.com/'):
-        raise CloudinaryUploadError('Cloudinary did not return a valid profile photo URL.')
+        raise CloudinaryUploadError(f'Cloudinary did not return a valid {image_label} URL.')
     return secure_url
+
+
+def upload_profile_photo(uploaded_file, user_id):
+    return upload_cloudinary_image(
+        uploaded_file,
+        f'profile-photos/user-{user_id}',
+        image_label='profile photo',
+    )
+
+
+def upload_product_image(uploaded_file, product_slug):
+    return upload_cloudinary_image(
+        uploaded_file,
+        f'products/{product_slug}',
+        field_name='image',
+        image_label='product image',
+    )

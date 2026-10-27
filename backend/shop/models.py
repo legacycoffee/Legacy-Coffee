@@ -3,8 +3,21 @@ from django.db import models
 
 
 class Product(models.Model):
+    class CoffeeType(models.TextChoices):
+        ARABICA = 'arabica', 'Arabica'
+        ROBUSTA = 'robusta', 'Robusta'
+        BLEND = 'blend', 'Blend'
+        GROUND = 'ground', 'Ground coffee'
+        GREEN = 'green', 'Green beans'
+        OTHER = 'other', 'Other'
+
     slug = models.SlugField(max_length=120, primary_key=True)
     name = models.CharField(max_length=160)
+    coffee_type = models.CharField(
+        max_length=20,
+        choices=CoffeeType.choices,
+        default=CoffeeType.OTHER,
+    )
     weight = models.CharField(max_length=40)
     price = models.DecimalField(max_digits=12, decimal_places=0)
     wholesale_price = models.DecimalField(

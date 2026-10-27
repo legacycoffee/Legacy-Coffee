@@ -10,7 +10,7 @@ The backend is a standalone repository, so create a Railway service from `gadget
 2. In the Django service variables, set `DATABASE_URL` to `${{Postgres.DATABASE_URL}}` (replace `Postgres` if your database service has a different name).
 3. Set `DJANGO_SECRET_KEY` to a new, long random secret and set `DJANGO_DEBUG` to `false`.
 4. The current backend domain is `legacy-production-48e0.up.railway.app`; set `DJANGO_ALLOWED_HOSTS` to that hostname only (without `https://`).
-5. Set `CORS_ALLOWED_ORIGINS` to `https://legacycoffee.github.io` (the origin only; do not include `/Legacy-Coffee/`). Set the Cloudinary variables if profile photo uploads are needed.
+5. Set `CORS_ALLOWED_ORIGINS` to `https://legacycoffee.github.io` (the origin only; do not include `/Legacy-Coffee/`). Set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` for profile and product image uploads.
 6. Deploy. The Procfile runs migrations, creates any missing starter products, collects static files, then starts Gunicorn. Existing products are left unchanged.
 
 The GitHub Pages workflow builds the frontend with `VITE_API_URL=https://legacy-production-48e0.up.railway.app/api`. Railway's filesystem is ephemeral; use the PostgreSQL service rather than the local SQLite database for production data. Do not set `DATABASE_URL` to SQLite or commit real secrets.
@@ -31,7 +31,7 @@ backend\.venv\Scripts\python.exe backend\manage.py seed_products
 backend\.venv\Scripts\python.exe backend\manage.py runserver
 ```
 
-The API runs at `http://127.0.0.1:8000/`; the Django admin is at `/admin/`. Django loads `backend\.env` automatically, while environment variables already set by the process take precedence. Set the real `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` values in that file for profile photo uploads. Keep the API secret on the backend only; uploads use a signed request to Cloudinary and store the resulting secure URL on the user account. Without these settings the API reports a configuration error instead of storing the image locally. Production startup refuses to use the development key when `DJANGO_DEBUG=false`.
+The API runs at `http://127.0.0.1:8000/`; the Django admin is at `/admin/`. Django loads `backend\.env` automatically, while environment variables already set by the process take precedence. Set the real `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` values in that file for profile and product image uploads. Keep the API secret on the backend only; uploads use a signed request to Cloudinary and store the resulting secure URL. Without these settings the API reports a configuration error instead of storing the image locally. Production startup refuses to use the development key when `DJANGO_DEBUG=false`.
 
 ## Repository remotes
 
@@ -53,6 +53,7 @@ Create the first staff superuser from the backend environment with `py backend\m
 - `GET /api/health/`
 - `POST /api/auth/register/`, `POST /api/auth/login/`, `POST /api/auth/logout/`, `GET|PATCH /api/auth/me/`
 - `POST /api/auth/profile-photo/` (authenticated multipart upload; stores the image in Cloudinary)
+- `POST /api/auth/change-password/` (authenticated; verifies the current password before changing it)
 - `GET /api/auth/notifications/`, `PATCH /api/auth/notifications/{id}/read/` (authenticated customer notifications and unread count)
 - `GET /api/shop/products/`, `GET /api/shop/products/{slug}/`, `GET /api/shop/products/{slug}/reviews/`
 - `GET|POST /api/shop/reviews/?product={slug}`, `GET /api/shop/reviews/eligibility/?product={slug}` (posting and eligibility require authentication; review submission additionally requires a fulfilled order containing the product)
@@ -61,7 +62,7 @@ Create the first staff superuser from the backend environment with `py backend\m
 - `POST /api/orders/` (authenticated order creation), `GET /api/orders/mine/` (authenticated order history for the signed-in user)
 - `POST /api/inquiries/` with `kind` set to `contact`, `quote`, or `partner`
 - `POST /api/newsletter/subscribe/`, `POST /api/newsletter/unsubscribe/`
-- `GET /api/dashboard/`, `GET /api/dashboard/orders/`, `GET /api/dashboard/inquiries/` (authenticated staff only)
+- `GET /api/dashboard/`, `GET /api/dashboard/orders/`, `PATCH /api/dashboard/orders/{reference}/status/`, `GET|POST /api/dashboard/products/`, `GET|PATCH|DELETE /api/dashboard/products/{slug}/`, `GET /api/dashboard/inquiries/`, `GET /api/dashboard/users/`, `GET|POST /api/dashboard/admins/`, `DELETE /api/dashboard/admins/{id}/` (authenticated staff only; product endpoints manage the catalog and accept multipart image uploads; admin endpoints manage staff accounts and prevent deleting the last active administrator; order items include catalog image URLs, status updates notify customers, and users endpoint searches customer accounts)
 
 Token-authenticated requests use `Authorization: Token <token>`. Order submission requires a signed-in account; the API associates each order with that account and uses the account email. The order history endpoint returns only orders belonging to the authenticated user, including status and item details. Product list responses use DRF page-number pagination and expose the storefront product identifier as `id`. Orders accept product IDs, quantities, optional business names, and a wholesale-order flag; the server looks up current active-product prices and snapshots them on each order item. A pro forma PDF invoice is generated when the order is submitted, stored with that order, and available only to its owner at `GET /api/orders/{reference}/invoice/`. It is available to preview and download from the order confirmation, notification, and My Orders pages. It states that no payment has been collected and delivery costs are confirmed separately.
 

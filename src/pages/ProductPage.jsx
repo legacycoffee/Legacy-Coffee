@@ -215,7 +215,7 @@ export default function ProductPage() {
 
         <div className="grid items-center gap-6 lg:grid-cols-2 lg:gap-10">
           <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-peach-light shadow-sm lg:w-full lg:max-w-[400px] lg:justify-self-center">
-            <ProductImage product={product} className="transition-transform duration-700 hover:scale-[1.03]" />
+            <ProductImage product={product} className="transition-transform duration-700 sm:hover:scale-[1.03]" />
             <button
               type="button"
               aria-label={`Share ${product.name}`}
