@@ -39,9 +39,9 @@ export default function CartPage() {
         </div>
 
         <div className="grid items-start gap-6 lg:grid-cols-[1fr_340px] lg:gap-8">
-          <div className="space-y-3">
+          <div className="divide-y divide-peach-mid/60 border-y border-peach-mid/60">
             {items.map(item => (
-              <article key={item.id} className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-3 rounded-xl border border-peach-mid/50 bg-white p-3 shadow-sm transition-shadow hover:shadow-md sm:grid-cols-[80px_minmax(0,1fr)_auto] sm:gap-x-4 sm:p-4 md:grid-cols-[96px_minmax(0,1fr)_auto] md:items-center md:gap-5">
+              <article key={item.id} className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-3 py-4 first:pt-0 last:pb-0 sm:grid-cols-[80px_minmax(0,1fr)_auto] sm:gap-x-4 md:grid-cols-[96px_minmax(0,1fr)_auto] md:items-center md:gap-5">
                 <Link to={`/products/${item.id}`} className="col-start-1 row-start-1 aspect-square w-14 shrink-0 overflow-hidden rounded-lg bg-peach-light p-1.5 sm:w-20 sm:p-2 md:w-24" aria-label={`View ${item.name}`}>
                   <ProductImage product={item} objectFit="contain" className="transition-transform duration-300 hover:scale-105" />
                 </Link>
@@ -100,7 +100,7 @@ export default function CartPage() {
                     <LuTrash2 aria-hidden="true" className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="col-span-3 row-start-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-peach-mid/40 pt-2 md:hidden">
+                <div className="col-span-3 row-start-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pt-1 md:hidden">
                   <p className="text-[11px] text-brown/65 sm:text-xs">Delivery fee confirmed by our team.</p>
                   {!isAuthenticated && (
                     <p className="text-[11px] text-brown/65 sm:text-xs">
