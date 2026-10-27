@@ -21,8 +21,6 @@ export default function CheckoutPage() {
     address: user?.delivery_address || '',
     city: user?.delivery_city || '',
     notes: user?.delivery_notes || '',
-    location_latitude: user?.location_latitude || '',
-    location_longitude: user?.location_longitude || '',
   }))
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -50,8 +48,6 @@ export default function CheckoutPage() {
           delivery_address: customer.address,
           delivery_city: customer.city,
           delivery_notes: customer.notes,
-          delivery_latitude: customer.location_latitude || null,
-          delivery_longitude: customer.location_longitude || null,
           items: items.map(item => ({ product_id: item.id, quantity: item.quantity })),
         },
       })
@@ -61,8 +57,6 @@ export default function CheckoutPage() {
         delivery_address: result.delivery_address,
         delivery_city: result.delivery_city,
         delivery_notes: result.delivery_notes,
-        location_latitude: result.delivery_latitude,
-        location_longitude: result.delivery_longitude,
       })
 
       const order = {
