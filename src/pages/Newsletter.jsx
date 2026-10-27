@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { apiRequest } from '../context/api.js'
 
 const pastIssues = [
   { title: 'Harvest Season 2024 Recap', date: 'December 2024', excerpt: 'A record-breaking harvest season with over 50,000kg of premium coffee collected from our farmer network.' },
@@ -7,12 +8,28 @@ const pastIssues = [
 ]
 
 export default function Newsletter() {
-  const [form, setForm] = useState({ name: '', email: '' })
-  const [submitted, setSubmitted] = useState(false)
+  const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault()
-    setSubmitted(true)
+    setError('')
+    setMessage('')
+    setIsSubmitting(true)
+    try {
+      const response = await apiRequest('/newsletter/subscribe/', {
+        method: 'POST',
+        body: { email },
+      })
+      setMessage(response.message || 'You are subscribed to Legacy Coffee updates.')
+      setEmail('')
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -30,41 +47,38 @@ export default function Newsletter() {
       </section>
 
       {/* Subscribe Form */}
-      <section className="py-16 px-6 bg-white">
-        <div className="max-w-lg mx-auto">
-          {submitted ? (
-            <div className="bg-peach-light rounded-2xl p-10 text-center shadow">
-              <div className="text-6xl mb-4">🎉</div>
-              <h2 className="text-primary text-2xl font-bold mb-2">You're Subscribed!</h2>
-              <p className="text-brown text-sm">Welcome to the Legacy Coffee community. Watch your inbox for our next newsletter.</p>
-            </div>
-          ) : (
-            <div className="bg-peach-light rounded-2xl p-10 shadow">
-              <h2 className="text-primary text-2xl font-bold mb-2 text-center">Subscribe to Our Newsletter</h2>
-              <p className="text-brown text-sm text-center mb-6">Join hundreds of coffee lovers and impact supporters.</p>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <input
-                  required
-                  placeholder="Your Full Name"
-                  value={form.name}
-                  onChange={e => setForm({ ...form, name: e.target.value })}
-                  className="w-full border border-peach-mid rounded px-4 py-3 text-brown outline-none focus:border-primary text-sm"
-                />
-                <input
-                  required
-                  type="email"
-                  placeholder="Your Email Address"
-                  value={form.email}
-                  onChange={e => setForm({ ...form, email: e.target.value })}
-                  className="w-full border border-peach-mid rounded px-4 py-3 text-brown outline-none focus:border-primary text-sm"
-                />
-                <button type="submit" className="w-full bg-primary text-white py-3 rounded font-semibold hover:opacity-90 transition-opacity">
-                  Subscribe Now
-                </button>
-              </form>
-              <p className="text-brown/60 text-xs text-center mt-4">No spam. Unsubscribe anytime.</p>
-            </div>
-          )}
+      <section className="bg-white px-4 py-12 sm:px-6 sm:py-16">
+        <div className="mx-auto max-w-3xl rounded-2xl bg-peach-light p-6 shadow-sm sm:p-10">
+          <div className="mx-auto max-w-xl text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Fresh from the source</p>
+            <h2 className="mt-2 text-2xl font-bold text-primary sm:text-3xl">Subscribe to our newsletter</h2>
+            <p className="mt-3 text-sm leading-6 text-brown">
+              Join our community for coffee stories, harvest news, and updates from our farming communities.
+            </p>
+          </div>
+          <form onSubmit={handleSubmit} className="mx-auto mt-6 flex max-w-xl flex-col gap-3 sm:flex-row">
+            <label htmlFor="newsletter-email" className="sr-only">Email address</label>
+            <input
+              id="newsletter-email"
+              required
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={event => setEmail(event.target.value)}
+              placeholder="Your email address"
+              className="min-h-12 min-w-0 flex-1 rounded-lg border border-peach-mid bg-white px-4 py-3 text-sm text-brown outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="min-h-12 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-wait disabled:opacity-60"
+            >
+              {isSubmitting ? 'Subscribing…' : 'Subscribe'}
+            </button>
+          </form>
+          {error && <p role="alert" className="mx-auto mt-3 max-w-xl text-sm text-red-700">{error}</p>}
+          {message && <p role="status" className="mx-auto mt-3 max-w-xl text-center text-sm font-medium text-green-800">{message}</p>}
+          <p className="mt-4 text-center text-xs text-brown/60">No spam. Unsubscribe anytime.</p>
         </div>
       </section>
 

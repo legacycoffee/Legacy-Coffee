@@ -5,6 +5,7 @@ from rest_framework.validators import UniqueValidator
 from accounts.models import User
 from accounts.services import upload_product_image
 from inquiries.models import Inquiry
+from newsletter.models import Subscriber
 from orders.models import Order
 from shop.models import Product
 
@@ -58,6 +59,12 @@ class UserInboxSerializer(serializers.ModelSerializer):
 
     def get_name(self, user):
         return ' '.join(part for part in (user.first_name, user.last_name) if part) or user.email
+
+
+class SubscriberInboxSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscriber
+        fields = ('id', 'email', 'is_active', 'subscribed_at', 'unsubscribed_at')
 
 
 class ProductManagementSerializer(serializers.ModelSerializer):

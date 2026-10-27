@@ -9,6 +9,7 @@ from .views import (
     OrderStatusUpdateView,
     ProductManagementDetailView,
     ProductManagementListView,
+    SubscriberInboxView,
     UserInboxView,
 )
 
@@ -21,5 +22,6 @@ urlpatterns = [
     path('admins/', AdminAccountListCreateView.as_view(), name='dashboard-admins'),
     path('admins/<int:pk>/', AdminAccountDeleteView.as_view(), name='dashboard-admin-delete'),
     path('inquiries/', InquiryInboxView.as_view(), name='dashboard-inquiries'),
+    path('subscribers/', SubscriberInboxView.as_view(), name='dashboard-subscribers'),
     path('users/', UserInboxView.as_view(), name='dashboard-users'),
 ]

@@ -6,6 +6,7 @@ from rest_framework.test import APITestCase
 
 from accounts.models import Notification
 from inquiries.models import Inquiry
+from newsletter.models import Subscriber
 from orders.models import Order, OrderItem
 from shop.models import Product, Review
 
@@ -30,6 +31,7 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(self.client.get('/api/dashboard/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/orders/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/inquiries/').status_code, 403)
+        self.assertEqual(self.client.get('/api/dashboard/subscribers/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/users/').status_code, 403)
         self.assertEqual(
             self.client.patch('/api/dashboard/orders/LC-TEST/status/', {'status': 'confirmed'}).status_code,
@@ -44,6 +46,18 @@ class DashboardApiTests(APITestCase):
         self.assertIn('product_shares', response.data)
         self.assertIn('users', response.data)
 
+    def test_staff_can_list_and_search_newsletter_subscribers(self):
+        matching = Subscriber.objects.create(email='coffee@example.com')
+        Subscriber.objects.create(email='another@example.com', is_active=False)
+        self.client.force_authenticate(self.staff)
+
+        response = self.client.get('/api/dashboard/subscribers/?search=coffee')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['id'], matching.id)
+        self.assertEqual(response.data['results'][0]['email'], matching.email)
+        self.assertTrue(response.data['results'][0]['is_active'])
     def test_staff_can_read_order_and_inquiry_inboxes(self):
         product = Product.objects.create(
             slug='arabica',

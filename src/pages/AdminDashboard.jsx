@@ -9,6 +9,7 @@ const sections = [
   { id: 'Products', label: 'Products' },
   { id: 'Requests', label: 'Requests' },
   { id: 'Users', label: 'Users' },
+  { id: 'Subscribers', label: 'Subscribers' },
   { id: 'Settings', label: 'Settings' },
 ]
 
@@ -129,7 +130,7 @@ function SearchBox({ value, onChange, label }) {
 }
 
 export default function AdminDashboard() {
-  const { token, isAuthenticated, user, signIn, signOut, updateUser } = useAuth()
+  const { token, isAuthenticated, user, signIn, signOut, clearAuth, updateUser } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const requestedSection = searchParams.get('tab')
   const activeTab = sections.some(section => section.id === requestedSection) ? requestedSection : 'Overview'
@@ -148,6 +149,11 @@ export default function AdminDashboard() {
   const [userPageNumber, setUserPageNumber] = useState(1)
   const [usersPageKey, setUsersPageKey] = useState('')
   const [usersError, setUsersError] = useState('')
+  const [subscribersPage, setSubscribersPage] = useState(null)
+  const [subscriberSearch, setSubscriberSearch] = useState('')
+  const [subscriberPageNumber, setSubscriberPageNumber] = useState(1)
+  const [subscribersPageKey, setSubscribersPageKey] = useState('')
+  const [subscribersError, setSubscribersError] = useState('')
   const [orderStatusUpdates, setOrderStatusUpdates] = useState({})
   const [expandedOrders, setExpandedOrders] = useState({})
   const [productsPage, setProductsPage] = useState(null)
@@ -246,6 +252,31 @@ export default function AdminDashboard() {
   }, [activeTab, token, userSearch, userPageNumber])
 
   useEffect(() => {
+    if (!token || activeTab !== 'Subscribers') return undefined
+
+    let isCurrent = true
+    const query = new URLSearchParams({ page: String(subscriberPageNumber) })
+    if (subscriberSearch.trim()) query.set('search', subscriberSearch.trim())
+    const requestKey = `${subscriberPageNumber}:${subscriberSearch}`
+
+    apiRequest(`/dashboard/subscribers/?${query.toString()}`, { token })
+      .then(data => {
+        if (isCurrent) {
+          setSubscribersPage(data)
+          setSubscribersPageKey(requestKey)
+          setSubscribersError('')
+        }
+      })
+      .catch(error => {
+        if (isCurrent) setSubscribersError(error.message)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [activeTab, token, subscriberSearch, subscriberPageNumber])
+
+  useEffect(() => {
     if (!token || activeTab !== 'Products') return undefined
     let isCurrent = true
     const query = new URLSearchParams({ page: String(productPageNumber) })
@@ -301,7 +332,11 @@ export default function AdminDashboard() {
     setDataError('')
     setIsSigningIn(true)
     try {
-      await signIn(credentials)
+      const signedInUser = await signIn(credentials)
+      if (!signedInUser.is_staff) {
+        clearAuth()
+        setLoginError('This account does not have administrator access.')
+      }
     } catch (error) {
       setLoginError(error.message)
     } finally {
@@ -587,11 +622,13 @@ export default function AdminDashboard() {
   }
   const isUsersLoading = activeTab === 'Users'
     && usersPageKey !== `${userPageNumber}:${userSearch}`
+  const isSubscribersLoading = activeTab === 'Subscribers'
+    && subscribersPageKey !== `${subscriberPageNumber}:${subscriberSearch}`
   const isProductLoading = activeTab === 'Products'
     && productsPageKey !== `${productPageNumber}:${productSearch}`
     && !productError
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user?.is_staff) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f5f2ee] px-4 py-10">
         <div className="grid w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_rgba(49,34,23,0.12)] md:min-h-[590px] md:grid-cols-[1.05fr_0.95fr]">
@@ -1563,6 +1600,82 @@ export default function AdminDashboard() {
                   })}
                 </ul>
               </section>
+            </section>
+          )}
+
+          {activeTab === 'Subscribers' && (
+            <section aria-labelledby="subscribers-heading">
+              <SectionHeading
+                eyebrow="Newsletter audience"
+                title="Subscribers"
+                description={`${subscribersPage?.count ?? summary?.active_subscribers ?? 0} newsletter subscribers`}
+              >
+                <SearchBox
+                  value={subscriberSearch}
+                  onChange={value => {
+                    setSubscriberSearch(value)
+                    setSubscriberPageNumber(1)
+                    setSubscribersError('')
+                  }}
+                  label="Search subscribers"
+                />
+              </SectionHeading>
+              {subscribersError && (
+                <p role="alert" className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  Could not load newsletter subscribers: {subscribersError}
+                </p>
+              )}
+              {isSubscribersLoading ? (
+                <p role="status" className="border-y border-stone-200 py-6 text-center text-sm text-stone-500">Loading subscribers…</p>
+              ) : subscribersPage?.results.length ? (
+                <>
+                  <ul className="divide-y divide-stone-200 border-y border-stone-200 bg-white">
+                    {subscribersPage.results.map(subscriber => (
+                      <li key={subscriber.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
+                        <div className="min-w-0">
+                          <a className="break-all text-sm font-semibold text-[#8b4a2b] hover:underline" href={`mailto:${subscriber.email}`}>
+                            {subscriber.email}
+                          </a>
+                          <p className="mt-1 text-xs text-stone-500">
+                            Subscribed {formatDate(subscriber.subscribed_at)}
+                          </p>
+                        </div>
+                        <StatusBadge>{subscriber.is_active ? 'active' : 'unsubscribed'}</StatusBadge>
+                      </li>
+                    ))}
+                  </ul>
+                  {subscribersPage.count > 20 && (
+                    <nav aria-label="Subscriber list pages" className="mt-4 flex items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        disabled={!subscribersPage.previous || isSubscribersLoading}
+                        onClick={() => setSubscriberPageNumber(page => page - 1)}
+                        className="min-h-10 rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-center text-xs text-stone-500">
+                        {subscribersPage.count} subscribers · Page {subscriberPageNumber}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={!subscribersPage.next || isSubscribersLoading}
+                        onClick={() => setSubscriberPageNumber(page => page + 1)}
+                        className="min-h-10 rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Next
+                      </button>
+                    </nav>
+                  )}
+                </>
+              ) : (
+                <div className="border-y border-stone-200 bg-white">
+                  <EmptyState
+                    title={subscriberSearch ? 'No matching subscribers' : 'No subscribers yet'}
+                    description={subscriberSearch ? 'Try another email address.' : 'New newsletter signups will appear here.'}
+                  />
+                </div>
+              )}
             </section>
           )}
 

@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube, FaXTwitter } from 'react-icons/fa6'
-import { useState } from 'react'
 
 const menuLinks = [
   { label: 'Home', to: '/' },
@@ -12,8 +11,6 @@ const menuLinks = [
 ]
 
 export default function Footer() {
-  const [email, setEmail] = useState('')
-
   return (
     <footer>
       {/* Wave divider */}
@@ -62,19 +59,6 @@ export default function Footer() {
               <a href="#" aria-label="X"><FaXTwitter /></a>
             </div>
 
-            {/* Newsletter subscribe */}
-            <div className="flex w-full min-w-0 gap-2">
-              <input
-                type="email"
-                placeholder="Put your email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="min-w-0 flex-1 bg-white px-3 py-2 rounded text-brown text-sm placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-brown"
-              />
-              <button className="shrink-0 whitespace-nowrap bg-slate text-white px-4 py-2 rounded text-sm hover:opacity-90 transition-opacity">
-                Subscribe
-              </button>
-            </div>
           </div>
 
           {/* Location Map */}

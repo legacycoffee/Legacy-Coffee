@@ -19,6 +19,7 @@ from .serializers import (
     AdminAccountSerializer,
     OrderInboxSerializer,
     ProductManagementSerializer,
+    SubscriberInboxSerializer,
     UserInboxSerializer,
 )
 
@@ -113,6 +114,14 @@ class UserInboxView(generics.ListAPIView):
         return user_model.objects.filter(is_staff=False, is_superuser=False).annotate(
             order_count=Count('orders', distinct=True),
         ).order_by('-date_joined')
+
+
+class SubscriberInboxView(generics.ListAPIView):
+    permission_classes = [IsAdminUser]
+    serializer_class = SubscriberInboxSerializer
+    queryset = Subscriber.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['email']
 
 
 class ProductManagementListView(generics.ListCreateAPIView):
