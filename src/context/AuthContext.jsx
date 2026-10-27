@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
 import { AuthContext } from './authContext.js'
+import { API_BASE_URL } from './api.js'
 
 const AUTH_STORAGE_KEY = 'legacy-coffee-auth'
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api'
 
 async function authRequest(path, payload, token) {
   const response = await fetch(`${API_BASE_URL}${path}`, {

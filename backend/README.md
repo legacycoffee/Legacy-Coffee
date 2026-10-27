@@ -1,6 +1,19 @@
 # Legacy Coffee API
 
-Django REST API for the Legacy Coffee storefront. The initial setup uses SQLite, token authentication, and CORS origins for the local Vite development server.
+Django REST API for the Legacy Coffee storefront. Local development uses SQLite; production can use PostgreSQL through `DATABASE_URL`. Static admin assets are served with WhiteNoise, and Railway starts the app with Gunicorn.
+
+## Railway deployment
+
+The backend is a standalone repository, so create a Railway service from `gadgetsmajo/legacy` on the `main` branch. Its repository root already contains `manage.py` and the `Procfile`; no monorepo root-directory setting is needed.
+
+1. Add a Railway PostgreSQL service.
+2. In the Django service variables, set `DATABASE_URL` to `${{Postgres.DATABASE_URL}}` (replace `Postgres` if your database service has a different name).
+3. Set `DJANGO_SECRET_KEY` to a new, long random secret and set `DJANGO_DEBUG` to `false`.
+4. The current backend domain is `legacy-production-48e0.up.railway.app`; set `DJANGO_ALLOWED_HOSTS` to that hostname only (without `https://`).
+5. Set `CORS_ALLOWED_ORIGINS` to `https://legacycoffee.github.io` (the origin only; do not include `/Legacy-Coffee/`). Set the Cloudinary variables if profile photo uploads are needed.
+6. Deploy. The Procfile runs migrations and collects static files before starting Gunicorn.
+
+The GitHub Pages workflow builds the frontend with `VITE_API_URL=https://legacy-production-48e0.up.railway.app/api`. Railway's filesystem is ephemeral; use the PostgreSQL service rather than the local SQLite database for production data. Do not set `DATABASE_URL` to SQLite or commit real secrets.
 
 ## Local setup (Windows PowerShell)
 
@@ -17,6 +30,10 @@ backend\.venv\Scripts\python.exe backend\manage.py runserver
 ```
 
 The API runs at `http://127.0.0.1:8000/`; the Django admin is at `/admin/`. Django loads `backend\.env` automatically, while environment variables already set by the process take precedence. Set the real `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` values in that file for profile photo uploads. Keep the API secret on the backend only; uploads use a signed request to Cloudinary and store the resulting secure URL on the user account. Without these settings the API reports a configuration error instead of storing the image locally. Production startup refuses to use the development key when `DJANGO_DEBUG=false`.
+
+## Repository remotes
+
+The project root remains in `legacycoffee/Legacy-Coffee`; the `backend` directory is also an independent Git repository hosted at `gadgetsmajo/legacy`. Run backend Git commands from this directory so pushes go to its `origin`; run project-wide Git commands from the project root to continue collaborating on the original repository. The backend `.gitignore` excludes local environment files and the SQLite database.
 
 ## Apps
 
