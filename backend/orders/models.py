@@ -25,6 +25,7 @@ class Order(models.Model):
         related_name='orders',
     )
     customer_name = models.CharField(max_length=160)
+    business_name = models.CharField(max_length=160, blank=True)
     customer_email = models.EmailField()
     customer_phone = models.CharField(max_length=40)
     delivery_address = models.CharField(max_length=250)
@@ -40,6 +41,7 @@ class Order(models.Model):
     )
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     total = models.DecimalField(max_digits=14, decimal_places=0, default=0)
+    invoice_pdf = models.BinaryField(null=True, blank=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -62,6 +64,7 @@ class OrderItem(models.Model):
     weight = models.CharField(max_length=40)
     unit_price = models.DecimalField(max_digits=12, decimal_places=0)
     quantity = models.PositiveSmallIntegerField()
+    is_wholesale = models.BooleanField(default=False)
 
     @property
     def line_total(self):

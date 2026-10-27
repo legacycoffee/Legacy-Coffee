@@ -4,6 +4,7 @@ import { LuArrowRight, LuPackage, LuPackageCheck, LuClock3, LuCircleX } from 're
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import { formatPrice } from '../data/products.js'
+import OrderInvoiceActions from '../components/OrderInvoiceActions.jsx'
 
 const statusStyles = {
   pending: 'bg-amber-50 text-amber-800 ring-amber-200',
@@ -144,7 +145,10 @@ export default function MyOrdersPage() {
                       <h2 className="font-bold text-black">Order {selectedOrder.reference}</h2>
                       <p className="mt-1 text-xs text-black/60">Placed {formatDate(selectedOrder.created_at)}</p>
                     </div>
-                    <StatusBadge status={selectedOrder.status} label={selectedOrder.status_label} />
+                    <div className="flex flex-wrap items-center gap-3">
+                      <StatusBadge status={selectedOrder.status} label={selectedOrder.status_label} />
+                      <OrderInvoiceActions reference={selectedOrder.reference} token={token} />
+                    </div>
                   </header>
 
                   <ul className="space-y-3 py-4">

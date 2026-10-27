@@ -59,6 +59,16 @@ class ShopApiTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['results'][0]['id'], self.product.slug)
         self.assertEqual(response.data['results'][0]['price'], '18')
+        self.assertIsNone(response.data['results'][0]['wholesale_price'])
+
+    def test_product_api_exposes_admin_configured_wholesale_price(self):
+        self.product.wholesale_price = 15
+        self.product.save(update_fields=('wholesale_price',))
+
+        response = self.client.get('/api/shop/products/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['results'][0]['wholesale_price'], '15')
 
     def test_review_creation_requires_auth_and_includes_rating(self):
         payload = {'product': self.product.slug, 'rating': 5, 'text': 'Excellent coffee.'}

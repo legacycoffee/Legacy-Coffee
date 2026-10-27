@@ -36,6 +36,7 @@ class DashboardApiTests(APITestCase):
     def test_staff_can_read_order_and_inquiry_inboxes(self):
         order = Order.objects.create(
             customer_name='Coffee Customer',
+            business_name='Coffee House',
             customer_email='customer@example.com',
             customer_phone='+256700000000',
             delivery_address='1 Coffee Road',
@@ -57,6 +58,7 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(orders_response.status_code, 200)
         self.assertEqual(orders_response.data['results'][0]['reference'], order.reference)
         self.assertEqual(orders_response.data['results'][0]['customer_phone'], '+256700000000')
+        self.assertEqual(orders_response.data['results'][0]['business_name'], 'Coffee House')
         self.assertEqual(inquiries_response.status_code, 200)
         self.assertEqual(inquiries_response.data['results'][0]['kind'], Inquiry.Kind.CONTACT)
         self.assertEqual(inquiries_response.data['results'][0]['message'], 'Please share more details.')

@@ -7,6 +7,13 @@ class Product(models.Model):
     name = models.CharField(max_length=160)
     weight = models.CharField(max_length=40)
     price = models.DecimalField(max_digits=12, decimal_places=0)
+    wholesale_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=0,
+        null=True,
+        blank=True,
+        help_text='Optional wholesale unit price. Leave blank to use the retail price estimate.',
+    )
     description = models.TextField()
     details = models.TextField()
     tasting_notes = models.CharField(max_length=300)

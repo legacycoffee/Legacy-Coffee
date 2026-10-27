@@ -192,7 +192,7 @@ export default function AdminDashboard() {
                   <ul className="divide-y divide-stone-100">
                     {orders.slice(0, 5).map(order => (
                       <li key={order.reference} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
-                        <div><p className="font-semibold text-stone-900">{order.customer_name}</p><p className="text-xs text-stone-500">{order.reference} · {formatDate(order.created_at)}</p></div>
+                        <div><p className="font-semibold text-stone-900">{order.customer_name}</p>{order.business_name && <p className="text-xs text-stone-600">{order.business_name}</p>}<p className="text-xs text-stone-500">{order.reference} · {formatDate(order.created_at)}</p></div>
                         <div className="text-right"><p className="font-semibold text-stone-800">{formatPrice(order.total)}</p><StatusBadge>{order.status}</StatusBadge></div>
                       </li>
                     ))}
@@ -229,6 +229,7 @@ export default function AdminDashboard() {
                     <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-100 pb-3">
                       <div>
                         <h2 className="font-bold text-stone-900">{order.customer_name}</h2>
+                        {order.business_name && <p className="mt-0.5 text-sm text-stone-600">{order.business_name}</p>}
                         <p className="mt-1 text-xs text-stone-500">{order.reference} · {formatDate(order.created_at)}</p>
                       </div>
                       <div className="flex items-center gap-3"><StatusBadge>{order.status}</StatusBadge><strong className="text-stone-900">{formatPrice(order.total)}</strong></div>
@@ -241,7 +242,7 @@ export default function AdminDashboard() {
                       {order.items.map((item, index) => (
                         <li key={`${item.product_name}-${index}`} className="flex justify-between gap-3 text-stone-700">
                           <span>{item.product_name} ({item.weight}) × {item.quantity}</span>
-                          <span>{formatPrice(item.line_total)}</span>
+                          <span className="text-right">{item.is_wholesale && <small className="mr-2 text-stone-500">Wholesale</small>}{formatPrice(item.line_total)}</span>
                         </li>
                       ))}
                     </ul>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
+import OrderInvoiceActions from '../components/OrderInvoiceActions.jsx'
 
 function formatNotificationDate(value) {
   return new Intl.DateTimeFormat(undefined, {
@@ -170,6 +171,12 @@ export default function NotificationsPage() {
                 {selectedNotification.details?.reference ? (
                   <div className="mt-6 border-t border-peach-mid/40 pt-5">
                     <h3 className="font-bold text-black">Order details</h3>
+                    <div className="mt-4">
+                      <OrderInvoiceActions
+                        reference={selectedNotification.details.reference}
+                        token={token}
+                      />
+                    </div>
                     <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
                       <div>
                         <dt className="text-xs font-semibold text-black/55">Order number</dt>
@@ -191,6 +198,12 @@ export default function NotificationsPage() {
                         <dt className="text-xs font-semibold text-black/55">Phone</dt>
                         <dd className="mt-1 text-black">{selectedNotification.details.customer_phone}</dd>
                       </div>
+                      {selectedNotification.details.business_name && (
+                        <div>
+                          <dt className="text-xs font-semibold text-black/55">Business</dt>
+                          <dd className="mt-1 text-black">{selectedNotification.details.business_name}</dd>
+                        </div>
+                      )}
                       <div>
                         <dt className="text-xs font-semibold text-black/55">Delivery location</dt>
                         <dd className="mt-1 text-black">

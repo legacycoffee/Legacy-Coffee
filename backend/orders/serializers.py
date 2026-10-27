@@ -7,6 +7,7 @@ from accounts.models import Notification
 from accounts.notifications import create_order_notification
 from shop.models import Product
 
+from .invoices import build_invoice_pdf
 from .models import Order, OrderItem
 
 
@@ -17,6 +18,7 @@ class OrderItemInputSerializer(serializers.Serializer):
         queryset=Product.objects.filter(is_active=True),
     )
     quantity = serializers.IntegerField(min_value=1, max_value=99)
+    is_wholesale = serializers.BooleanField(default=False)
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -24,7 +26,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ('product_name', 'weight', 'unit_price', 'quantity', 'line_total')
+        fields = ('product_name', 'weight', 'unit_price', 'quantity', 'is_wholesale', 'line_total')
 
 
 class OrderHistoryItemSerializer(serializers.ModelSerializer):
@@ -35,7 +37,7 @@ class OrderHistoryItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
         fields = (
-            'product_name', 'weight', 'unit_price', 'quantity', 'line_total',
+            'product_name', 'weight', 'unit_price', 'quantity', 'is_wholesale', 'line_total',
             'product_image', 'product_image_alt',
         )
 
@@ -53,7 +55,7 @@ class OrderHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = (
-            'reference', 'customer_name', 'customer_email', 'customer_phone',
+            'reference', 'customer_name', 'business_name', 'customer_email', 'customer_phone',
             'status', 'status_label', 'total', 'created_at',
             'delivery_address', 'delivery_city', 'delivery_notes',
             'delivery_latitude', 'delivery_longitude', 'items',
@@ -67,7 +69,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = (
-            'reference', 'customer_name', 'customer_email', 'customer_phone',
+            'reference', 'customer_name', 'business_name', 'customer_email', 'customer_phone',
             'delivery_address', 'delivery_city', 'delivery_notes', 'status',
             'delivery_latitude', 'delivery_longitude',
             'total', 'order_items', 'items', 'created_at',
@@ -106,12 +108,19 @@ class OrderCreateSerializer(serializers.ModelSerializer):
                 product=product,
                 product_name=product.name,
                 weight=product.weight,
-                unit_price=product.price,
+                unit_price=(
+                    product.wholesale_price
+                    if entry['is_wholesale'] and product.wholesale_price is not None
+                    else product.price
+                ),
                 quantity=entry['quantity'],
+                is_wholesale=entry['is_wholesale'],
             )
             total += item.line_total
         order.total = total
         order.save(update_fields=('total', 'updated_at'))
+        order.invoice_pdf = build_invoice_pdf(order)
+        order.save(update_fields=('invoice_pdf',))
         create_order_notification(
             order,
             kind=Notification.Kind.ORDER_SUBMITTED,

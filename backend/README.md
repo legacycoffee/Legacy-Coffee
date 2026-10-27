@@ -15,6 +15,8 @@ The backend is a standalone repository, so create a Railway service from `gadget
 
 The GitHub Pages workflow builds the frontend with `VITE_API_URL=https://legacy-production-48e0.up.railway.app/api`. Railway's filesystem is ephemeral; use the PostgreSQL service rather than the local SQLite database for production data. Do not set `DATABASE_URL` to SQLite or commit real secrets.
 
+Wholesale pricing is optional for each product and can be set in Django admin. The wholesale page uses a configured wholesale price when present; otherwise, it calculates an estimate using the retail price.
+
 ## Local setup (Windows PowerShell)
 
 From the repository root:
@@ -61,7 +63,7 @@ Create the first staff superuser from the backend environment with `py backend\m
 - `POST /api/newsletter/subscribe/`, `POST /api/newsletter/unsubscribe/`
 - `GET /api/dashboard/`, `GET /api/dashboard/orders/`, `GET /api/dashboard/inquiries/` (authenticated staff only)
 
-Token-authenticated requests use `Authorization: Token <token>`. Order submission requires a signed-in account; the API associates each order with that account and uses the account email. The order history endpoint returns only orders belonging to the authenticated user, including status and item details. Product list responses use DRF page-number pagination and expose the storefront product identifier as `id`. Orders accept product IDs and quantities only; the server looks up current active-product prices and snapshots them on each order item.
+Token-authenticated requests use `Authorization: Token <token>`. Order submission requires a signed-in account; the API associates each order with that account and uses the account email. The order history endpoint returns only orders belonging to the authenticated user, including status and item details. Product list responses use DRF page-number pagination and expose the storefront product identifier as `id`. Orders accept product IDs, quantities, optional business names, and a wholesale-order flag; the server looks up current active-product prices and snapshots them on each order item. A pro forma PDF invoice is generated when the order is submitted, stored with that order, and available only to its owner at `GET /api/orders/{reference}/invoice/`. It is available to preview and download from the order confirmation, notification, and My Orders pages. It states that no payment has been collected and delivery costs are confirmed separately.
 
 Wishlist items are private to the signed-in account. Product share events record the product, share channel, and timestamp, without recording account identity or IP addresses. The admin dashboard summary includes the total number of recorded product shares.
 

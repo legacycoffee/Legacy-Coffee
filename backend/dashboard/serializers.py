@@ -9,6 +9,7 @@ class OrderInboxItemSerializer(serializers.Serializer):
     weight = serializers.CharField()
     unit_price = serializers.DecimalField(max_digits=12, decimal_places=0)
     quantity = serializers.IntegerField()
+    is_wholesale = serializers.BooleanField()
     line_total = serializers.DecimalField(max_digits=14, decimal_places=0)
 
 
@@ -18,7 +19,7 @@ class OrderInboxSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = (
-            'reference', 'customer_name', 'customer_email', 'customer_phone',
+            'reference', 'customer_name', 'business_name', 'customer_email', 'customer_phone',
             'delivery_address', 'delivery_city', 'delivery_notes',
             'delivery_latitude', 'delivery_longitude', 'status',
             'total', 'items', 'created_at',

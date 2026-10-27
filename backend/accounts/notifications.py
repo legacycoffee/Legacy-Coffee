@@ -6,6 +6,7 @@ def order_notification_details(order):
     return {
         'reference': order.reference,
         'customer_name': order.customer_name,
+        'business_name': order.business_name,
         'customer_email': order.customer_email,
         'customer_phone': order.customer_phone,
         'status': order.status,
@@ -26,6 +27,7 @@ def order_notification_details(order):
                 'weight': item.weight,
                 'unit_price': str(item.unit_price),
                 'quantity': item.quantity,
+                'is_wholesale': item.is_wholesale,
                 'line_total': str(item.line_total),
                 'image': item.product.image if item.product else None,
                 'image_alt': item.product.image_alt if item.product else item.product_name,

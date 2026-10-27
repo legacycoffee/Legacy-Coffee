@@ -3,11 +3,14 @@ import { Link, Navigate, useLocation } from 'react-router-dom'
 import { LuArrowRight, LuCheck, LuClock3, LuCoffee, LuPackageCheck } from 'react-icons/lu'
 import { formatPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
+import { useAuth } from '../context/useAuth.js'
 import ProductImage from '../components/ProductImage.jsx'
+import OrderInvoiceActions from '../components/OrderInvoiceActions.jsx'
 
 export default function ConfirmationPage() {
   const location = useLocation()
   const { latestOrder, clearCart } = useCart()
+  const { token } = useAuth()
   const order = location.state?.order || latestOrder
 
   useEffect(() => {
@@ -41,6 +44,9 @@ export default function ConfirmationPage() {
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-black/70 sm:text-base">
             We’ve received your coffee order request. Our team will be in touch to confirm delivery and payment details.
           </p>
+          <div className="mt-5 flex justify-center">
+            <OrderInvoiceActions reference={order.id} token={token} />
+          </div>
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
@@ -93,6 +99,7 @@ export default function ConfirmationPage() {
                   <div>
                     <dt className="text-xs text-black/60">Contact</dt>
                     <dd className="mt-1 font-medium text-black">{order.customer.name}</dd>
+                    {order.customer.business_name && <dd className="text-black/80">{order.customer.business_name}</dd>}
                     <dd className="break-all text-black/80">{order.customer.email}</dd>
                     {order.customer.phone && <dd className="text-black/80">{order.customer.phone}</dd>}
                   </div>

@@ -11,11 +11,12 @@ const inputClass = 'mt-1.5 w-full border border-peach-mid bg-white px-3.5 py-3 t
 const labelClass = 'block text-sm font-medium text-black'
 
 export default function CheckoutPage() {
-  const { items, cartTotal, saveOrder } = useCart()
+  const { items, cartTotal, saveOrder, wholesaleDetails } = useCart()
   const { isAuthenticated, token, user, updateUser } = useAuth()
   const navigate = useNavigate()
   const [customer, setCustomer] = useState(() => ({
-    name: [user?.first_name, user?.last_name].filter(Boolean).join(' '),
+    name: wholesaleDetails?.name || [user?.first_name, user?.last_name].filter(Boolean).join(' '),
+    business_name: wholesaleDetails?.business_name || '',
     email: user?.email || '',
     phone: '',
     address: user?.delivery_address || '',
@@ -43,12 +44,17 @@ export default function CheckoutPage() {
         token,
         body: {
           customer_name: customer.name,
+          business_name: customer.business_name,
           customer_email: customer.email,
           customer_phone: customer.phone,
           delivery_address: customer.address,
           delivery_city: customer.city,
           delivery_notes: customer.notes,
-          items: items.map(item => ({ product_id: item.id, quantity: item.quantity })),
+          items: items.map(item => ({
+            product_id: item.id,
+            quantity: item.quantity,
+            is_wholesale: Boolean(item.is_wholesale),
+          })),
         },
       })
 
@@ -64,6 +70,7 @@ export default function CheckoutPage() {
         status: result.status,
         customer: {
           name: result.customer_name,
+          business_name: result.business_name,
           email: result.customer_email,
           phone: result.customer_phone,
           address: result.delivery_address,
@@ -141,6 +148,12 @@ export default function CheckoutPage() {
                   Full name
                   <input id="checkout-name" required autoComplete="name" name="name" value={customer.name} onChange={handleChange} placeholder="e.g. Alex Namusoke" className={inputClass} />
                 </label>
+                {wholesaleDetails && (
+                  <label className={labelClass} htmlFor="checkout-business">
+                    Business name <span className="font-normal text-black/55">(optional)</span>
+                    <input id="checkout-business" autoComplete="organization" name="business_name" value={customer.business_name} onChange={handleChange} placeholder="Your café or business" className={inputClass} />
+                  </label>
+                )}
                 <label className={labelClass} htmlFor="checkout-email">
                   Email address
                   <input id="checkout-email" required type="email" autoComplete="email" name="email" value={customer.email} onChange={handleChange} placeholder="you@example.com" className={inputClass} />
@@ -176,9 +189,11 @@ export default function CheckoutPage() {
                   : null}
               </p>
             )}
-            <button type="submit" disabled={isSubmitting} className="w-full bg-[#F58537] px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60 sm:w-auto">
-              {isSubmitting ? 'Sending order…' : 'Place order request'}
-            </button>
+            <div className="flex justify-end">
+              <button type="submit" disabled={isSubmitting} className="w-full bg-[#F58537] px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60 sm:w-auto">
+                {isSubmitting ? 'Sending order…' : 'Place order request'}
+              </button>
+            </div>
           </form>
 
           <aside className="h-fit border border-peach-mid/50 bg-white p-4 shadow-sm sm:p-6 lg:sticky lg:top-6">

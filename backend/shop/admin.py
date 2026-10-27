@@ -5,7 +5,7 @@ from .models import Product, Review, ShareEvent, WishlistItem
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'price', 'weight', 'roast', 'is_active')
+    list_display = ('name', 'slug', 'price', 'wholesale_price', 'weight', 'roast', 'is_active')
     list_filter = ('is_active', 'roast')
     search_fields = ('name', 'slug', 'description')
     prepopulated_fields = {'slug': ('name',)}

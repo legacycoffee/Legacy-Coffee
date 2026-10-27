@@ -71,7 +71,77 @@ class OrderApiTests(APITestCase):
             'line_total': '36000',
             'image': 'https://example.com/coffee.jpg',
             'image_alt': 'Coffee',
+            'is_wholesale': False,
         }])
+
+    def test_wholesale_order_uses_admin_price_and_saves_optional_business(self):
+        self.product.wholesale_price = Decimal('15000')
+        self.product.save(update_fields=('wholesale_price',))
+        self.client.force_authenticate(self.user)
+        response = self.client.post('/api/orders/', {
+            **self.payload,
+            'business_name': 'Coffee House',
+            'items': [{
+                'product_id': self.product.slug,
+                'quantity': 2,
+                'is_wholesale': True,
+            }],
+        }, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        order = Order.objects.get()
+        item = order.items.get()
+        self.assertEqual(order.business_name, 'Coffee House')
+        self.assertEqual(order.total, Decimal('30000'))
+        self.assertTrue(item.is_wholesale)
+        self.assertEqual(item.unit_price, Decimal('15000'))
+        self.assertEqual(response.data['business_name'], 'Coffee House')
+        self.assertTrue(response.data['order_items'][0]['is_wholesale'])
+
+    def test_wholesale_order_falls_back_to_retail_price_when_unconfigured(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.post('/api/orders/', {
+            **self.payload,
+            'items': [{
+                'product_id': self.product.slug,
+                'quantity': 2,
+                'is_wholesale': True,
+            }],
+        }, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['total'], '36000')
+        self.assertEqual(response.data['order_items'][0]['unit_price'], '18000')
+        self.assertTrue(response.data['order_items'][0]['is_wholesale'])
+
+    def test_order_generates_invoice_pdf_available_to_order_owner(self):
+        self.client.force_authenticate(self.user)
+        order_response = self.client.post('/api/orders/', self.payload, format='json')
+        order = Order.objects.get()
+        self.assertEqual(order_response.status_code, 201)
+        self.assertTrue(bytes(order.invoice_pdf).startswith(b'%PDF-'))
+
+        invoice_response = self.client.get(f'/api/orders/{order.reference}/invoice/')
+
+        self.assertEqual(invoice_response.status_code, 200)
+        self.assertEqual(invoice_response['Content-Type'], 'application/pdf')
+        self.assertIn(f'invoice-{order.reference}.pdf', invoice_response['Content-Disposition'])
+        self.assertEqual(bytes(invoice_response.content), bytes(order.invoice_pdf))
+
+    def test_invoice_is_not_accessible_to_another_customer(self):
+        self.client.force_authenticate(self.user)
+        self.client.post('/api/orders/', self.payload, format='json')
+        order = Order.objects.get()
+        other_user = get_user_model().objects.create_user(
+            username='another-customer',
+            email='another@example.com',
+            password='StrongPassword!2026',
+        )
+        self.client.force_authenticate(other_user)
+
+        response = self.client.get(f'/api/orders/{order.reference}/invoice/')
+
+        self.assertEqual(response.status_code, 404)
 
     def test_order_status_changes_create_customer_notification(self):
         self.client.force_authenticate(self.user)
