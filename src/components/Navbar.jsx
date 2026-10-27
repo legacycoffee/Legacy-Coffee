@@ -87,9 +87,9 @@ export default function Navbar() {
   return (
     <>
       <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur shadow-md' : 'bg-peach'}`}>
-        <div className="relative max-w-7xl mx-auto px-4 md:px-6 flex items-center justify-between h-16 md:h-20">
+        <div className="relative max-w-7xl mx-auto px-4 md:px-6 flex items-center justify-between h-18 md:h-22">
           <Link to="/" className="flex-shrink-0" onClick={() => setMenuOpen(false)}>
-            <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-10 md:h-12 w-auto" />
+            <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-18 w-auto md:h-20" />
           </Link>
 
           {/* Desktop Nav */}
@@ -246,7 +246,7 @@ export default function Navbar() {
         <div className={`absolute top-0 right-0 h-full w-4/5 max-w-sm bg-white shadow-2xl flex flex-col transition-transform duration-300 ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           {/* header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-peach-light">
-            <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-9 w-auto" />
+            <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-16 w-auto" />
             <button onClick={() => setMenuOpen(false)} className="w-9 h-9 flex items-center justify-center rounded-full bg-peach-light text-brown hover:bg-primary hover:text-white transition-colors">
               <FiX size={18} />
             </button>
