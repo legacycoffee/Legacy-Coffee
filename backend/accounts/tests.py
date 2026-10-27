@@ -1,17 +1,59 @@
 import hashlib
 import json
+import os
 import re
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import SimpleTestCase
+from django.core.management import call_command, CommandError
+from django.test import SimpleTestCase, TestCase
 from django.test import override_settings
 from rest_framework.test import APITestCase
 
 from accounts.services import upload_profile_photo
 from accounts.models import Notification
 from orders.models import Order
+
+
+class InitialAdminCommandTests(TestCase):
+    @patch.dict(os.environ, {
+        'INITIAL_ADMIN_EMAIL': 'initial-admin@example.com',
+        'INITIAL_ADMIN_USERNAME': 'initial-admin',
+        'INITIAL_ADMIN_PASSWORD': 'VeryStrong!Initial2026',
+    })
+    def test_creates_initial_superuser_and_does_not_reset_password(self):
+        call_command('create_initial_admin')
+
+        admin = get_user_model().objects.get(email='initial-admin@example.com')
+        self.assertTrue(admin.is_staff)
+        self.assertTrue(admin.is_superuser)
+        self.assertTrue(admin.check_password('VeryStrong!Initial2026'))
+
+        with patch.dict(os.environ, {'INITIAL_ADMIN_PASSWORD': 'DifferentStrong!2026'}):
+            call_command('create_initial_admin')
+
+        admin.refresh_from_db()
+        self.assertTrue(admin.check_password('VeryStrong!Initial2026'))
+        self.assertFalse(admin.check_password('DifferentStrong!2026'))
+
+    @patch.dict(os.environ, {
+        'INITIAL_ADMIN_EMAIL': '',
+        'INITIAL_ADMIN_USERNAME': '',
+        'INITIAL_ADMIN_PASSWORD': '',
+    })
+    def test_skips_when_initial_admin_variables_are_unset(self):
+        call_command('create_initial_admin')
+        self.assertFalse(get_user_model().objects.filter(is_superuser=True).exists())
+
+    @patch.dict(os.environ, {
+        'INITIAL_ADMIN_EMAIL': 'initial-admin@example.com',
+        'INITIAL_ADMIN_USERNAME': '',
+        'INITIAL_ADMIN_PASSWORD': 'VeryStrong!Initial2026',
+    })
+    def test_rejects_partial_initial_admin_configuration(self):
+        with self.assertRaises(CommandError):
+            call_command('create_initial_admin')
 
 
 class CloudinaryUploadTests(SimpleTestCase):
