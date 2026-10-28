@@ -1,6 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { LuStore } from 'react-icons/lu'
+import {
+  LuBold,
+  LuImage,
+  LuItalic,
+  LuLink,
+  LuList,
+  LuListOrdered,
+  LuSend,
+  LuStore,
+  LuUnderline,
+} from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 
@@ -11,6 +21,7 @@ const sections = [
   { id: 'Requests', label: 'Requests' },
   { id: 'Users', label: 'Users' },
   { id: 'Subscribers', label: 'Subscribers' },
+  { id: 'Newsletter', label: 'Newsletter' },
   { id: 'Settings', label: 'Settings' },
 ]
 
@@ -130,6 +141,113 @@ function SearchBox({ value, onChange, label }) {
   )
 }
 
+function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnly }) {
+  const editorRef = useRef(null)
+
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = value
+    }
+  }, [value])
+
+  const insertImage = async event => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    try {
+      const imageUrl = await onImageUpload(file)
+      editorRef.current?.focus()
+      document.execCommand('insertHTML', false, `<img src="${imageUrl}" alt="" style="max-width:100%;height:auto">`)
+      if (editorRef.current) onChange(editorRef.current.innerHTML)
+    } catch {
+      // The parent displays the upload error.
+    }
+  }
+
+  const handleToolbarClick = event => {
+    const button = event.target instanceof Element
+      ? event.target.closest('button[data-command], button[data-action]')
+      : null
+    if (!button) return
+
+    if (button.dataset.action === 'highlight') {
+      const selection = window.getSelection()
+      if (!selection || selection.isCollapsed || !editorRef.current?.contains(selection.anchorNode)) return
+
+      const range = selection.getRangeAt(0)
+      const mark = document.createElement('mark')
+      mark.append(range.extractContents())
+      range.insertNode(mark)
+      selection.removeAllRanges()
+    } else if (button.dataset.action === 'link') {
+      const url = window.prompt('Enter the link URL (https:// or mailto:)')
+      if (!url) return
+      editorRef.current?.focus()
+      document.execCommand('createLink', false, url)
+    } else {
+      editorRef.current?.focus()
+      document.execCommand(button.dataset.command, false, button.dataset.argument || null)
+    }
+
+    if (editorRef.current) onChange(editorRef.current.innerHTML)
+  }
+
+  const tools = [
+    { label: 'Bold', icon: LuBold, command: 'bold' },
+    { label: 'Italic', icon: LuItalic, command: 'italic' },
+    { label: 'Underline', icon: LuUnderline, command: 'underline' },
+    { label: 'Highlight', text: 'H', action: 'highlight' },
+    { label: 'Bulleted list', icon: LuList, command: 'insertUnorderedList' },
+    { label: 'Numbered list', icon: LuListOrdered, command: 'insertOrderedList' },
+    { label: 'Heading', text: 'H2', command: 'formatBlock', argument: 'h2' },
+    { label: 'Quote', text: '“ ”', command: 'formatBlock', argument: 'blockquote' },
+    { label: 'Link', icon: LuLink, action: 'link' },
+  ]
+
+  return (
+    <div className="overflow-hidden border border-stone-200 bg-white">
+      <div className="flex flex-wrap gap-1 border-b border-stone-200 bg-stone-50 p-2" aria-label="Newsletter formatting tools" onClick={handleToolbarClick}>
+        {tools.map(({ label, icon: Icon, text, command, argument, action }) => (
+          <button
+            key={label}
+            type="button"
+            title={label}
+            aria-label={label}
+            data-command={command}
+            data-argument={argument}
+            data-action={action}
+            onMouseDown={event => event.preventDefault()}
+            className="flex h-9 min-w-9 items-center justify-center gap-1 border border-transparent px-2 text-sm font-semibold text-stone-700 transition hover:border-stone-200 hover:bg-white hover:text-[#8b4a2b] focus-visible:outline-2 focus-visible:outline-[#b86638]"
+          >
+            {Icon ? <Icon aria-hidden="true" className="h-4 w-4" /> : text}
+          </button>
+        ))}
+        <label
+          onMouseDown={event => event.preventDefault()}
+          className={`flex h-9 min-w-9 items-center justify-center gap-1 border border-transparent px-2 text-sm font-semibold text-stone-700 transition hover:border-stone-200 hover:bg-white hover:text-[#8b4a2b] focus-within:outline-2 focus-within:outline-[#b86638] ${isUploading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
+        >
+          <LuImage aria-hidden="true" className="h-4 w-4" />
+          <span className="hidden text-xs sm:inline">{isUploading ? 'Uploading…' : 'Image'}</span>
+          <input aria-label="Add image" disabled={isUploading} type="file" accept="image/jpeg,image/png,image/webp" onChange={insertImage} className="sr-only" />
+        </label>
+      </div>
+      <div
+        ref={editorRef}
+        contentEditable={!readOnly}
+        suppressContentEditableWarning
+        role="textbox"
+        aria-label="Newsletter content"
+        aria-multiline="true"
+        onInput={event => onChange(event.currentTarget.innerHTML)}
+        className={`newsletter-editor min-h-72 px-4 py-4 text-sm leading-7 text-stone-800 outline-none sm:min-h-96 sm:px-6 ${readOnly ? 'bg-stone-50' : 'focus:ring-2 focus:ring-inset focus:ring-orange-100'}`}
+        data-placeholder="Write your newsletter here. Select text to format it, or add an image with the toolbar."
+      />
+      <p className="border-t border-stone-100 px-4 py-2 text-[11px] text-stone-400">Formatting and uploaded images are included in the subscriber email.</p>
+    </div>
+  )
+}
+
 export default function AdminDashboard() {
   const { token, isAuthenticated, user, signIn, signOut, clearAuth, updateUser } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -155,6 +273,20 @@ export default function AdminDashboard() {
   const [subscriberPageNumber, setSubscriberPageNumber] = useState(1)
   const [subscribersPageKey, setSubscribersPageKey] = useState('')
   const [subscribersError, setSubscribersError] = useState('')
+  const [newsletters, setNewsletters] = useState([])
+  const [newsletterError, setNewsletterError] = useState('')
+  const [newsletterNotice, setNewsletterNotice] = useState('')
+  const [newsletterSubject, setNewsletterSubject] = useState('')
+  const [newsletterHtml, setNewsletterHtml] = useState('')
+  const [newsletterId, setNewsletterId] = useState(null)
+  const [newsletterStatus, setNewsletterStatus] = useState('draft')
+  const [isNewsletterEditorOpen, setIsNewsletterEditorOpen] = useState(false)
+  const [newsletterLoadedToken, setNewsletterLoadedToken] = useState(null)
+  const isNewsletterLoading = Boolean(token && activeTab === 'Newsletter' && newsletterLoadedToken !== token)
+  const [isNewsletterSaving, setIsNewsletterSaving] = useState(false)
+  const [isNewsletterSending, setIsNewsletterSending] = useState(false)
+  const [isNewsletterImageUploading, setIsNewsletterImageUploading] = useState(false)
+  const [showNewsletterSendConfirmation, setShowNewsletterSendConfirmation] = useState(false)
   const [orderStatusUpdates, setOrderStatusUpdates] = useState({})
   const [expandedOrders, setExpandedOrders] = useState({})
   const [productsPage, setProductsPage] = useState(null)
@@ -278,6 +410,29 @@ export default function AdminDashboard() {
   }, [activeTab, token, subscriberSearch, subscriberPageNumber])
 
   useEffect(() => {
+    if (!token || activeTab !== 'Newsletter') return undefined
+
+    let isCurrent = true
+    apiRequest('/dashboard/newsletters/', { token })
+      .then(data => {
+        if (isCurrent) {
+          setNewsletters(data.results)
+          setNewsletterError('')
+        }
+      })
+      .catch(error => {
+        if (isCurrent) setNewsletterError(error.message)
+      })
+      .finally(() => {
+        if (isCurrent) setNewsletterLoadedToken(token)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [activeTab, token])
+
+  useEffect(() => {
     if (!token || activeTab !== 'Products') return undefined
     let isCurrent = true
     const query = new URLSearchParams({ page: String(productPageNumber) })
@@ -326,6 +481,115 @@ export default function AdminDashboard() {
   useEffect(() => () => {
     if (productImagePreview.startsWith('blob:')) URL.revokeObjectURL(productImagePreview)
   }, [productImagePreview])
+
+  const startNewsletter = () => {
+    setNewsletterId(null)
+    setNewsletterStatus('draft')
+    setNewsletterSubject('')
+    setNewsletterHtml('')
+    setNewsletterError('')
+    setNewsletterNotice('')
+    setIsNewsletterEditorOpen(true)
+  }
+
+  const editNewsletter = newsletter => {
+    setNewsletterId(newsletter.id)
+    setNewsletterStatus(newsletter.status)
+    setNewsletterSubject(newsletter.subject)
+    setNewsletterHtml(newsletter.content_html)
+    setNewsletterError(newsletter.last_error || '')
+    setNewsletterNotice('')
+    setIsNewsletterEditorOpen(true)
+  }
+
+  const saveNewsletter = async () => {
+    setNewsletterError('')
+    setNewsletterNotice('')
+    setIsNewsletterSaving(true)
+    try {
+      const saved = await apiRequest(
+        newsletterId ? `/dashboard/newsletters/${newsletterId}/` : '/dashboard/newsletters/',
+        {
+          method: newsletterId ? 'PATCH' : 'POST',
+          token,
+          body: { subject: newsletterSubject, content_html: newsletterHtml },
+        },
+      )
+      setNewsletterId(saved.id)
+      setNewsletterStatus(saved.status)
+      setNewsletters(current => [saved, ...current.filter(newsletter => newsletter.id !== saved.id)])
+      setNewsletterNotice('Draft saved. Review the email preview before sending.')
+    } catch (error) {
+      setNewsletterError(error.message)
+    } finally {
+      setIsNewsletterSaving(false)
+    }
+  }
+
+  const uploadNewsletterImage = async file => {
+    setNewsletterError('')
+    setIsNewsletterImageUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const result = await apiRequest('/dashboard/newsletter-images/', {
+        method: 'POST',
+        token,
+        body: formData,
+      })
+      return result.url
+    } catch (error) {
+      setNewsletterError(error.message)
+      throw error
+    } finally {
+      setIsNewsletterImageUploading(false)
+    }
+  }
+
+  const sendNewsletter = async () => {
+    if (!newsletterId) return
+    setNewsletterError('')
+    setNewsletterNotice('')
+    setIsNewsletterSending(true)
+    try {
+      await apiRequest(`/dashboard/newsletters/${newsletterId}/`, {
+        method: 'PATCH',
+        token,
+        body: { subject: newsletterSubject, content_html: newsletterHtml },
+      })
+      const sent = await apiRequest(`/dashboard/newsletters/${newsletterId}/send/`, {
+        method: 'POST',
+        token,
+      })
+      setNewsletterStatus(sent.status)
+      setNewsletters(current => current.map(newsletter => newsletter.id === sent.id ? sent : newsletter))
+      setNewsletterNotice(`Newsletter sent to ${sent.recipient_count} subscribers.`)
+      setShowNewsletterSendConfirmation(false)
+      setIsNewsletterEditorOpen(false)
+    } catch (error) {
+      setNewsletterError(error.message)
+    } finally {
+      setIsNewsletterSending(false)
+    }
+  }
+
+  const deleteNewsletterDraft = async () => {
+    if (!newsletterId || newsletterStatus !== 'draft') return
+    if (!window.confirm('Delete this newsletter draft? This cannot be undone.')) return
+    setNewsletterError('')
+    try {
+      await apiRequest(`/dashboard/newsletters/${newsletterId}/`, {
+        method: 'DELETE',
+        token,
+      })
+      setNewsletters(current => current.filter(newsletter => newsletter.id !== newsletterId))
+      setNewsletterNotice('Draft deleted.')
+      setIsNewsletterEditorOpen(false)
+      setNewsletterId(null)
+    } catch (error) {
+      setNewsletterError(error.message)
+    }
+  }
 
   const handleLogin = async event => {
     event.preventDefault()
@@ -1634,6 +1898,188 @@ export default function AdminDashboard() {
             </section>
           )}
 
+          {activeTab === 'Newsletter' && (
+            <section aria-labelledby="newsletter-heading">
+              {isNewsletterEditorOpen ? (
+                <>
+                  <SectionHeading
+                    eyebrow="Audience"
+                    title={newsletterStatus === 'sent' ? 'Sent newsletter' : newsletterId ? 'Edit newsletter' : 'New newsletter'}
+                    description={newsletterStatus === 'sent'
+                      ? `Sent to ${newsletters.find(item => item.id === newsletterId)?.recipient_count ?? 0} subscribers`
+                      : 'Compose a message, save it as a draft, then confirm before emailing subscribers.'}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setIsNewsletterEditorOpen(false)}
+                      className="min-h-10 border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-700 transition hover:bg-white"
+                    >
+                      Back to newsletters
+                    </button>
+                  </SectionHeading>
+
+                  {newsletterError && (
+                    <p role="alert" className="mb-4 break-words border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                      {newsletterError}
+                    </p>
+                  )}
+                  {newsletterNotice && (
+                    <p role="status" className="mb-4 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                      {newsletterNotice}
+                    </p>
+                  )}
+
+                  <div className="mb-5 border-l-4 border-[#f58537] bg-[#fff8f1] px-4 py-3 text-xs leading-5 text-[#70432d]">
+                    Email delivery requires the <code className="font-semibold">RESEND_API_KEY</code> and <code className="font-semibold">NEWSLETTER_FROM_EMAIL</code> variables in Railway. Drafts can be prepared before those are configured.
+                  </div>
+
+                  <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+                    <div className="min-w-0 space-y-4">
+                      <label className="block text-sm font-semibold text-stone-700">
+                        Email subject
+                        <input
+                          required
+                          maxLength={180}
+                          disabled={newsletterStatus === 'sent' || newsletterStatus === 'sending'}
+                          value={newsletterSubject}
+                          onChange={event => setNewsletterSubject(event.target.value)}
+                          placeholder="A fresh update from Legacy Coffee"
+                          className="mt-1.5 min-h-11 w-full border border-stone-200 bg-white px-3 py-2.5 text-sm font-normal text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-[#c77a4b] focus:ring-2 focus:ring-orange-100 disabled:bg-stone-50"
+                        />
+                      </label>
+
+                      <NewsletterEditor
+                        value={newsletterHtml}
+                        onChange={setNewsletterHtml}
+                        onImageUpload={uploadNewsletterImage}
+                        isUploading={isNewsletterImageUploading}
+                        readOnly={newsletterStatus === 'sent' || newsletterStatus === 'sending'}
+                      />
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {newsletterStatus === 'draft' && (
+                          <>
+                            <SavingButton
+                              type="button"
+                              isSaving={isNewsletterSaving}
+                              savingLabel="Saving draft…"
+                              onClick={saveNewsletter}
+                              className="inline-flex min-h-11 items-center gap-2 bg-[#593a27] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#40291d]"
+                            >
+                              Save draft
+                            </SavingButton>
+                            <button
+                              type="button"
+                              disabled={!newsletterId || isNewsletterSaving || isNewsletterImageUploading}
+                              onClick={() => setShowNewsletterSendConfirmation(true)}
+                              className="inline-flex min-h-11 items-center gap-2 bg-[#f58537] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#d96b25] disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <LuSend aria-hidden="true" className="h-4 w-4" />
+                              Send to subscribers
+                            </button>
+                          </>
+                        )}
+                        {newsletterStatus === 'sending' && (
+                          <p role="status" className="text-sm font-medium text-amber-800">Sending is in progress. Refresh the newsletter list shortly to check the status.</p>
+                        )}
+                        {newsletterStatus === 'sent' && (
+                          <StatusBadge>sent</StatusBadge>
+                        )}
+                        {newsletterStatus === 'draft' && newsletterId && (
+                          <button
+                            type="button"
+                            disabled={isNewsletterSaving || isNewsletterSending}
+                            onClick={deleteNewsletterDraft}
+                            className="min-h-11 px-3 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+                          >
+                            Delete draft
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <section aria-labelledby="newsletter-preview-heading" className="overflow-hidden border border-stone-200 bg-white">
+                      <div className="border-b border-stone-200 px-4 py-3">
+                        <h2 id="newsletter-preview-heading" className="text-sm font-semibold text-stone-900">Email preview</h2>
+                        <p className="mt-1 truncate text-xs text-stone-500">{newsletterSubject || 'Your subject will appear here'}</p>
+                      </div>
+                      <iframe
+                        title="Newsletter email preview"
+                        sandbox=""
+                        srcDoc={`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:16px;background:#f4eee8;font:14px/1.7 Arial,sans-serif;color:#2b211b}main{max-width:680px;margin:auto;padding:24px;background:#fff}img{display:block;max-width:100%;height:auto;margin:16px 0}blockquote{margin:16px 0;padding:8px 16px;border-left:3px solid #f58537;color:#70432d}mark{background:#fff1a8}</style></head><body><main>${newsletterHtml || '<p style="color:#999">Your newsletter preview will appear here.</p>'}</main></body></html>`}
+                        className="h-[480px] w-full bg-[#f4eee8]"
+                      />
+                    </section>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <SectionHeading
+                    eyebrow="Audience"
+                    title="Newsletters"
+                    description={`${newsletters.length} recent campaigns · ${summary?.active_subscribers ?? 0} active subscribers`}
+                  >
+                    <button
+                      type="button"
+                      onClick={startNewsletter}
+                      className="min-h-11 w-full bg-[#593a27] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#40291d] sm:w-auto"
+                    >
+                      Create newsletter
+                    </button>
+                  </SectionHeading>
+                  {newsletterError && (
+                    <p role="alert" className="mb-4 break-words border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                      Could not load newsletters: {newsletterError}
+                    </p>
+                  )}
+                  {newsletterNotice && (
+                    <p role="status" className="mb-4 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                      {newsletterNotice}
+                    </p>
+                  )}
+                  {isNewsletterLoading ? (
+                    <p role="status" className="border-y border-stone-200 py-8 text-center text-sm text-stone-500">Loading newsletters…</p>
+                  ) : newsletters.length ? (
+                    <ul className="divide-y divide-stone-100 border-y border-stone-200 bg-white">
+                      {newsletters.map(newsletter => (
+                        <li key={newsletter.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:px-5">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-stone-900">{newsletter.subject}</p>
+                            <p className="mt-1 text-xs text-stone-500">
+                              Updated {formatDate(newsletter.updated_at)}
+                              {newsletter.status === 'sent' && newsletter.sent_at ? ` · Sent ${formatDate(newsletter.sent_at)}` : ''}
+                              {newsletter.status === 'sent' ? ` · ${newsletter.recipient_count} recipients` : ''}
+                            </p>
+                            {newsletter.last_error && (
+                              <p className="mt-1 text-xs text-red-700">Some deliveries did not complete. Reopen this draft to retry the remaining subscribers.</p>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between gap-3 sm:justify-end">
+                            <StatusBadge>{newsletter.status}</StatusBadge>
+                            <button
+                              type="button"
+                              onClick={() => editNewsletter(newsletter)}
+                              className="min-h-10 border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50"
+                            >
+                              {newsletter.status === 'draft' ? 'Edit draft' : 'View'}
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="border-y border-stone-200 bg-white">
+                      <EmptyState
+                        title="No newsletters yet"
+                        description="Create a draft, format your content, preview the email, and send it to active subscribers when ready."
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+          )}
+
           {activeTab === 'Subscribers' && (
             <section aria-labelledby="subscribers-heading">
               <SectionHeading
@@ -1873,6 +2319,46 @@ export default function AdminDashboard() {
                 </div>
               )}
             </section>
+          )}
+
+          {showNewsletterSendConfirmation && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/60 p-4">
+              <section
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="newsletter-send-confirmation-heading"
+                className="w-full max-w-md border border-stone-200 bg-white p-5 shadow-2xl sm:p-6"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#a75a31]">Confirm send</p>
+                <h2 id="newsletter-send-confirmation-heading" className="mt-2 text-xl font-bold text-stone-900">
+                  Email this newsletter?
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-stone-600">
+                  <strong>{newsletterSubject || 'Untitled newsletter'}</strong> will be sent to about{' '}
+                  <strong>{summary?.active_subscribers ?? 0} active subscribers</strong>. This cannot be undone.
+                </p>
+                <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    disabled={isNewsletterSending}
+                    onClick={() => setShowNewsletterSendConfirmation(false)}
+                    className="min-h-11 border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
+                  >
+                    Keep editing
+                  </button>
+                  <SavingButton
+                    type="button"
+                    isSaving={isNewsletterSending}
+                    savingLabel="Sending newsletter…"
+                    onClick={sendNewsletter}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 bg-[#f58537] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#d96b25]"
+                  >
+                    <LuSend aria-hidden="true" className="h-4 w-4" />
+                    Send newsletter
+                  </SavingButton>
+                </div>
+              </section>
+            </div>
           )}
 
           <footer className="mt-10 border-t border-stone-200 pt-4 text-xs text-stone-400">

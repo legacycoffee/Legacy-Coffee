@@ -17,6 +17,51 @@ body {
   color: #5C3A1E;
 }
 
+.newsletter-editor:empty::before {
+  color: #a8a29e;
+  content: attr(data-placeholder);
+  pointer-events: none;
+}
+
+.newsletter-editor h2 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.newsletter-editor p {
+  margin: 0.5rem 0;
+}
+
+.newsletter-editor ul,
+.newsletter-editor ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.newsletter-editor ul {
+  list-style: disc;
+}
+
+.newsletter-editor ol {
+  list-style: decimal;
+}
+
+.newsletter-editor blockquote {
+  margin: 1rem 0;
+  border-left: 3px solid #F58537;
+  padding-left: 1rem;
+  color: #70432d;
+}
+
+.newsletter-editor img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1rem 0;
+}
+
 .home-page h1,
 .home-page h2,
 .home-page h3,

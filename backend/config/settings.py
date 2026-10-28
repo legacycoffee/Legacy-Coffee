@@ -114,6 +114,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
 CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY', '')
 CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET', '')
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+NEWSLETTER_FROM_EMAIL = os.environ.get('NEWSLETTER_FROM_EMAIL', '')
+NEWSLETTER_PUBLIC_URL = os.environ.get(
+    'NEWSLETTER_PUBLIC_URL',
+    'https://legacycoffee.github.io/Legacy-Coffee',
+).rstrip('/')
 
 CORS_ALLOWED_ORIGINS = [
     origin.strip()

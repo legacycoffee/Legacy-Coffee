@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../context/api.js'
 
 const pastIssues = [
@@ -8,27 +9,30 @@ const pastIssues = [
 ]
 
 export default function Newsletter() {
-  const [email, setEmail] = useState('')
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const unsubscribeToken = searchParams.get('unsubscribe')
+  const [unsubscribeMessage, setUnsubscribeMessage] = useState('')
+  const [unsubscribeError, setUnsubscribeError] = useState('')
+  const [isUnsubscribing, setIsUnsubscribing] = useState(false)
 
-  const handleSubmit = async e => {
-    e.preventDefault()
-    setError('')
-    setMessage('')
-    setIsSubmitting(true)
+  const handleUnsubscribe = async () => {
+    setIsUnsubscribing(true)
+    setUnsubscribeError('')
     try {
-      const response = await apiRequest('/newsletter/subscribe/', {
+      const response = await apiRequest('/newsletter/unsubscribe/', {
         method: 'POST',
-        body: { email },
+        body: { token: unsubscribeToken },
       })
-      setMessage(response.message || 'You are subscribed to Legacy Coffee updates.')
-      setEmail('')
+      setUnsubscribeMessage(response.message)
+      setSearchParams(current => {
+        const next = new URLSearchParams(current)
+        next.delete('unsubscribe')
+        return next
+      }, { replace: true })
     } catch (requestError) {
-      setError(requestError.message)
+      setUnsubscribeError(requestError.message)
     } finally {
-      setIsSubmitting(false)
+      setIsUnsubscribing(false)
     }
   }
 
@@ -46,41 +50,29 @@ export default function Newsletter() {
         </p>
       </section>
 
-      {/* Subscribe Form */}
-      <section className="bg-white px-4 py-12 sm:px-6 sm:py-16">
-        <div className="mx-auto max-w-3xl rounded-2xl bg-peach-light p-6 shadow-sm sm:p-10">
-          <div className="mx-auto max-w-xl text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Fresh from the source</p>
-            <h2 className="mt-2 text-2xl font-bold text-primary sm:text-3xl">Subscribe to our newsletter</h2>
-            <p className="mt-3 text-sm leading-6 text-brown">
-              Join our community for coffee stories, harvest news, and updates from our farming communities.
+      {unsubscribeToken && (
+        <section aria-labelledby="unsubscribe-heading" className="bg-white px-4 py-8 sm:px-6">
+          <div className="mx-auto max-w-3xl border border-peach-mid/50 bg-peach-light p-5 sm:p-7">
+            <h2 id="unsubscribe-heading" className="text-xl font-bold text-brown">Unsubscribe from email updates?</h2>
+            <p className="mt-2 text-sm leading-6 text-brown/75">
+              Confirm below to stop receiving Legacy Coffee newsletter emails.
             </p>
+            {unsubscribeError && <p role="alert" className="mt-3 text-sm text-red-700">{unsubscribeError}</p>}
+            {unsubscribeMessage ? (
+              <p role="status" className="mt-3 text-sm font-semibold text-green-800">{unsubscribeMessage}</p>
+            ) : (
+              <button
+                type="button"
+                disabled={isUnsubscribing}
+                onClick={handleUnsubscribe}
+                className="mt-4 min-h-11 bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-wait disabled:opacity-60"
+              >
+                {isUnsubscribing ? 'Unsubscribing…' : 'Confirm unsubscribe'}
+              </button>
+            )}
           </div>
-          <form onSubmit={handleSubmit} className="mx-auto mt-6 flex max-w-xl flex-col gap-3 sm:flex-row">
-            <label htmlFor="newsletter-email" className="sr-only">Email address</label>
-            <input
-              id="newsletter-email"
-              required
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={event => setEmail(event.target.value)}
-              placeholder="Your email address"
-              className="min-h-12 min-w-0 flex-1 rounded-lg border border-peach-mid bg-white px-4 py-3 text-sm text-brown outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="min-h-12 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-wait disabled:opacity-60"
-            >
-              {isSubmitting ? 'Subscribing…' : 'Subscribe'}
-            </button>
-          </form>
-          {error && <p role="alert" className="mx-auto mt-3 max-w-xl text-sm text-red-700">{error}</p>}
-          {message && <p role="status" className="mx-auto mt-3 max-w-xl text-center text-sm font-medium text-green-800">{message}</p>}
-          <p className="mt-4 text-center text-xs text-brown/60">No spam. Unsubscribe anytime.</p>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Past Issues */}
       <section className="py-16 px-6 bg-peach-light">
