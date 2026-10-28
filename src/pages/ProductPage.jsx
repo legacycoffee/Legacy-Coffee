@@ -410,16 +410,9 @@ export default function ProductPage() {
                 </button>
               )}
             </>
-          ) : (
-            <p className="mb-4 text-sm text-black">Be the first to review this coffee.</p>
-          )}
+          ) : null}
 
-          {!isAuthenticated ? (
-            <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black">
-              <Link to="/signin" state={{ from: location.pathname }} className="font-semibold text-primary underline">Sign in</Link>
-              {' '}and complete a purchase to rate or review this coffee.
-            </p>
-          ) : !currentReviewData || !reviewEligibility ? null : reviewEligibility.can_review ? (
+          {isAuthenticated && currentReviewData && reviewEligibility?.can_review ? (
             <form onSubmit={handleReviewSubmit} className="border border-peach-mid/50 bg-white p-3 sm:p-4">
               <p className="mb-3 text-xs text-black/65">Verified customers with a fulfilled order can leave one review for this coffee.</p>
               <label className="block text-xs font-semibold text-black">Your rating</label>
@@ -456,8 +449,12 @@ export default function ProductPage() {
                 {isSubmittingReview ? 'Submitting…' : 'Submit review'}
               </button>
             </form>
-          ) : reviewEligibility?.has_reviewed ? (
+          ) : isAuthenticated && reviewEligibility?.has_reviewed ? (
             <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black/70">You’ve already reviewed this coffee.</p>
+          ) : isAuthenticated && currentReviewData && reviewEligibility ? (
+            <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black/70">
+              You can rate and review this coffee after your order is marked fulfilled.
+            </p>
           ) : null}
 
         </section>

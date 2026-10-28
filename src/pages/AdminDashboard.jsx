@@ -9,6 +9,7 @@ import {
   LuListOrdered,
   LuSend,
   LuStore,
+  LuTriangleAlert,
   LuUnderline,
 } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
@@ -537,6 +538,9 @@ export default function AdminDashboard() {
   const [productSearch, setProductSearch] = useState('')
   const [productError, setProductError] = useState('')
   const [productSuccess, setProductSuccess] = useState('')
+  const [productStatusNotice, setProductStatusNotice] = useState('')
+  const [productPendingUnpublish, setProductPendingUnpublish] = useState(null)
+  const [isProductStatusSaving, setIsProductStatusSaving] = useState(false)
   const [productsPageKey, setProductsPageKey] = useState('')
   const [isProductSaving, setIsProductSaving] = useState(false)
   const [productForm, setProductForm] = useState(emptyProduct)
@@ -970,7 +974,18 @@ export default function AdminDashboard() {
   }
 
   const setProductPublished = async product => {
+    if (product.is_active) {
+      setProductPendingUnpublish(product)
+      return
+    }
+
+    await updateProductPublishedStatus(product)
+  }
+
+  const updateProductPublishedStatus = async product => {
     setProductError('')
+    setProductSuccess('')
+    setIsProductStatusSaving(true)
     try {
       const updated = await apiRequest(
         `/dashboard/products/${encodeURIComponent(product.slug)}/`,
@@ -984,9 +999,12 @@ export default function AdminDashboard() {
         ...current,
         active_products: current.active_products + (updated.is_active ? 1 : -1),
       } : current)
-      setProductSuccess(`“${updated.name}” ${updated.is_active ? 'published' : 'unpublished'}.`)
+      setProductStatusNotice(`“${updated.name}” ${updated.is_active ? 'published' : 'unpublished'}.`)
+      setProductPendingUnpublish(null)
     } catch (error) {
       setProductError(error.message)
+    } finally {
+      setIsProductStatusSaving(false)
     }
   }
 
@@ -2599,6 +2617,90 @@ export default function AdminDashboard() {
                     <LuSend aria-hidden="true" className="h-4 w-4" />
                     Send newsletter
                   </SavingButton>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {productPendingUnpublish && (
+            <div
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-stone-950/60 p-4"
+              onMouseDown={event => {
+                if (event.target === event.currentTarget && !isProductStatusSaving) setProductPendingUnpublish(null)
+              }}
+            >
+              <section
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="product-unpublish-heading"
+                aria-describedby="product-unpublish-description"
+                className="w-full max-w-md border border-rose-200 bg-white p-6 shadow-2xl"
+              >
+                <div className="flex items-start gap-4">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700">
+                    <LuTriangleAlert aria-hidden="true" className="h-6 w-6" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-rose-700">Confirm unpublish</p>
+                    <h2 id="product-unpublish-heading" className="mt-2 text-xl font-bold text-stone-900">
+                      Unpublish “{productPendingUnpublish.name}”?
+                    </h2>
+                    <p id="product-unpublish-description" className="mt-2 text-sm leading-6 text-stone-600">
+                      This product will no longer appear in the storefront. You can publish it again later.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    disabled={isProductStatusSaving}
+                    onClick={() => setProductPendingUnpublish(null)}
+                    className="min-h-11 border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isProductStatusSaving}
+                    onClick={() => updateProductPublishedStatus(productPendingUnpublish)}
+                    className="min-h-11 bg-rose-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-800 disabled:opacity-50"
+                  >
+                    {isProductStatusSaving ? 'Unpublishing…' : 'Unpublish product'}
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {productStatusNotice && (
+            <div
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-stone-950/60 p-4"
+              onMouseDown={event => {
+                if (event.target === event.currentTarget) setProductStatusNotice('')
+              }}
+            >
+              <section
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="product-published-heading"
+                className="w-full max-w-md border border-stone-200 bg-white p-6 shadow-2xl"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Product status updated</p>
+                <h2 id="product-published-heading" className="mt-2 text-xl font-bold text-stone-900">
+                  {productStatusNotice}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-stone-600">
+                  The product visibility in the storefront has been updated.
+                </p>
+                <div className="mt-5 flex justify-end">
+                  <button
+                    type="button"
+                    autoFocus
+                    onClick={() => setProductStatusNotice('')}
+                    className="min-h-11 bg-[#593a27] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#40291d]"
+                  >
+                    Done
+                  </button>
                 </div>
               </section>
             </div>
