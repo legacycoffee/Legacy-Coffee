@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { LuArrowLeft, LuMinus, LuPlus, LuShoppingBag, LuTrash2 } from 'react-icons/lu'
+import { LuArrowLeft, LuMinus, LuPlus, LuTrash2 } from 'react-icons/lu'
 import { formatPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
 import { useAuth } from '../context/useAuth.js'
@@ -12,16 +12,21 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <section className="bg-[#fffdfa] px-4 py-12 sm:px-6 sm:py-20">
-        <div className="mx-auto max-w-xl rounded-2xl border border-peach-mid/50 bg-white px-6 py-10 text-center shadow-sm sm:px-10">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-peach-light text-primary">
-            <LuShoppingBag aria-hidden="true" className="h-8 w-8" />
+      <section className="bg-[#fffdfa] px-4 py-10 sm:px-6 sm:py-16">
+        <div className="mx-auto flex min-h-[420px] max-w-4xl items-center justify-center overflow-hidden rounded-2xl border border-[#e8d5c4] bg-gradient-to-br from-[#fff8ef] via-[#f7e9d8] to-[#efd4bb] px-6 py-12 text-[#40291d] shadow-[0_20px_55px_rgba(74,49,32,0.12)] sm:px-10">
+          <div className="flex max-w-xl flex-col items-center text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#a75a31]">Your next favorite is waiting</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Your cart is empty</h1>
+            <p className="mt-3 max-w-md text-sm leading-6 text-[#684c3b]/80 sm:text-base">
+              Find your next favorite cup in our coffee shop.
+            </p>
+            <Link
+              to="/"
+              className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 bg-[#8b4e2d] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#70402a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b4e2d]"
+            >
+              Browse coffee
+            </Link>
           </div>
-          <h1 className="mb-2 text-2xl font-bold text-brown sm:text-3xl">Your cart is empty</h1>
-          <p className="mb-6 text-sm leading-relaxed text-brown/70">Find your next favorite cup in our coffee shop.</p>
-          <Link to="/" className="inline-flex items-center justify-center gap-2 bg-[#F58537] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-            Browse coffee
-          </Link>
         </div>
       </section>
     )
