@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { FiChevronDown, FiX } from 'react-icons/fi'
 import {
+  LuLayoutDashboard,
   LuShoppingCart,
   LuUserRound,
 } from 'react-icons/lu'
@@ -178,6 +179,18 @@ export default function Navbar() {
                           </Link>
                         ))}
                       </nav>
+                      {user?.is_staff && (
+                        <Link
+                          to="/admin"
+                          aria-label="Switch to admin dashboard"
+                          title="Admin dashboard"
+                          onClick={() => setAccountOpen(false)}
+                          className="mt-2 flex items-center gap-2 border-t border-peach-mid/40 px-2 pt-3 text-sm font-semibold text-brown transition-colors hover:text-primary"
+                        >
+                          <LuLayoutDashboard aria-hidden="true" className="h-5 w-5" />
+                          Admin dashboard
+                        </Link>
+                      )}
                       <div className="mt-4 border-t border-peach-mid/40 pt-3">
                         <button
                           type="button"
@@ -209,6 +222,16 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+            {user?.is_staff && (
+              <Link
+                to="/admin"
+                aria-label="Switch to admin dashboard"
+                title="Admin dashboard"
+                className="hidden h-10 w-10 items-center justify-center rounded-full text-brown transition-colors hover:bg-peach-light hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:inline-flex"
+              >
+                <LuLayoutDashboard aria-hidden="true" size={21} />
+              </Link>
+            )}
             <Link
               to="/cart"
               aria-label={`Shopping cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
@@ -308,6 +331,18 @@ export default function Navbar() {
                 >
                   My orders
                 </NavLink>
+                {user?.is_staff && (
+                  <NavLink
+                    to="/admin"
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-brown hover:bg-peach-light'}`
+                    }
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <LuLayoutDashboard aria-hidden="true" className="h-5 w-5" />
+                    Admin dashboard
+                  </NavLink>
+                )}
                 <button
                   type="button"
                   onClick={() => {

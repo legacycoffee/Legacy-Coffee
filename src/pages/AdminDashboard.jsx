@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import { LuStore } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 
@@ -826,6 +827,15 @@ export default function AdminDashboard() {
               {(user?.email?.[0] || 'A').toUpperCase()}
             </span>
           </div>
+          <Link
+            to="/"
+            aria-label="Switch to storefront"
+            title="Storefront"
+            className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#f58537] px-3 text-white shadow-sm transition hover:bg-[#d96b25] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a75a31]"
+          >
+            <LuStore aria-hidden="true" className="h-5 w-5" />
+            <span className="text-xs font-semibold">Storefront</span>
+          </Link>
           <button
             type="button"
             onClick={() => setIsSidebarOpen(open => !open)}
@@ -1165,7 +1175,7 @@ export default function AdminDashboard() {
                               src={product.image}
                               alt={product.image_alt || product.name}
                               loading="lazy"
-                              className="aspect-square w-full shrink-0 rounded-lg bg-stone-100 object-contain xl:h-16 xl:w-16"
+                              className="aspect-square w-full shrink-0 rounded-lg bg-stone-100 object-cover xl:h-16 xl:w-16"
                             />
                           ) : (
                             <div aria-hidden="true" className="aspect-square w-full shrink-0 rounded-lg bg-stone-100 xl:h-16 xl:w-16" />

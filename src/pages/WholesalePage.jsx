@@ -103,8 +103,8 @@ export default function WholesalePage() {
                   }`}
                 >
                   <label className="grid cursor-pointer grid-cols-[88px_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[104px_minmax(0,1fr)]">
-                    <span className="flex aspect-square items-center justify-center bg-white p-2">
-                      <ProductImage product={product} objectFit="contain" />
+                    <span className="flex aspect-square items-center justify-center overflow-hidden bg-white">
+                      <ProductImage product={product} />
                     </span>
                     <span className="min-w-0">
                       <span className="flex items-start justify-between gap-3">

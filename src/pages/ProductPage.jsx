@@ -261,12 +261,12 @@ export default function ProductPage() {
               {product.description}
             </p>
 
-            <div className="mt-4 grid grid-cols-[1fr_auto] items-center gap-2 border-b border-peach-mid/50 pb-4 lg:mt-3 lg:flex lg:flex-col lg:items-start lg:gap-3 lg:pb-3">
+            <div className="mt-4 grid grid-cols-1 items-center gap-2 border-b border-peach-mid/50 pb-4 lg:mt-3 lg:flex lg:flex-col lg:items-start lg:gap-3 lg:pb-3">
               <div className="flex items-baseline gap-2 justify-self-start">
                 <p className="text-xl font-bold tracking-tight text-brown sm:text-2xl lg:whitespace-nowrap">{formatPrice(product.price)}</p>
                 <p className="text-xs text-brown/60 sm:text-sm lg:whitespace-nowrap">per {product.weight}</p>
               </div>
-              <div className="col-start-2 flex items-center justify-self-center overflow-hidden border border-black bg-white lg:self-center">
+              <div className="flex items-center justify-self-center overflow-hidden border border-black bg-white lg:self-center">
                 <button
                   type="button"
                   aria-label="Decrease quantity"
@@ -458,9 +458,7 @@ export default function ProductPage() {
             </form>
           ) : reviewEligibility?.has_reviewed ? (
             <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black/70">You’ve already reviewed this coffee.</p>
-          ) : (
-            <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black/70">You can rate and review this coffee after an order containing it has been fulfilled.</p>
-          )}
+          ) : null}
 
         </section>
 
