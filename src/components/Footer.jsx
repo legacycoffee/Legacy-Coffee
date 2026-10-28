@@ -105,8 +105,10 @@ export default function Footer() {
           <p className="mt-2">
             Developed by{' '}
             <a href="tel:+256794448439" className="font-semibold text-white/85 hover:text-white hover:underline">+256794448439</a>
-            {' '}and{' '}
+            {', '}
             <a href="tel:+25794448750" className="font-semibold text-white/85 hover:text-white hover:underline">+25794448750</a>
+            {' and '}
+            <a href="tel:+256785688921" className="font-semibold text-white/85 hover:text-white hover:underline">+256785688921</a>
           </p>
         </div>
       </div>
