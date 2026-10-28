@@ -1,5 +1,6 @@
 import html
 import json
+import re
 from html.parser import HTMLParser
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
@@ -46,7 +47,17 @@ class NewsletterHtmlSanitizer(HTMLParser):
             src = attributes.get('src', '')
             if src.startswith('https://'):
                 alt = html.escape(attributes.get('alt', ''), quote=True)
-                self.output.append(f'<img src="{html.escape(src, quote=True)}" alt="{alt}" style="display:block;max-width:100%;height:auto;margin:16px 0">')
+                width = attributes.get('style', '')
+                width_match = re.search(r'(?:^|;)\s*width:\s*(\d{1,3})%\s*(?:;|$)', width)
+                width_percent = min(100, max(10, int(width_match.group(1)))) if width_match else 100
+                margin_match = re.search(r'(?:^|;)\s*margin:\s*([^;]+)', width)
+                alignment = margin_match.group(1).strip() if margin_match else '16px 0'
+                if alignment not in {'16px 0', '16px auto', '16px 0 16px auto'}:
+                    alignment = '16px 0'
+                self.output.append(
+                    f'<img src="{html.escape(src, quote=True)}" alt="{alt}" '
+                    f'style="display:block;width:{width_percent}%;max-width:100%;height:auto;margin:{alignment}">'
+                )
             return
 
         self.output.append(f'<{tag}>')

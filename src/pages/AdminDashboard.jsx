@@ -141,8 +141,140 @@ function SearchBox({ value, onChange, label }) {
   )
 }
 
+function NewsletterImageCropDialog({ src, onClose, onApply, isUploading }) {
+  const [zoom, setZoom] = useState(1)
+  const [horizontalPosition, setHorizontalPosition] = useState(50)
+  const [verticalPosition, setVerticalPosition] = useState(50)
+  const [error, setError] = useState('')
+  const [imageDimensions, setImageDimensions] = useState({ width: 16, height: 9 })
+  const imageAspect = imageDimensions.width / imageDimensions.height
+  const previewWidth = Math.max(100, (9 / 16) * imageAspect * 100) * zoom
+  const previewHeight = Math.max(100, (16 / 9) / imageAspect * 100) * zoom
+
+  const applyCrop = async () => {
+    setError('')
+    try {
+      const image = new Image()
+      image.crossOrigin = 'anonymous'
+      image.src = src
+      await new Promise((resolve, reject) => {
+        image.onload = resolve
+        image.onerror = () => reject(new Error('This image could not be loaded for cropping.'))
+      })
+
+      const outputWidth = 1200
+      const outputHeight = 675
+      const scale = Math.max(outputWidth / image.naturalWidth, outputHeight / image.naturalHeight) * zoom
+      const renderedWidth = image.naturalWidth * scale
+      const renderedHeight = image.naturalHeight * scale
+      const canvas = document.createElement('canvas')
+      canvas.width = outputWidth
+      canvas.height = outputHeight
+      const context = canvas.getContext('2d')
+      if (!context) throw new Error('Your browser could not prepare the crop.')
+      const offsetX = (outputWidth - renderedWidth) * horizontalPosition / 100
+      const offsetY = (outputHeight - renderedHeight) * verticalPosition / 100
+      context.drawImage(image, offsetX, offsetY, renderedWidth, renderedHeight)
+
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob(result => {
+          if (result) resolve(result)
+          else reject(new Error('The cropped image could not be created.'))
+        }, 'image/jpeg', 0.9)
+      })
+      await onApply(new File([blob], 'newsletter-crop.jpg', { type: 'image/jpeg' }))
+      onClose()
+    } catch (cropError) {
+      setError(cropError.message || 'The image could not be cropped. Try another image.')
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-stone-950/70 p-4" role="presentation" onMouseDown={event => {
+      if (event.target === event.currentTarget && !isUploading) onClose()
+    }}>
+      <section role="dialog" aria-modal="true" aria-labelledby="newsletter-crop-heading" className="w-full max-w-xl border border-stone-200 bg-white p-5 shadow-2xl sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 id="newsletter-crop-heading" className="text-lg font-bold text-stone-900">Crop image</h2>
+            <p className="mt-1 text-sm text-stone-500">Adjust the zoom and position inside a 16:9 frame.</p>
+          </div>
+          <button type="button" disabled={isUploading} onClick={onClose} className="px-2 py-1 text-sm font-semibold text-stone-600 hover:bg-stone-100">Close</button>
+        </div>
+        <div className="relative mt-5 aspect-video overflow-hidden bg-stone-100">
+          <img
+            src={src}
+            alt="Crop preview"
+            crossOrigin="anonymous"
+            onLoad={event => setImageDimensions({
+              width: event.currentTarget.naturalWidth,
+              height: event.currentTarget.naturalHeight,
+            })}
+            className="absolute max-w-none"
+            style={{
+              width: `${previewWidth}%`,
+              height: `${previewHeight}%`,
+              left: `${(100 - previewWidth) * horizontalPosition / 100}%`,
+              top: `${(100 - previewHeight) * verticalPosition / 100}%`,
+            }}
+          />
+          <div className="pointer-events-none absolute inset-0 border border-white/80 shadow-[inset_0_0_0_1px_rgba(28,25,23,0.2)]" />
+        </div>
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          <label className="text-xs font-semibold text-stone-700">
+            Zoom · {zoom.toFixed(1)}×
+            <input aria-label="Crop zoom" type="range" min="1" max="3" step="0.1" value={zoom} onChange={event => setZoom(Number(event.target.value))} className="mt-2 block w-full accent-[#c77a4b]" />
+          </label>
+          <label className="text-xs font-semibold text-stone-700">
+            Horizontal position
+            <input aria-label="Crop horizontal position" type="range" min="0" max="100" value={horizontalPosition} onChange={event => setHorizontalPosition(Number(event.target.value))} className="mt-2 block w-full accent-[#c77a4b]" />
+          </label>
+          <label className="text-xs font-semibold text-stone-700">
+            Vertical position
+            <input aria-label="Crop vertical position" type="range" min="0" max="100" value={verticalPosition} onChange={event => setVerticalPosition(Number(event.target.value))} className="mt-2 block w-full accent-[#c77a4b]" />
+          </label>
+        </div>
+        {error && <p role="alert" className="mt-4 border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
+        <div className="mt-5 flex justify-end gap-2">
+          <button type="button" disabled={isUploading} onClick={onClose} className="min-h-10 border border-stone-300 px-4 text-sm font-semibold text-stone-700 disabled:opacity-50">Cancel</button>
+          <button type="button" disabled={isUploading} onClick={applyCrop} className="min-h-10 bg-[#593a27] px-4 text-sm font-semibold text-white disabled:opacity-50">
+            {isUploading ? 'Uploading crop…' : 'Apply crop'}
+          </button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
 function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnly }) {
   const editorRef = useRef(null)
+  const selectedImageRef = useRef(null)
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [imageAlt, setImageAlt] = useState('')
+  const [cropImage, setCropImage] = useState(null)
+  const [imageError, setImageError] = useState('')
+
+  const publishEditorHtml = () => {
+    if (editorRef.current) onChange(editorRef.current.innerHTML)
+  }
+
+  const selectImage = event => {
+    const target = event.target
+    if (!(target instanceof HTMLImageElement) || !editorRef.current?.contains(target)) {
+      selectedImageRef.current = null
+      setSelectedImage(null)
+      setImageAlt('')
+      return
+    }
+    selectedImageRef.current = target
+    setSelectedImage({
+      alt: target.alt || '',
+      width: Math.round(Number.parseFloat(target.style.width) || 100),
+      src: target.src,
+    })
+    setImageAlt(target.alt || '')
+    setImageError('')
+  }
 
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
@@ -158,8 +290,12 @@ function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnl
     try {
       const imageUrl = await onImageUpload(file)
       editorRef.current?.focus()
-      document.execCommand('insertHTML', false, `<img src="${imageUrl}" alt="" style="max-width:100%;height:auto">`)
-      if (editorRef.current) onChange(editorRef.current.innerHTML)
+      const previousImages = new Set(editorRef.current?.querySelectorAll('img') || [])
+      document.execCommand('insertHTML', false, `<img src="${imageUrl}" alt="" style="display:block;width:100%;max-width:100%;height:auto;margin:16px 0">`)
+      const insertedImage = Array.from(editorRef.current?.querySelectorAll('img') || [])
+        .find(image => !previousImages.has(image))
+      if (insertedImage) selectImage({ target: insertedImage })
+      publishEditorHtml()
     } catch {
       // The parent displays the upload error.
     }
@@ -190,7 +326,49 @@ function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnl
       document.execCommand(button.dataset.command, false, button.dataset.argument || null)
     }
 
-    if (editorRef.current) onChange(editorRef.current.innerHTML)
+    publishEditorHtml()
+  }
+
+  const setImageAlignment = alignment => {
+    const image = selectedImageRef.current
+    if (!image?.isConnected) return
+    image.style.display = 'block'
+    image.style.margin = alignment === 'center'
+      ? '16px auto'
+      : alignment === 'right'
+        ? '16px 0 16px auto'
+        : '16px 0'
+    publishEditorHtml()
+  }
+
+  const setImageWidth = width => {
+    const image = selectedImageRef.current
+    if (!image?.isConnected) return
+    image.style.width = `${width}%`
+    image.style.maxWidth = '100%'
+    image.style.height = 'auto'
+    setSelectedImage(current => current ? { ...current, width } : current)
+    publishEditorHtml()
+  }
+
+  const moveSelectedImage = direction => {
+    const image = selectedImageRef.current
+    if (!image?.isConnected) return
+    const block = image.closest('p, div, blockquote') || image
+    const sibling = direction === 'up' ? block.previousElementSibling : block.nextElementSibling
+    if (!sibling || sibling.parentElement !== block.parentElement) return
+    if (direction === 'up') sibling.before(block)
+    else sibling.after(block)
+    publishEditorHtml()
+  }
+
+  const applyCrop = async file => {
+    const imageUrl = await onImageUpload(file)
+    const image = selectedImageRef.current
+    if (!image?.isConnected) throw new Error('The selected image is no longer in the newsletter.')
+    image.src = imageUrl
+    setSelectedImage(current => current ? { ...current, src: imageUrl } : current)
+    publishEditorHtml()
   }
 
   const tools = [
@@ -232,6 +410,53 @@ function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnl
           <input aria-label="Add image" disabled={isUploading} type="file" accept="image/jpeg,image/png,image/webp" onChange={insertImage} className="sr-only" />
         </label>
       </div>
+      {selectedImage && !readOnly && (
+        <div className="flex flex-wrap items-end gap-3 border-b border-stone-200 bg-white px-3 py-3">
+          <label className="min-w-40 flex-1 text-xs font-semibold text-stone-600">
+            Image description
+            <input
+              value={imageAlt}
+              onChange={event => {
+                setImageAlt(event.target.value)
+                if (selectedImageRef.current) selectedImageRef.current.alt = event.target.value
+                publishEditorHtml()
+              }}
+              maxLength={250}
+              placeholder="Describe this image"
+              className="mt-1 block min-h-9 w-full border border-stone-300 px-2.5 text-sm font-normal text-stone-800 outline-none focus:border-[#c77a4b]"
+            />
+          </label>
+          <label className="min-w-36 flex-1 text-xs font-semibold text-stone-600">
+            Width · {selectedImage.width}%
+            <input
+              aria-label="Image width"
+              type="range"
+              min="10"
+              max="100"
+              value={selectedImage.width}
+              onChange={event => setImageWidth(Number(event.target.value))}
+              className="mt-2 block w-full accent-[#c77a4b]"
+            />
+          </label>
+          <div className="flex items-center gap-1" aria-label="Image position">
+            {['left', 'center', 'right'].map(alignment => (
+              <button key={alignment} type="button" onMouseDown={event => event.preventDefault()} onClick={() => setImageAlignment(alignment)} className="min-h-9 border border-stone-300 px-2 text-xs font-semibold capitalize text-stone-700 hover:bg-stone-50">{alignment}</button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1">
+            <button type="button" onMouseDown={event => event.preventDefault()} onClick={() => moveSelectedImage('up')} className="min-h-9 border border-stone-300 px-2 text-xs font-semibold text-stone-700 hover:bg-stone-50">Move up</button>
+            <button type="button" onMouseDown={event => event.preventDefault()} onClick={() => moveSelectedImage('down')} className="min-h-9 border border-stone-300 px-2 text-xs font-semibold text-stone-700 hover:bg-stone-50">Move down</button>
+          </div>
+          <button type="button" onMouseDown={event => event.preventDefault()} onClick={() => { setImageError(''); setCropImage(selectedImage.src) }} className="min-h-9 bg-[#f58537] px-3 text-xs font-bold text-white hover:bg-[#d96b25]">Crop</button>
+          <button type="button" onMouseDown={event => event.preventDefault()} onClick={() => {
+            selectedImageRef.current?.remove()
+            selectedImageRef.current = null
+            setSelectedImage(null)
+            publishEditorHtml()
+          }} className="min-h-9 px-2 text-xs font-semibold text-red-700 hover:bg-red-50">Remove</button>
+        </div>
+      )}
+      {imageError && <p role="alert" className="border-b border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{imageError}</p>}
       <div
         ref={editorRef}
         contentEditable={!readOnly}
@@ -239,11 +464,29 @@ function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnl
         role="textbox"
         aria-label="Newsletter content"
         aria-multiline="true"
+        onClick={selectImage}
+        onKeyUp={selectImage}
         onInput={event => onChange(event.currentTarget.innerHTML)}
         className={`newsletter-editor min-h-72 px-4 py-4 text-sm leading-7 text-stone-800 outline-none sm:min-h-96 sm:px-6 ${readOnly ? 'bg-stone-50' : 'focus:ring-2 focus:ring-inset focus:ring-orange-100'}`}
         data-placeholder="Write your newsletter here. Select text to format it, or add an image with the toolbar."
       />
       <p className="border-t border-stone-100 px-4 py-2 text-[11px] text-stone-400">Formatting and uploaded images are included in the subscriber email.</p>
+      {cropImage && (
+        <NewsletterImageCropDialog
+          src={cropImage}
+          onClose={() => setCropImage(null)}
+          onApply={async file => {
+            try {
+              await applyCrop(file)
+              setCropImage(null)
+            } catch (error) {
+              setImageError(error.message)
+              throw error
+            }
+          }}
+          isUploading={isUploading}
+        />
+      )}
     </div>
   )
 }

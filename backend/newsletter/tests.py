@@ -105,6 +105,16 @@ class NewsletterApiTests(APITestCase):
 
         self.assertEqual(sanitized, '<p>Hello</p><span>unsafe link</span>')
 
+    def test_newsletter_html_sanitizer_preserves_safe_image_size_and_alignment(self):
+        sanitized = sanitize_newsletter_html(
+            '<img src="https://res.cloudinary.com/test/image/upload/coffee.jpg" '
+            'alt="Coffee" style="width:60%;margin:16px auto;position:absolute">'
+        )
+
+        self.assertIn('width:60%', sanitized)
+        self.assertIn('margin:16px auto', sanitized)
+        self.assertNotIn('position:absolute', sanitized)
+
     @override_settings(RESEND_API_KEY='re_test_key', NEWSLETTER_FROM_EMAIL='Legacy Coffee <news@example.com>')
     @patch('newsletter.views.send_resend_batch')
     def test_staff_can_send_newsletter_to_active_subscribers(self, send_batch):
