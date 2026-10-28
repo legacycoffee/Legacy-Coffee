@@ -84,14 +84,58 @@ class ShopApiTests(APITestCase):
         self.client.force_authenticate(self.user)
         payload = {'product': self.product.slug, 'rating': 5, 'text': 'Excellent coffee.'}
 
-        self.create_order(Order.Status.PENDING)
-        pending_response = self.client.post('/api/shop/reviews/', payload)
-        self.assertEqual(pending_response.status_code, 400)
-        self.assertEqual(Review.objects.count(), 0)
+        order = self.create_order(Order.Status.PENDING)
+        for status in (Order.Status.PENDING, Order.Status.CONFIRMED, Order.Status.CANCELLED):
+            order.status = status
+            order.save(update_fields=('status',))
+            response = self.client.post('/api/shop/reviews/', payload)
+            self.assertEqual(response.status_code, 400, f'Reviews must be rejected for {status} orders.')
+            self.assertEqual(Review.objects.count(), 0)
 
-        Order.objects.all().update(status=Order.Status.FULFILLED)
+        order.status = Order.Status.CONFIRMED
+        order.save(update_fields=('status',))
+
+        staff = get_user_model().objects.create_user(
+            username='shop-admin',
+            email='shop-admin@example.com',
+            password='StrongPassword!2026',
+            is_staff=True,
+        )
+        self.client.force_authenticate(staff)
+        fulfillment_response = self.client.patch(
+            f'/api/dashboard/orders/{order.reference}/status/',
+            {'status': Order.Status.FULFILLED},
+            format='json',
+        )
+        self.assertEqual(fulfillment_response.status_code, 200)
+
+        self.client.force_authenticate(self.user)
+        eligibility_response = self.client.get(
+            f'/api/shop/reviews/eligibility/?product={self.product.slug}',
+        )
+        self.assertTrue(eligibility_response.data['can_review'])
         fulfilled_response = self.client.post('/api/shop/reviews/', payload)
         self.assertEqual(fulfilled_response.status_code, 201)
+
+    def test_another_customers_fulfilled_order_does_not_allow_review(self):
+        other_user = get_user_model().objects.create_user(
+            username='other-customer',
+            email='other@example.com',
+            password='StrongPassword!2026',
+        )
+        self.create_order(Order.Status.FULFILLED)
+        self.client.force_authenticate(other_user)
+        payload = {'product': self.product.slug, 'rating': 5, 'text': 'Excellent coffee.'}
+
+        response = self.client.post('/api/shop/reviews/', payload)
+        eligibility = self.client.get(
+            f'/api/shop/reviews/eligibility/?product={self.product.slug}',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(eligibility.data['has_purchased'])
+        self.assertFalse(eligibility.data['can_review'])
+        self.assertEqual(Review.objects.count(), 0)
 
     def test_review_eligibility_requires_auth_and_reports_purchase_state(self):
         url = f'/api/shop/reviews/eligibility/?product={self.product.slug}'
