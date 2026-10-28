@@ -631,38 +631,55 @@ export default function AdminDashboard() {
 
   if (!isAuthenticated || !user?.is_staff) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f5f2ee] px-4 py-10">
-        <div className="grid w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_rgba(49,34,23,0.12)] md:min-h-[590px] md:grid-cols-[1.05fr_0.95fr]">
-          <div className="relative hidden flex-col justify-between overflow-hidden bg-[#2b211b] p-10 text-white md:flex lg:p-14">
-            <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full border border-white/10" />
-            <div className="absolute -right-6 -top-6 h-44 w-44 rounded-full border border-white/10" />
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f4eee8] px-4 py-6 sm:px-6 sm:py-10">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-32 top-[-7rem] h-96 w-96 rounded-full bg-[#f5a66f]/20 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-40 -right-24 h-[30rem] w-[30rem] rounded-full bg-[#6f4734]/10 blur-3xl" />
+        <div className="relative grid w-full max-w-5xl overflow-hidden rounded-2xl border border-white/70 bg-white shadow-[0_30px_90px_rgba(55,36,25,0.16)] md:min-h-[620px] md:grid-cols-[1.02fr_0.98fr]">
+          <div className="relative flex min-h-44 flex-col justify-between overflow-hidden bg-[#2b211b] px-6 py-5 text-white sm:min-h-52 sm:px-9 sm:py-7 md:min-h-0 md:p-10 lg:p-14">
+            <div aria-hidden="true" className="absolute -right-24 -top-28 h-80 w-80 rounded-full border border-white/10" />
+            <div aria-hidden="true" className="absolute -right-8 -top-12 h-56 w-56 rounded-full border border-white/10" />
+            <div aria-hidden="true" className="absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-[#f58537]/15 blur-2xl" />
             <div className="relative flex items-center gap-3">
-            <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-10 w-auto brightness-0 invert" />
+              <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-9 w-auto brightness-0 invert sm:h-10" />
+              <span className="h-8 w-px bg-white/20" />
               <div>
-                <p className="font-semibold">Legacy Coffee</p>
-              <p className="text-xs text-white/55">Admin Portal</p>
+                <p className="text-sm font-semibold tracking-wide">LEGACY COFFEE</p>
+                <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white/55">Staff workspace</p>
               </div>
             </div>
-            <div className="relative max-w-md">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#f3a66f]">Staff workspace</p>
-              <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight lg:text-5xl">Good coffee.<br />Well managed.</h1>
-              <p className="mt-5 max-w-sm text-sm leading-7 text-white/65">
-                Review orders, respond to business requests, and keep the Legacy Coffee operation moving.
+            <div className="relative mt-8 max-w-md md:mt-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#f6a66f] sm:text-xs">Coffee with a story</p>
+              <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-tight sm:text-3xl md:mt-4 md:text-4xl lg:text-5xl">
+                Good coffee.<br className="hidden sm:block" /> Well managed.
+              </h1>
+              <p className="mt-2 max-w-sm text-xs leading-5 text-white/65 sm:mt-4 sm:text-sm sm:leading-7">
+                Your central workspace for orders, products, customer requests, and the people behind every cup.
               </p>
             </div>
-            <p className="relative text-xs text-white/40">Authorized team members only</p>
+            <p className="relative mt-5 hidden text-xs text-white/40 md:block">A workspace for authorized team members.</p>
           </div>
 
-          <div className="flex flex-col justify-center px-6 py-10 sm:px-10 md:px-12 lg:px-14">
-            <div className="mb-8 md:hidden">
-              <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-10 w-auto" />
+          <div className="flex flex-col justify-center px-6 py-7 sm:px-10 sm:py-10 md:px-10 lg:px-14">
+            <Link to="/" className="mb-7 inline-flex w-fit items-center gap-2 text-xs font-semibold text-stone-500 transition hover:text-[#8b4a2b] sm:mb-10">
+              <span aria-hidden="true">←</span> Back to storefront
+            </Link>
+            <div className="mb-6">
+              <span className="inline-flex items-center gap-2 rounded-full bg-[#fbf2eb] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#8b4a2b]">
+                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#f58537]" />
+                Admin portal
+              </span>
+              <h2 className="mt-4 text-2xl font-bold tracking-tight text-stone-900 sm:text-3xl">Welcome back</h2>
+              <p className="mt-2 max-w-sm text-sm leading-6 text-stone-500">
+                Sign in with your authorized staff account to open your workspace.
+              </p>
             </div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a75a31]">Admin Portal</p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight text-stone-900">Welcome back</h2>
-            <p className="mt-2 text-sm leading-6 text-stone-500">Sign in with your authorized staff account to access your workspace.</p>
-            {loginError && <p role="alert" className="mt-6 border border-red-200 bg-red-50 p-3 text-sm text-red-800">{loginError}</p>}
-            <form onSubmit={handleLogin} className="mt-7 space-y-5">
-              <label className="block text-sm font-medium text-stone-700" htmlFor="admin-email">
+            {loginError && (
+              <p role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-800">
+                {loginError}
+              </p>
+            )}
+            <form onSubmit={handleLogin} className="space-y-5">
+              <label className="block text-sm font-semibold text-stone-700" htmlFor="admin-email">
                 Email address
                 <input
                   id="admin-email"
@@ -671,11 +688,11 @@ export default function AdminDashboard() {
                   required
                   value={credentials.email}
                   onChange={event => setCredentials(current => ({ ...current, email: event.target.value }))}
-                  className="mt-2 w-full rounded-lg border border-stone-300 bg-white px-3.5 py-3 text-sm outline-none transition focus:border-[#bf7043] focus:ring-4 focus:ring-orange-100"
+                  className="mt-2 min-h-12 w-full rounded-none border border-stone-200 bg-[#fcfbfa] px-4 py-3 text-base font-normal text-stone-900 outline-none transition placeholder:text-stone-400 hover:border-stone-300 focus:border-[#b86638] focus:bg-white focus:ring-4 focus:ring-orange-100"
                   placeholder="you@legacycoffee.com"
                 />
               </label>
-              <label className="block text-sm font-medium text-stone-700" htmlFor="admin-password">
+              <label className="block text-sm font-semibold text-stone-700" htmlFor="admin-password">
                 Password
                 <input
                   id="admin-password"
@@ -684,18 +701,22 @@ export default function AdminDashboard() {
                   required
                   value={credentials.password}
                   onChange={event => setCredentials(current => ({ ...current, password: event.target.value }))}
-                  className="mt-2 w-full rounded-lg border border-stone-300 bg-white px-3.5 py-3 text-sm outline-none transition focus:border-[#bf7043] focus:ring-4 focus:ring-orange-100"
+                  className="mt-2 min-h-12 w-full rounded-none border border-stone-200 bg-[#fcfbfa] px-4 py-3 text-base font-normal text-stone-900 outline-none transition placeholder:text-stone-400 hover:border-stone-300 focus:border-[#b86638] focus:bg-white focus:ring-4 focus:ring-orange-100"
                   placeholder="Enter your password"
                 />
               </label>
               <button
                 disabled={isSigningIn}
-                className="mt-2 w-full rounded-lg bg-[#593a27] px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#40291d] disabled:cursor-wait disabled:opacity-60"
+                className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-none bg-[#593a27] px-4 py-3 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(89,58,39,0.18)] transition hover:bg-[#40291d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b86638] disabled:cursor-wait disabled:opacity-60"
               >
+                {isSigningIn && <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
                 {isSigningIn ? 'Signing in…' : 'Sign in to workspace'}
               </button>
             </form>
-            <p className="mt-7 text-center text-xs text-stone-400">Access is limited to authorized staff accounts.</p>
+            <div className="mt-7 flex items-center justify-center gap-2 border-t border-stone-100 pt-5 text-center text-[11px] text-stone-400">
+              <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full bg-stone-100 text-[10px] text-stone-500">✓</span>
+              Access is limited to authorized staff accounts.
+            </div>
           </div>
         </div>
       </main>
