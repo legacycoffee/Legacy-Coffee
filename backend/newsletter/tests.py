@@ -4,6 +4,7 @@ from unittest.mock import patch
 from django.test import override_settings
 from django.core import signing
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 from accounts.models import User
 from rest_framework.test import APITestCase
 
@@ -39,6 +40,30 @@ class NewsletterApiTests(APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertTrue(response.data['detail'])
+
+    def test_public_newsletter_issues_returns_only_sent_sanitized_content(self):
+        published = Newsletter.objects.create(
+            subject='Harvest update',
+            content_html='<h2>Harvest report</h2><script>alert(1)</script><p>Fresh coffee.</p>',
+            status=Newsletter.Status.SENT,
+            sent_at=timezone.now(),
+        )
+        Newsletter.objects.create(
+            subject='Private draft',
+            content_html='<p>Not public</p>',
+            status=Newsletter.Status.DRAFT,
+        )
+
+        response = self.client.get('/api/newsletter/issues/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Cache-Control'], 'no-store')
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], published.id)
+        self.assertEqual(response.data[0]['subject'], 'Harvest update')
+        self.assertIn('<h2>Harvest report</h2>', response.data[0]['content_html'])
+        self.assertNotIn('<script>', response.data[0]['content_html'])
+        self.assertNotIn('recipient_count', response.data[0])
 
     def setUp(self):
         self.staff = User.objects.create_user(

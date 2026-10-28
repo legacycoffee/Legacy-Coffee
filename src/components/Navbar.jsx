@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import { FiChevronDown, FiX } from 'react-icons/fi'
 import {
   LuLayoutDashboard,
+  LuBell,
   LuShoppingCart,
   LuUserRound,
 } from 'react-icons/lu'
@@ -330,6 +331,23 @@ export default function Navbar() {
                   onClick={() => setMenuOpen(false)}
                 >
                   My orders
+                </NavLink>
+                <NavLink
+                  to="/notifications"
+                  className={({ isActive }) =>
+                    `flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-brown hover:bg-peach-light'}`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <span className="flex items-center gap-3">
+                    <LuBell aria-hidden="true" className="h-5 w-5" />
+                    Notifications
+                  </span>
+                  {unreadCount > 0 && (
+                    <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-red-600 px-1.5 text-xs font-bold text-white" aria-label={`${unreadCount} unread notifications`}>
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </NavLink>
                 {user?.is_staff && (
                   <NavLink

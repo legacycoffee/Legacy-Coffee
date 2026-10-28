@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
+import { useCookieConsent } from '../context/useCookieConsent.js'
 
 function CountUp({ target, suffix }) {
   const [count, setCount] = useState(0)
@@ -168,6 +169,7 @@ function OurCoffeeSection() {
 }
 
 export default function AboutUs() {
+  const { consent, openPreferences } = useCookieConsent()
   const location = useLocation()
 
   useEffect(() => {
@@ -406,14 +408,23 @@ export default function AboutUs() {
             Watch and hear from Patrick
           </h2>
           <div className="aspect-video overflow-hidden rounded-2xl shadow-lg">
-            <iframe
-              className="h-full w-full"
-              src="https://www.youtube-nocookie.com/embed/_tfrzsu8rLs?vq=hd1080"
-              title="How Legacy Coffee is transforming small holder farmers"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-            />
+            {consent?.embeddedContent ? (
+              <iframe
+                className="h-full w-full"
+                src="https://www.youtube-nocookie.com/embed/_tfrzsu8rLs?vq=hd1080"
+                title="How Legacy Coffee is transforming small holder farmers"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#f7f1e9] px-5 text-center">
+                <p className="text-sm text-brown/75">The video is disabled until you allow optional embedded content.</p>
+                <button type="button" onClick={openPreferences} className="font-semibold text-primary underline underline-offset-2">
+                  Manage preferences
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 from accounts.services import upload_cloudinary_image
 from .dashboard_serializers import NewsletterSerializer
 from .models import Newsletter, Subscriber
-from .serializers import SubscribeSerializer
+from .serializers import PublicNewsletterSerializer, SubscribeSerializer
 from .services import ResendConfigurationError, ResendDeliveryError, send_resend_batch
 
 
@@ -58,6 +58,20 @@ class UnsubscribeView(APIView):
             unsubscribed_at=timezone.now(),
         )
         return Response({'message': 'If the address was subscribed, it has been unsubscribed.'})
+
+
+class PublicNewsletterListView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        newsletters = Newsletter.objects.filter(
+            status=Newsletter.Status.SENT,
+            sent_at__isnull=False,
+        ).order_by('-sent_at')
+        serializer = PublicNewsletterSerializer(newsletters, many=True)
+        response = Response(serializer.data)
+        response['Cache-Control'] = 'no-store'
+        return response
 
 
 class NewsletterImageUploadView(APIView):

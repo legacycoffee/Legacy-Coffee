@@ -1,19 +1,44 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../context/api.js'
 
-const pastIssues = [
-  { title: 'Harvest Season 2024 Recap', date: 'December 2024', excerpt: 'A record-breaking harvest season with over 50,000kg of premium coffee collected from our farmer network.' },
-  { title: 'Women in Coffee Initiative Launch', date: 'October 2024', excerpt: 'We launched our women empowerment program, enrolling 80 women farmers in our first cohort.' },
-  { title: 'New Export Partnership Announced', date: 'August 2024', excerpt: 'Legacy Coffee signs a landmark export deal to bring Ugandan coffee to European markets.' },
-]
+function getIssueExcerpt(contentHtml) {
+  const document = new DOMParser().parseFromString(contentHtml, 'text/html')
+  const text = document.body.textContent?.replace(/\s+/g, ' ').trim() || ''
+  return text.length > 220 ? `${text.slice(0, 217).trimEnd()}...` : text
+}
+
+function formatIssueDate(sentAt) {
+  return new Date(sentAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+}
 
 export default function Newsletter() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const [pastIssues, setPastIssues] = useState([])
+  const [archiveError, setArchiveError] = useState('')
+  const [isLoadingIssues, setIsLoadingIssues] = useState(true)
+  const [openIssueId, setOpenIssueId] = useState(null)
   const unsubscribeToken = searchParams.get('unsubscribe')
   const [unsubscribeMessage, setUnsubscribeMessage] = useState('')
   const [unsubscribeError, setUnsubscribeError] = useState('')
   const [isUnsubscribing, setIsUnsubscribing] = useState(false)
+
+  useEffect(() => {
+    let isCurrent = true
+    apiRequest('/newsletter/issues/')
+      .then(issues => {
+        if (isCurrent) setPastIssues(Array.isArray(issues) ? issues : [])
+      })
+      .catch(requestError => {
+        if (isCurrent) setArchiveError(requestError.message)
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoadingIssues(false)
+      })
+    return () => {
+      isCurrent = false
+    }
+  }, [])
 
   const handleUnsubscribe = async () => {
     setIsUnsubscribing(true)
@@ -38,16 +63,14 @@ export default function Newsletter() {
 
   return (
     <div>
-      {/* Hero */}
-      <section
-        className="py-24 px-6 text-center"
-        style={{ background: 'linear-gradient(135deg, #FCEBD0 0%, #F5C08A 100%)' }}
-      >
-        <div className="text-5xl mb-4">📬</div>
-        <h1 className="text-4xl font-bold text-primary mb-4">Stay in the Loop</h1>
-        <p className="text-brown max-w-xl mx-auto text-lg">
-          Get the latest news on our farmers, coffee harvests, community impact, and partnership opportunities — delivered straight to your inbox.
-        </p>
+      <section className="bg-[#f4eee8] px-4 py-8 sm:px-6 sm:py-12">
+        <div className="relative mx-auto flex min-h-56 max-w-7xl items-center justify-center overflow-hidden bg-[#2b211b] bg-cover bg-center px-6 py-14 text-center sm:min-h-72 sm:py-20"
+          style={{ backgroundImage: "linear-gradient(rgba(43, 33, 27, 0.62), rgba(43, 33, 27, 0.62)), url('https://res.cloudinary.com/vgko5mna/image/upload/v1792514667/coffee_1_farm.jpg')" }}
+        >
+          <h1 className="relative text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+            Stay in the loop
+          </h1>
+        </div>
       </section>
 
       {unsubscribeToken && (
@@ -78,20 +101,48 @@ export default function Newsletter() {
       <section className="py-16 px-6 bg-peach-light">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-primary text-2xl font-bold mb-8 text-center">Past Issues</h2>
-          <div className="space-y-4">
-            {pastIssues.map(issue => (
-              <div key={issue.title} className="bg-white rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center gap-4">
-                <div className="flex-1">
-                  <h3 className="text-brown font-bold text-lg mb-1">{issue.title}</h3>
-                  <p className="text-brown/70 text-sm mb-2">{issue.excerpt}</p>
-                  <span className="text-primary text-xs font-medium">{issue.date}</span>
-                </div>
-                <button className="bg-peach text-brown px-5 py-2 rounded font-medium text-sm hover:bg-primary hover:text-white transition-colors flex-shrink-0">
-                  Read Issue
-                </button>
-              </div>
-            ))}
-          </div>
+          {isLoadingIssues ? (
+            <p role="status" className="text-center text-sm text-brown/70">Loading past issues…</p>
+          ) : archiveError ? (
+            <p role="alert" className="mx-auto max-w-2xl text-center text-sm text-red-700">
+              Could not load past issues: {archiveError}
+            </p>
+          ) : pastIssues.length === 0 ? (
+            <p className="text-center text-sm text-brown/70">No past issues are available yet. Check back soon.</p>
+          ) : (
+            <div className="space-y-4">
+              {pastIssues.map(issue => {
+                const isOpen = openIssueId === issue.id
+                return (
+                  <article key={issue.id} className="overflow-hidden rounded-xl bg-white shadow-sm">
+                    <div className="flex flex-col gap-4 p-6 md:flex-row md:items-center">
+                      <div className="flex-1">
+                        <h3 className="mb-1 text-lg font-bold text-brown">{issue.subject}</h3>
+                        <p className="mb-2 text-sm text-brown/70">{getIssueExcerpt(issue.content_html)}</p>
+                        <time dateTime={issue.sent_at} className="text-xs font-medium text-primary">
+                          {formatIssueDate(issue.sent_at)}
+                        </time>
+                      </div>
+                      <button
+                        type="button"
+                        aria-expanded={isOpen}
+                        onClick={() => setOpenIssueId(isOpen ? null : issue.id)}
+                        className="flex-shrink-0 rounded bg-peach px-5 py-2 text-sm font-medium text-brown transition-colors hover:bg-primary hover:text-white"
+                      >
+                        {isOpen ? 'Close Issue' : 'Read Issue'}
+                      </button>
+                    </div>
+                    {isOpen && (
+                      <div
+                        className="newsletter-editor border-t border-peach-mid/40 px-6 py-6 text-sm leading-7 text-brown sm:px-8"
+                        dangerouslySetInnerHTML={{ __html: issue.content_html }}
+                      />
+                    )}
+                  </article>
+                )
+              })}
+            </div>
+          )}
         </div>
       </section>
     </div>
