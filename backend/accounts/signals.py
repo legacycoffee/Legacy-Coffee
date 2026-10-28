@@ -33,9 +33,21 @@ def notify_order_events(sender, instance, created, **kwargs):
     }
     title = status_titles.get(instance.status)
     if title:
+        details_extra = None
+        message = f'Order number: {instance.reference}'
+        if instance.status == Order.Status.FULFILLED:
+            review_products = [
+                {'slug': item.product.slug, 'name': item.product_name}
+                for item in instance.items.select_related('product')
+                if item.product_id and item.product.is_active
+            ]
+            message = 'Your order is fulfilled. Rate and review the coffee you received.'
+            details_extra = {'review_products': review_products}
+
         create_order_notification(
             instance,
             kind=Notification.Kind.ORDER_STATUS,
             title=title,
-            message=f'Order number: {instance.reference}',
+            message=message,
+            details_extra=details_extra,
         )

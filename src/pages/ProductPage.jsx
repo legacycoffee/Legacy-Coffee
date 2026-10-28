@@ -23,11 +23,8 @@ export default function ProductPage() {
   const [wishlistMessage, setWishlistMessage] = useState('')
   const [isWishlistSaving, setIsWishlistSaving] = useState(false)
   const [shareMessage, setShareMessage] = useState('')
-  const [reviewRating, setReviewRating] = useState(0)
-  const [reviewText, setReviewText] = useState('')
   const [reviewData, setReviewData] = useState(null)
   const [reviewError, setReviewError] = useState('')
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false)
   const [showAllReviews, setShowAllReviews] = useState(false)
   const isWishlisted = Boolean(isAuthenticated && wishlistProductIds.includes(productId))
   const currentReviewData = reviewData?.productId === productId ? reviewData : null
@@ -114,36 +111,6 @@ export default function ProductPage() {
   const handleBuyNow = () => {
     addToCart(product, quantity)
     navigate('/cart')
-  }
-
-  const handleReviewSubmit = async event => {
-    event.preventDefault()
-    setReviewError('')
-    setIsSubmittingReview(true)
-    try {
-      const review = await apiRequest('/shop/reviews/', {
-        method: 'POST',
-        token,
-        body: {
-          product: product.id,
-          rating: reviewRating,
-          text: reviewText.trim(),
-        },
-      })
-      setReviewData(current => current?.productId === product.id
-        ? {
-          ...current,
-          reviews: [review, ...current.reviews],
-          eligibility: { has_purchased: true, has_reviewed: true, can_review: false },
-        }
-        : current)
-      setReviewRating(0)
-      setReviewText('')
-    } catch (error) {
-      setReviewError(error.message)
-    } finally {
-      setIsSubmittingReview(false)
-    }
   }
 
   const handleToggleWishlist = async () => {
@@ -413,42 +380,12 @@ export default function ProductPage() {
           ) : null}
 
           {isAuthenticated && currentReviewData && reviewEligibility?.can_review ? (
-            <form onSubmit={handleReviewSubmit} className="border border-peach-mid/50 bg-white p-3 sm:p-4">
-              <p className="mb-3 text-xs text-black/65">Verified customers with a fulfilled order can leave one review for this coffee.</p>
-              <label className="block text-xs font-semibold text-black">Your rating</label>
-              <div className="mt-1 flex gap-1" role="group" aria-label="Choose a rating from 1 to 5 stars">
-                {[1, 2, 3, 4, 5].map(rating => (
-                  <button
-                    key={rating}
-                    type="button"
-                    aria-label={`${rating} ${rating === 1 ? 'star' : 'stars'}`}
-                    aria-pressed={reviewRating === rating}
-                    onClick={() => setReviewRating(rating)}
-                    className="p-0.5 text-[#F58537] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
-                  >
-                    <LuStar aria-hidden="true" className={`h-5 w-5 ${reviewRating >= rating ? 'fill-current' : ''}`} />
-                  </button>
-                ))}
-              </div>
-              <label htmlFor="product-review" className="mt-3 block text-xs font-semibold text-black">Your review</label>
-              <textarea
-                id="product-review"
-                required
-                maxLength={2000}
-                rows={2}
-                value={reviewText}
-                onChange={event => setReviewText(event.target.value)}
-                placeholder="Share your experience with this coffee"
-                className="mt-1 w-full rounded border border-peach-mid px-3 py-2 text-sm text-black outline-none focus:border-primary"
-              />
-              <button
-                type="submit"
-                disabled={reviewRating === 0 || !reviewText.trim() || isSubmittingReview}
-                className="mt-2 border border-black bg-[#F58537] px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isSubmittingReview ? 'Submitting…' : 'Submit review'}
-              </button>
-            </form>
+            <Link
+              to={`/review/${encodeURIComponent(product.id)}`}
+              className="inline-flex min-h-11 items-center border border-[#593a27] bg-[#593a27] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#40291d]"
+            >
+              Rate and review this coffee
+            </Link>
           ) : isAuthenticated && reviewEligibility?.has_reviewed ? (
             <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black/70">You’ve already reviewed this coffee.</p>
           ) : isAuthenticated && currentReviewData && reviewEligibility ? (

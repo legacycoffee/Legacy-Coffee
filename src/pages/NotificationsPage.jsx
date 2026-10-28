@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import OrderInvoiceActions from '../components/OrderInvoiceActions.jsx'
@@ -91,7 +91,7 @@ export default function NotificationsPage() {
       <div className="mx-auto w-full max-w-7xl">
         <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-primary">Your account</p>
         <h1 className="text-3xl font-bold tracking-tight text-black sm:text-4xl">Notifications</h1>
-        <p className="mt-2 text-sm text-black/65">Order updates and account messages.</p>
+        <p className="mt-2 text-sm text-black/65">Order updates, review reminders, and account messages.</p>
 
         {error && <p role="alert" className="mt-5 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
 
@@ -246,6 +246,27 @@ export default function NotificationsPage() {
                         </li>
                       ))}
                     </ul>
+                    {selectedNotification.details.status === 'fulfilled'
+                      && selectedNotification.details.review_products?.length > 0 && (
+                        <div className="mt-5 border border-peach-mid/50 bg-[#fffdfa] p-4">
+                          <h3 className="font-bold text-black">Rate your coffee</h3>
+                          <p className="mt-1 text-sm text-black/65">
+                            Your order is fulfilled. Share a rating and review for the coffee you received.
+                          </p>
+                          <ul className="mt-3 flex flex-wrap gap-2">
+                            {selectedNotification.details.review_products.map(item => (
+                              <li key={item.slug}>
+                                <Link
+                                  to={`/review/${encodeURIComponent(item.slug)}`}
+                                  className="inline-flex min-h-10 items-center border border-[#593a27] px-3 py-2 text-sm font-semibold text-[#593a27] transition hover:bg-[#593a27] hover:text-white"
+                                >
+                                  Review {item.name}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     <div className="mt-4 flex justify-between gap-4 text-base font-bold text-black">
                       <span>Order total</span>
                       <span>UGX {Number(selectedNotification.details.total).toLocaleString()}</span>

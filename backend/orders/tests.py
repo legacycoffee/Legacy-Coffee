@@ -161,6 +161,14 @@ class OrderApiTests(APITestCase):
             [notification.title for notification in notifications],
             ['Order submitted', 'Order confirmed', 'Order fulfilled'],
         )
+        fulfilled_notification = notifications[-1]
+        self.assertIn('Rate and review', fulfilled_notification.message)
+        self.assertEqual(
+            fulfilled_notification.details['review_products'],
+            [{'slug': self.product.slug, 'name': self.product.name}],
+        )
+        self.assertNotIn('review_products', notifications[0].details)
+        self.assertNotIn('review_products', notifications[1].details)
         self.assertTrue(all(
             notification.details['reference'] == order.reference
             and notification.details['items'][0]['image'] == self.product.image

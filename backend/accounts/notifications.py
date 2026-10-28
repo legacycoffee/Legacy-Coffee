@@ -37,11 +37,14 @@ def order_notification_details(order):
     }
 
 
-def create_order_notification(order, *, kind, title, message):
+def create_order_notification(order, *, kind, title, message, details_extra=None):
+    details = order_notification_details(order)
+    if details_extra:
+        details.update(details_extra)
     return Notification.objects.create(
         user=order.user,
         kind=kind,
         title=title,
         message=message,
-        details=order_notification_details(order),
+        details=details,
     )

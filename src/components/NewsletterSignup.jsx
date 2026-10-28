@@ -45,7 +45,7 @@ export default function NewsletterSignup() {
         </div>
 
         <div className="w-full lg:max-w-md">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row">
+          <form onSubmit={handleSubmit} className="flex flex-row gap-2">
             <label htmlFor="footer-newsletter-email" className="sr-only">Email address</label>
             <input
               id="footer-newsletter-email"
@@ -55,12 +55,12 @@ export default function NewsletterSignup() {
               value={email}
               onChange={event => setEmail(event.target.value)}
               placeholder="Your email address"
-              className="min-h-12 min-w-0 flex-1 border border-white/20 bg-white px-4 py-3 text-sm text-stone-900 outline-none placeholder:text-stone-400 focus:border-[#f58537] focus:ring-2 focus:ring-[#f58537]/40"
+              className="min-h-11 min-w-0 flex-1 border border-white/20 bg-white px-2.5 py-2.5 text-xs text-stone-900 outline-none placeholder:text-stone-400 focus:border-[#f58537] focus:ring-2 focus:ring-[#f58537]/40 sm:min-h-12 sm:px-4 sm:py-3 sm:text-sm"
             />
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#f58537] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#d96b25] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 bg-[#f58537] px-3 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#d96b25] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-wait disabled:opacity-60 sm:min-h-12 sm:gap-2 sm:px-5 sm:py-3 sm:text-sm"
             >
               {isSubmitting ? 'Subscribing…' : 'Subscribe'}
               {!isSubmitting && <LuArrowRight aria-hidden="true" className="h-4 w-4" />}

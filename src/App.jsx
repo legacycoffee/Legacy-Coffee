@@ -11,6 +11,7 @@ import ContactUs from './pages/ContactUs'
 import Newsletter from './pages/Newsletter'
 import AdminDashboard from './pages/AdminDashboard'
 import ProductPage from './pages/ProductPage'
+import ReviewPage from './pages/ReviewPage.jsx'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import ConfirmationPage from './pages/ConfirmationPage'
@@ -58,6 +59,7 @@ export default function App() {
             <Route path="/about/patrick-muhereza" element={<Layout><PatrickStoryPage /></Layout>} />
             <Route path="/shop" element={<Navigate to="/" replace />} />
             <Route path="/products/:productId" element={<Layout><ProductPage /></Layout>} />
+            <Route path="/review/:productId" element={<Layout><ReviewPage /></Layout>} />
             <Route path="/cart" element={<Layout><CartPage /></Layout>} />
             <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
             <Route path="/my-orders" element={<Layout><MyOrdersPage /></Layout>} />
