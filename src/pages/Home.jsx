@@ -79,16 +79,16 @@ export default function Home() {
             <p className="mb-8 max-w-lg text-base leading-relaxed text-white/80 sm:text-lg">
               From cafés to busy restaurants and homes, we bring you fresh, rich coffee that makes every cup memorable.
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:gap-5">
+            <div className="mx-auto flex w-full max-w-xs flex-col items-center justify-center gap-3 sm:max-w-none sm:flex-row sm:gap-5 sm:justify-center md:mx-0 md:justify-start">
               <Link
-                to="/about"
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                to="/#product-list"
+                className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 transition-all duration-300 hover:bg-white hover:text-brown md:px-9 md:py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
-                About Us
+                Shop Coffee →
               </Link>
               <Link
                 to="/partner"
-                className="inline-flex items-center justify-center rounded-full border border-peach-light/80 px-7 py-3.5 text-sm font-semibold text-peach-light transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex items-center justify-center rounded-full border-2 border-white/50 px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white backdrop-blur-sm transition-all duration-300 hover:border-primary hover:text-primary md:px-9 md:py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 Partner With Us
               </Link>
@@ -106,42 +106,83 @@ export default function Home() {
             </div>
           </div>
           {isProductsLoading ? (
-                <p role="status" className="text-sm text-brown/70">Loading products…</p>
+            <p role="status" className="text-sm text-brown/70">Loading products…</p>
           ) : productsError ? (
-                <p role="alert" className="mb-5 text-sm text-red-700">Could not load products: {productsError}</p>
+            <p role="alert" className="mb-5 text-sm text-red-700">Could not load products: {productsError}</p>
           ) : products.length === 0 ? (
-                <p className="text-sm text-brown/70">No products are currently available.</p>
+            <p className="text-sm text-brown/70">No products are currently available.</p>
           ) : (
-                <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
-                  {products.map(product => (
-                    <article key={product.id} className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-peach-mid/40 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
-                      <Link to={`/products/${product.id}`} aria-label={`View ${product.name}`} className="flex flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary">
-                        <div className="relative block aspect-[4/3] w-full overflow-hidden bg-peach-light">
-                          <ProductImage product={product} className="transition-transform duration-500 sm:group-hover:scale-105" />
-                          <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-brown shadow-sm sm:left-3 sm:top-3 sm:text-xs">
-                            {product.weight}
-                          </span>
-                        </div>
-                        <div className="flex flex-1 flex-col p-3 sm:p-4 lg:p-5">
-                          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary sm:text-xs">{product.roast}</p>
-                          <p className="mb-2 text-sm font-bold leading-snug text-brown group-hover:text-primary sm:text-base lg:text-lg">{product.name}</p>
-                          <p className="mb-4 flex-1 text-xs leading-relaxed text-brown/70 sm:text-sm">{product.description}</p>
-                          <p className="mt-auto text-lg font-bold text-brown sm:text-xl">{formatPrice(product.price)}</p>
-                        </div>
-                      </Link>
-                      <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5 lg:pb-5">
-                        <button
-                          type="button"
-                          onClick={() => handleAddToCart(product)}
-                          className="w-full rounded-lg bg-primary px-3 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-sm"
-                        >
-                          {addedProduct === product.id ? 'Added!' : 'Add to cart'}
-                        </button>
-                      </div>
-                    </article>
-                  ))}
-                </div>
+            <div id="product-list" className="grid scroll-mt-24 grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+              {products.map(product => (
+                <article key={product.id} className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-peach-mid/40 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+                  <Link to={`/products/${product.id}`} aria-label={`View ${product.name}`} className="flex flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary">
+                    <div className="relative block aspect-[4/3] w-full overflow-hidden bg-peach-light">
+                      <ProductImage product={product} className="transition-transform duration-500 sm:group-hover:scale-105" />
+                      <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-brown shadow-sm sm:left-3 sm:top-3 sm:text-xs">
+                        {product.weight}
+                      </span>
+                    </div>
+                    <div className="flex flex-1 flex-col p-3 sm:p-4 lg:p-5">
+                      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary sm:text-xs">{product.roast}</p>
+                      <p className="mb-2 text-sm font-bold leading-snug text-brown group-hover:text-primary sm:text-base lg:text-lg">{product.name}</p>
+                      <p className="mb-4 flex-1 text-xs leading-relaxed text-brown/70 sm:text-sm">{product.description}</p>
+                      <p className="mt-auto text-lg font-bold text-brown sm:text-xl">{formatPrice(product.price)}</p>
+                    </div>
+                  </Link>
+                  <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5 lg:pb-5">
+                    <button
+                      type="button"
+                      onClick={() => handleAddToCart(product)}
+                      className="w-full rounded-lg bg-primary px-3 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-sm"
+                    >
+                      {addedProduct === product.id ? 'Added!' : 'Add to cart'}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
           )}
+        </div>
+      </section>
+
+      <section aria-labelledby="coffee-shop-heading" className="relative isolate overflow-hidden bg-brown px-5 py-12 text-white sm:px-8 sm:py-16 lg:py-20">
+        <img
+          src="https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=2000&q=85"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+        />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-[#21160e]/95 via-[#21160e]/80 to-[#21160e]/45" />
+
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-2xl">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-primary sm:text-sm">Fresh from our café</p>
+            <h2 id="coffee-shop-heading" className="text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
+              Your next great cup is waiting.
+            </h2>
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
+              Visit the Legacy Coffee shop for freshly prepared coffee drinks, or place a pre-order and we’ll help arrange your pickup.
+            </p>
+            <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/85 sm:text-base">
+              Tell us your favorite type of coffee and your preferred pickup time. We’ll confirm your pre-order directly with you.
+            </p>
+            <div className="mx-auto mt-8 flex w-full max-w-xs flex-col items-center gap-3 sm:mx-0 sm:max-w-none sm:flex-row">
+              <a
+                href="https://wa.me/256752254962?text=Hi%20Legacy%20Coffee!%20I%E2%80%99d%20like%20to%20pre-order%20a%20coffee%20drink.%20Please%20share%20today%E2%80%99s%20menu%20and%20pickup%20times."
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white hover:text-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                Pre-order on WhatsApp
+              </a>
+              <Link
+                to="/#product-list"
+                className="inline-flex items-center justify-center rounded-full border border-white/60 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                Shop packaged coffee
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 

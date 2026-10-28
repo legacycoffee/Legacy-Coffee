@@ -31,9 +31,9 @@ export default function Footer() {
             <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-24 w-auto brightness-0 invert md:h-28" />
           </div>
 
-          {/* Menu */}
+          {/* Quick Links */}
           <div>
-            <h4 className="text-white font-semibold text-lg mb-3">Menu</h4>
+            <h4 className="text-white font-semibold text-lg mb-3">Quick Links</h4>
             <ul className="space-y-1">
               {menuLinks.map(link => (
                 <li key={link.label}>

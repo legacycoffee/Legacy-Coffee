@@ -33,9 +33,12 @@ function ScrollToTop() {
   const { pathname, hash } = useLocation()
 
   useEffect(() => {
-    if (!hash) {
-      window.scrollTo(0, 0)
+    if (hash) {
+      document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView()
+      return
     }
+
+    window.scrollTo(0, 0)
   }, [pathname, hash])
 
   return null
