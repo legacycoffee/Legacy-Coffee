@@ -74,6 +74,20 @@ class OrderApiTests(APITestCase):
             'is_wholesale': False,
         }])
 
+    def test_order_without_account_email_uses_checkout_email(self):
+        user = get_user_model().objects.create_user(
+            username='phone-customer',
+            email=None,
+            phone='+256700000009',
+            password='StrongPassword!2026',
+        )
+        self.client.force_authenticate(user)
+
+        response = self.client.post('/api/orders/', self.payload, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['customer_email'], self.payload['customer_email'])
+
     def test_wholesale_order_uses_admin_price_and_saves_optional_business(self):
         self.product.wholesale_price = Decimal('15000')
         self.product.save(update_fields=('wholesale_price',))
@@ -119,14 +133,16 @@ class OrderApiTests(APITestCase):
         order_response = self.client.post('/api/orders/', self.payload, format='json')
         order = Order.objects.get()
         self.assertEqual(order_response.status_code, 201)
-        self.assertTrue(bytes(order.invoice_pdf).startswith(b'%PDF-'))
+        invoice_pdf = bytes(order.invoice_pdf)
+        self.assertTrue(invoice_pdf.startswith(b'%PDF-'))
+        self.assertIn(b'/Subtype /Image', invoice_pdf)
 
         invoice_response = self.client.get(f'/api/orders/{order.reference}/invoice/')
 
         self.assertEqual(invoice_response.status_code, 200)
         self.assertEqual(invoice_response['Content-Type'], 'application/pdf')
         self.assertIn(f'invoice-{order.reference}.pdf', invoice_response['Content-Disposition'])
-        self.assertEqual(bytes(invoice_response.content), bytes(order.invoice_pdf))
+        self.assertEqual(bytes(invoice_response.content), invoice_pdf)
 
     def test_invoice_is_not_accessible_to_another_customer(self):
         self.client.force_authenticate(self.user)

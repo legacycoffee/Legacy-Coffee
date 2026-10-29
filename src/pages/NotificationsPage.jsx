@@ -70,12 +70,14 @@ export default function NotificationsPage() {
     apiRequest(`/auth/notifications/${selectedNotification.id}/read/`, {
       method: 'PATCH',
       token,
-    }).then(() => {
+    }).then(response => {
       if (!isCurrent) return
       setNotifications(current => current.map(item => (
         item.id === selectedNotification.id ? { ...item, is_read: true } : item
       )))
-      window.dispatchEvent(new Event('legacy-notifications-updated'))
+      window.dispatchEvent(new CustomEvent('legacy-notifications-updated', {
+        detail: { unreadCount: response.unread_count },
+      }))
     }).catch(requestError => {
       if (isCurrent) setError(requestError.message)
     })

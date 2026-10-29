@@ -37,7 +37,7 @@ export default function MyAccountPage() {
                 <p className="text-xs text-black/60">Your profile and saved delivery location</p>
               </div>
             </div>
-            <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
+            <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-4">
               <div>
                 <dt className="text-xs font-bold text-black/70">Full name</dt>
                 <dd className="mt-1 text-sm font-normal text-black">{name}</dd>
@@ -45,6 +45,10 @@ export default function MyAccountPage() {
               <div>
                 <dt className="text-xs font-bold text-black/70">Email address</dt>
                 <dd className="mt-1 break-all text-sm font-normal text-black">{user?.email || 'Not provided'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-bold text-black/70">Phone number</dt>
+                <dd className="mt-1 break-all text-sm font-normal text-black">{user?.phone || 'Not provided'}</dd>
               </div>
               <div>
                 <dt className="text-xs font-bold text-black/70">Username</dt>

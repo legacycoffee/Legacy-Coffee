@@ -58,6 +58,12 @@ const orderStatusActions = {
   cancelled: [{ status: 'pending', label: 'Reopen order' }],
 }
 
+const paymentMethodLabels = {
+  mobile_money: 'Mobile Money',
+  bank: 'Bank',
+  cash: 'Cash',
+}
+
 function formatDate(value) {
   return new Intl.DateTimeFormat('en-UG', {
     dateStyle: 'medium',
@@ -534,6 +540,9 @@ export default function AdminDashboard() {
   const [isNewsletterImageUploading, setIsNewsletterImageUploading] = useState(false)
   const [showNewsletterSendConfirmation, setShowNewsletterSendConfirmation] = useState(false)
   const [orderStatusUpdates, setOrderStatusUpdates] = useState({})
+  const [orderCancellation, setOrderCancellation] = useState(null)
+  const [paymentConfirmationOrder, setPaymentConfirmationOrder] = useState(null)
+  const [paymentMethod, setPaymentMethod] = useState('')
   const [expandedOrders, setExpandedOrders] = useState({})
   const [productsPage, setProductsPage] = useState(null)
   const [productPageNumber, setProductPageNumber] = useState(1)
@@ -859,8 +868,6 @@ export default function AdminDashboard() {
   }
 
   const updateOrderStatus = async (order, nextStatus) => {
-    if (nextStatus === 'cancelled' && !window.confirm(`Cancel order ${order.reference}?`)) return
-
     setOrderStatusUpdates(current => ({
       ...current,
       [order.reference]: { isSaving: true, error: '', success: '' },
@@ -880,10 +887,47 @@ export default function AdminDashboard() {
           - (order.status === 'pending' ? 1 : 0)
         return { ...current, pending_orders: pendingOrders }
       })
+      if (nextStatus === 'cancelled') setOrderCancellation(null)
       setOrderStatusUpdates(current => ({
         ...current,
         [order.reference]: { isSaving: false, error: '', success: 'Order status updated.' },
       }))
+    } catch (error) {
+      setOrderStatusUpdates(current => ({
+        ...current,
+        [order.reference]: { isSaving: false, error: error.message, success: '' },
+      }))
+    }
+  }
+
+  const requestOrderStatusUpdate = (order, nextStatus) => {
+    if (nextStatus === 'cancelled') {
+      setOrderCancellation(order)
+      return
+    }
+    updateOrderStatus(order, nextStatus)
+  }
+
+  const updateOrderPayment = async (order, method) => {
+    const isPaid = !order.is_paid
+    setOrderStatusUpdates(current => ({
+      ...current,
+      [order.reference]: { isSaving: true, error: '', success: '' },
+    }))
+    try {
+      const updatedOrder = await apiRequest(
+        `/dashboard/orders/${encodeURIComponent(order.reference)}/payment/`,
+        { method: 'PATCH', body: { is_paid: isPaid, payment_method: isPaid ? method : '' }, token },
+      )
+      setOrders(current => current.map(item => (
+        item.reference === updatedOrder.reference ? { ...item, ...updatedOrder } : item
+      )))
+      setOrderStatusUpdates(current => ({
+        ...current,
+        [order.reference]: { isSaving: false, error: '', success: 'Payment status updated.' },
+      }))
+      setPaymentConfirmationOrder(null)
+      setPaymentMethod('')
     } catch (error) {
       setOrderStatusUpdates(current => ({
         ...current,
@@ -1567,7 +1611,7 @@ export default function AdminDashboard() {
                                 key={action.status}
                                 type="button"
                                 disabled={orderStatusUpdates[order.reference]?.isSaving}
-                                onClick={() => updateOrderStatus(order, action.status)}
+                                onClick={() => requestOrderStatusUpdate(order, action.status)}
                                 className={`min-h-10 flex-1 rounded-lg px-2.5 py-2 text-xs font-semibold transition disabled:cursor-wait disabled:opacity-50 sm:flex-none sm:px-3 ${
                                   action.destructive
                                     ? 'border border-rose-200 text-rose-700 hover:bg-rose-50'
@@ -1578,7 +1622,24 @@ export default function AdminDashboard() {
                               </button>
                             ))}
                             {order.status === 'fulfilled' && (
-                              <span className="self-center text-xs text-stone-400">Order complete</span>
+                              <>
+                                <span className={`self-center rounded-full px-2.5 py-1 text-xs font-semibold ${order.is_paid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                                  {order.is_paid ? `Paid · ${paymentMethodLabels[order.payment_method]}` : 'Unpaid'}
+                                </span>
+                                <button
+                                  type="button"
+                                  disabled={orderStatusUpdates[order.reference]?.isSaving}
+                                  onClick={() => {
+                                    setPaymentMethod(order.payment_method || '')
+                                    setPaymentConfirmationOrder(order)
+                                  }}
+                                  className="min-h-10 flex-1 rounded-lg border border-stone-300 px-2.5 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 disabled:cursor-wait disabled:opacity-50 sm:flex-none sm:px-3"
+                                >
+                                  {orderStatusUpdates[order.reference]?.isSaving
+                                    ? 'Updating…'
+                                    : order.is_paid ? 'Undo paid' : 'Mark as paid'}
+                                </button>
+                              </>
                             )}
                           </div>
                           <button
@@ -2445,9 +2506,12 @@ export default function AdminDashboard() {
                         <div className="flex flex-wrap items-start justify-between gap-2">
                           <div className="min-w-0">
                             <p className="break-words text-sm font-semibold text-stone-800">{customer.name}</p>
-                            <a className="mt-1 block break-all text-xs text-[#8b4a2b] hover:underline" href={`mailto:${customer.email}`}>
-                              {customer.email}
-                            </a>
+                            {customer.email && (
+                              <a className="mt-1 block break-all text-xs text-[#8b4a2b] hover:underline" href={`mailto:${customer.email}`}>
+                                {customer.email}
+                              </a>
+                            )}
+                            <p className="mt-1 break-all text-xs text-stone-500">{customer.phone || 'Phone not provided'}</p>
                           </div>
                           <StatusBadge>{customer.is_active ? 'active' : 'inactive'}</StatusBadge>
                         </div>
@@ -2484,9 +2548,12 @@ export default function AdminDashboard() {
                           <tr key={customer.id} className="transition-colors hover:bg-stone-50/70">
                             <td className="px-4 py-4 sm:px-5">
                               <p className="font-semibold text-stone-800">{customer.name}</p>
-                              <a className="mt-1 inline-block text-xs text-[#8b4a2b] hover:underline" href={`mailto:${customer.email}`}>
-                                {customer.email}
-                              </a>
+                              {customer.email && (
+                                <a className="mt-1 inline-block text-xs text-[#8b4a2b] hover:underline" href={`mailto:${customer.email}`}>
+                                  {customer.email}
+                                </a>
+                              )}
+                              <p className="mt-1 text-xs text-stone-500">{customer.phone || 'Phone not provided'}</p>
                             </td>
                             <td className="px-4 py-4 sm:px-5">
                               <StatusBadge>{customer.is_active ? 'active' : 'inactive'}</StatusBadge>
@@ -2705,6 +2772,171 @@ export default function AdminDashboard() {
                   >
                     Done
                   </button>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {paymentConfirmationOrder && (
+            <div
+              className="fixed inset-0 z-[80] flex items-center justify-center bg-stone-950/65 p-4 backdrop-blur-sm"
+              onMouseDown={event => {
+                if (event.target === event.currentTarget && !orderStatusUpdates[paymentConfirmationOrder.reference]?.isSaving) {
+                  setPaymentConfirmationOrder(null)
+                }
+              }}
+            >
+              <section
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="payment-confirmation-heading"
+                aria-describedby="payment-confirmation-description"
+                className="w-full max-w-md overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-2xl"
+              >
+                <div className="p-5 sm:p-6">
+                  <p className={`text-xs font-bold uppercase tracking-[0.16em] ${paymentConfirmationOrder.is_paid ? 'text-amber-700' : 'text-emerald-700'}`}>
+                    {paymentConfirmationOrder.is_paid ? 'Undo payment confirmation' : 'Record payment'}
+                  </p>
+                  <h2 id="payment-confirmation-heading" className="mt-2 text-xl font-bold text-stone-900">
+                    {paymentConfirmationOrder.is_paid ? 'Mark this order as unpaid?' : 'Confirm payment received?'}
+                  </h2>
+                  <p id="payment-confirmation-description" className="mt-2 text-sm leading-6 text-stone-600">
+                    {paymentConfirmationOrder.is_paid
+                      ? 'This removes the paid marker from the accounting summary. You can mark the order as paid again later.'
+                      : 'Only continue if payment has actually been received. This will update the paid totals in Accounting.'}
+                  </p>
+                  <div className="mt-5 rounded-xl border border-stone-200 bg-stone-50 p-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Fulfilled order</p>
+                    <div className="mt-2 flex items-center justify-between gap-3">
+                      <span className="font-mono text-sm font-bold text-stone-800">{paymentConfirmationOrder.reference}</span>
+                      <span className="text-sm font-semibold text-stone-900">{formatPrice(paymentConfirmationOrder.total)}</span>
+                    </div>
+                    <p className="mt-1 truncate text-xs text-stone-500">{paymentConfirmationOrder.customer_name}</p>
+                  </div>
+                  {!paymentConfirmationOrder.is_paid ? (
+                    <fieldset className="mt-5">
+                      <legend className="text-sm font-semibold text-stone-800">How was the payment received?</legend>
+                      <div className="mt-2 grid grid-cols-3 gap-2">
+                        {[
+                          { value: 'mobile_money', label: 'Mobile Money' },
+                          { value: 'bank', label: 'Bank' },
+                          { value: 'cash', label: 'Cash' },
+                        ].map(method => (
+                          <label
+                            key={method.value}
+                            className={`flex min-h-11 cursor-pointer items-center justify-center rounded-lg border px-2 py-2 text-center text-xs font-semibold transition ${
+                              paymentMethod === method.value
+                                ? 'border-[#593a27] bg-[#f7f0e9] text-[#593a27]'
+                                : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="payment-method"
+                              value={method.value}
+                              checked={paymentMethod === method.value}
+                              onChange={event => setPaymentMethod(event.target.value)}
+                              className="sr-only"
+                            />
+                            {method.label}
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  ) : (
+                    <p className="mt-4 text-sm text-stone-600">
+                      Recorded as paid by <strong>{paymentMethodLabels[paymentConfirmationOrder.payment_method]}</strong>.
+                    </p>
+                  )}
+                  {orderStatusUpdates[paymentConfirmationOrder.reference]?.error && (
+                    <p role="alert" className="mt-4 border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+                      {orderStatusUpdates[paymentConfirmationOrder.reference].error}
+                    </p>
+                  )}
+                  <div className="mt-6 flex flex-row justify-end gap-2">
+                    <button
+                      type="button"
+                      disabled={orderStatusUpdates[paymentConfirmationOrder.reference]?.isSaving}
+                      onClick={() => setPaymentConfirmationOrder(null)}
+                      className="min-h-11 min-w-0 flex-1 whitespace-nowrap rounded-lg border border-stone-300 px-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-50 sm:flex-none sm:px-4 sm:text-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      autoFocus
+                      disabled={orderStatusUpdates[paymentConfirmationOrder.reference]?.isSaving || (!paymentConfirmationOrder.is_paid && !paymentMethod)}
+                      onClick={() => updateOrderPayment(paymentConfirmationOrder, paymentMethod)}
+                      className={`min-h-11 min-w-0 flex-1 whitespace-nowrap rounded-lg px-2 text-xs font-semibold text-white transition disabled:cursor-wait disabled:opacity-50 sm:flex-none sm:px-4 sm:text-sm ${
+                        paymentConfirmationOrder.is_paid ? 'bg-amber-700 hover:bg-amber-800' : 'bg-emerald-700 hover:bg-emerald-800'
+                      }`}
+                    >
+                      {orderStatusUpdates[paymentConfirmationOrder.reference]?.isSaving
+                        ? 'Updating payment…'
+                        : paymentConfirmationOrder.is_paid ? 'Confirm as unpaid' : 'Confirm payment received'}
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {orderCancellation && (
+            <div
+              className="fixed inset-0 z-[80] flex items-center justify-center bg-stone-950/65 p-4 backdrop-blur-sm"
+              onMouseDown={event => {
+                if (event.target === event.currentTarget && !orderStatusUpdates[orderCancellation.reference]?.isSaving) {
+                  setOrderCancellation(null)
+                }
+              }}
+            >
+              <section
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="order-cancellation-heading"
+                aria-describedby="order-cancellation-description"
+                className="w-full max-w-md overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-2xl"
+              >
+                <div className="p-5 sm:p-6">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-rose-700">Cancel order</p>
+                  <h2 id="order-cancellation-heading" className="mt-2 text-xl font-bold text-stone-900">
+                    Cancel this order?
+                  </h2>
+                  <p id="order-cancellation-description" className="mt-2 text-sm leading-6 text-stone-600">
+                    The order will be marked cancelled and its value will be excluded from non-cancelled order totals. You can reopen it later.
+                  </p>
+                  <div className="mt-5 rounded-xl border border-stone-200 bg-stone-50 p-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Order to cancel</p>
+                    <div className="mt-2 flex items-center justify-between gap-3">
+                      <span className="font-mono text-sm font-bold text-stone-800">{orderCancellation.reference}</span>
+                      <span className="text-sm font-semibold text-stone-900">{formatPrice(orderCancellation.total)}</span>
+                    </div>
+                    <p className="mt-1 truncate text-xs text-stone-500">{orderCancellation.customer_name}</p>
+                  </div>
+                  {orderStatusUpdates[orderCancellation.reference]?.error && (
+                    <p role="alert" className="mt-4 border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+                      {orderStatusUpdates[orderCancellation.reference].error}
+                    </p>
+                  )}
+                  <div className="mt-6 flex flex-row justify-end gap-2">
+                    <button
+                      type="button"
+                      disabled={orderStatusUpdates[orderCancellation.reference]?.isSaving}
+                      onClick={() => setOrderCancellation(null)}
+                      className="min-h-11 min-w-0 flex-1 whitespace-nowrap rounded-lg border border-stone-300 px-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-50 sm:flex-none sm:px-4 sm:text-sm"
+                    >
+                      Keep order
+                    </button>
+                    <button
+                      type="button"
+                      autoFocus
+                      disabled={orderStatusUpdates[orderCancellation.reference]?.isSaving}
+                      onClick={() => updateOrderStatus(orderCancellation, 'cancelled')}
+                      className="min-h-11 min-w-0 flex-1 whitespace-nowrap rounded-lg bg-rose-700 px-2 text-xs font-semibold text-white transition hover:bg-rose-800 disabled:cursor-wait disabled:opacity-50 sm:flex-none sm:px-4 sm:text-sm"
+                    >
+                      {orderStatusUpdates[orderCancellation.reference]?.isSaving ? 'Cancelling…' : 'Cancel order'}
+                    </button>
+                  </div>
                 </div>
               </section>
             </div>

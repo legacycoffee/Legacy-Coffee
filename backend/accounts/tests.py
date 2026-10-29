@@ -123,7 +123,9 @@ class AuthenticationApiTests(APITestCase):
         response = self.client.post('/api/auth/register/', {
             'username': 'coffee-customer',
             'email': 'customer@example.com',
+            'phone': '+256700000001',
             'password': 'StrongPassword!2026',
+            'confirm_password': 'StrongPassword!2026',
             'first_name': 'Coffee',
             'delivery_address': '1 Coffee Road',
             'delivery_city': 'Kampala',
@@ -134,6 +136,7 @@ class AuthenticationApiTests(APITestCase):
         self.assertEqual(response.status_code, 201)
         self.assertIn('token', response.data)
         self.assertEqual(response.data['user']['email'], 'customer@example.com')
+        self.assertEqual(response.data['user']['phone'], '+256700000001')
         self.assertEqual(response.data['user']['delivery_address'], '1 Coffee Road')
         self.assertEqual(response.data['user']['location_latitude'], '0.347600')
         self.assertTrue(get_user_model().objects.filter(email='customer@example.com').exists())
@@ -146,6 +149,7 @@ class AuthenticationApiTests(APITestCase):
         user = get_user_model().objects.create_user(
             username='customer',
             email='customer@example.com',
+            phone='+256700000002',
             password='StrongPassword!2026',
         )
         response = self.client.post('/api/auth/login/', {
@@ -161,6 +165,36 @@ class AuthenticationApiTests(APITestCase):
         self.assertEqual(notifications.data['results'][0]['kind'], Notification.Kind.SIGN_IN)
         self.assertEqual(notifications.data['results'][0]['details'], {})
         self.assertEqual(self.client.get('/api/auth/me/').status_code, 200)
+
+    def test_registration_without_email_and_login_with_phone(self):
+        response = self.client.post('/api/auth/register/', {
+            'username': 'phone-customer',
+            'phone': '+256700000003',
+            'password': 'StrongPassword!2026',
+            'confirm_password': 'StrongPassword!2026',
+        })
+
+        self.assertEqual(response.status_code, 201)
+        self.assertIsNone(response.data['user']['email'])
+        self.assertEqual(response.data['user']['phone'], '+256700000003')
+
+        login_response = self.client.post('/api/auth/login/', {
+            'email': '+256700000003',
+            'password': 'StrongPassword!2026',
+        })
+        self.assertEqual(login_response.status_code, 200)
+        self.assertEqual(login_response.data['user']['id'], response.data['user']['id'])
+
+    def test_registration_rejects_mismatched_confirm_password(self):
+        response = self.client.post('/api/auth/register/', {
+            'username': 'mismatch-customer',
+            'phone': '+256700000004',
+            'password': 'StrongPassword!2026',
+            'confirm_password': 'DifferentPassword!2026',
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('confirm_password', response.data)
 
     def test_staff_login_identifies_staff_account_for_admin_routing(self):
         staff_user = get_user_model().objects.create_user(
@@ -195,6 +229,12 @@ class AuthenticationApiTests(APITestCase):
             title='Welcome',
             message='Welcome to Legacy Coffee.',
         )
+        Notification.objects.create(
+            user=user,
+            kind=Notification.Kind.ORDER_SUBMITTED,
+            title='Order update',
+            message='Your order is being processed.',
+        )
 
         self.client.force_authenticate(other_user)
         self.assertEqual(self.client.get('/api/auth/notifications/').data['results'], [])
@@ -207,9 +247,10 @@ class AuthenticationApiTests(APITestCase):
         response = self.client.patch(f'/api/auth/notifications/{notification.pk}/read/')
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['unread_count'], 1)
         notification.refresh_from_db()
         self.assertTrue(notification.is_read)
-        self.assertEqual(self.client.get('/api/auth/notifications/').data['unread_count'], 0)
+        self.assertEqual(self.client.get('/api/auth/notifications/').data['unread_count'], 1)
 
     def test_notifications_require_authentication(self):
         self.assertEqual(self.client.get('/api/auth/notifications/').status_code, 401)

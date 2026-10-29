@@ -1,6 +1,7 @@
-from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
+from django.db.models import Q
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 from urllib.parse import urlparse
 
 from .models import User
@@ -12,12 +13,12 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'email', 'first_name', 'last_name',
+            'id', 'username', 'email', 'phone', 'first_name', 'last_name',
             'delivery_address', 'delivery_city', 'delivery_notes',
             'location_latitude', 'location_longitude', 'profile_photo',
             'is_staff',
         )
-        read_only_fields = ('id', 'username', 'email', 'is_staff')
+        read_only_fields = ('id', 'username', 'email', 'phone', 'is_staff')
 
     def validate_profile_photo(self, value):
         if value and urlparse(value).hostname != 'res.cloudinary.com':
@@ -66,32 +67,53 @@ class DeleteAccountSerializer(serializers.Serializer):
 
 class RegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
+    confirm_password = serializers.CharField(write_only=True, trim_whitespace=False)
+    email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
+    phone = serializers.CharField(
+        max_length=40,
+        validators=[UniqueValidator(queryset=User.objects.all())],
+    )
 
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'email', 'password', 'first_name', 'last_name',
+            'id', 'username', 'email', 'phone', 'password', 'confirm_password',
+            'first_name', 'last_name',
             'delivery_address', 'delivery_city', 'delivery_notes',
             'location_latitude', 'location_longitude',
         )
         read_only_fields = ('id',)
 
+    def validate_email(self, value):
+        if not value:
+            return None
+        value = value.strip().lower()
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError('A user with this email address already exists.')
+        return value
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': 'The passwords do not match.'})
+        return attrs
+
     def create(self, validated_data):
+        validated_data.pop('confirm_password')
+        validated_data['email'] = validated_data.get('email') or None
         return User.objects.create_user(**validated_data)
 
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    email = serializers.CharField()
     password = serializers.CharField(write_only=True, trim_whitespace=False)
 
     def validate(self, attrs):
-        user = authenticate(
-            request=self.context.get('request'),
-            email=attrs['email'],
-            password=attrs['password'],
-        )
-        if user is None:
-            raise serializers.ValidationError('Invalid email or password.')
+        identifier = attrs['email'].strip()
+        user = User.objects.filter(
+            Q(email__iexact=identifier) | Q(phone=identifier),
+        ).first()
+        if user is None or not user.check_password(attrs['password']):
+            raise serializers.ValidationError('Invalid email or phone number or password.')
         if not user.is_active:
             raise serializers.ValidationError('This account is inactive.')
         attrs['user'] = user

@@ -16,6 +16,11 @@ class Order(models.Model):
         FULFILLED = 'fulfilled', 'Fulfilled'
         CANCELLED = 'cancelled', 'Cancelled'
 
+    class PaymentMethod(models.TextChoices):
+        MOBILE_MONEY = 'mobile_money', 'Mobile Money'
+        BANK = 'bank', 'Bank'
+        CASH = 'cash', 'Cash'
+
     reference = models.CharField(max_length=16, unique=True, default=generate_order_reference)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -40,6 +45,21 @@ class Order(models.Model):
         validators=[MinValueValidator(-180), MaxValueValidator(180)],
     )
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    is_paid = models.BooleanField(default=False, db_index=True)
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.choices,
+        blank=True,
+        default='',
+    )
+    paid_at = models.DateTimeField(null=True, blank=True)
+    paid_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='payments_recorded',
+    )
     total = models.DecimalField(max_digits=14, decimal_places=0, default=0)
     invoice_pdf = models.BinaryField(null=True, blank=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)

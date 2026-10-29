@@ -7,6 +7,7 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from accounts.models import Notification
+from dashboard.models import AnonymousVisitor
 from inquiries.models import Inquiry
 from newsletter.models import Subscriber
 from orders.models import Order, OrderItem
@@ -32,6 +33,10 @@ class DashboardApiTests(APITestCase):
         self.client.force_authenticate(self.customer)
         self.assertEqual(self.client.get('/api/dashboard/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/orders/').status_code, 403)
+        self.assertEqual(
+            self.client.patch('/api/dashboard/orders/LC-TEST/payment/', {'is_paid': True}).status_code,
+            403,
+        )
         self.assertEqual(self.client.get('/api/dashboard/inquiries/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/subscribers/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/users/').status_code, 403)
@@ -103,6 +108,167 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(invalid_date.status_code, 400)
         self.assertEqual(reversed_range.status_code, 400)
         self.assertEqual(long_range.status_code, 400)
+
+    def test_new_registration_is_counted_as_active_without_a_login(self):
+        today = timezone.localdate()
+        start_at = timezone.make_aware(datetime.combine(today, time.min))
+        get_user_model().objects.filter(pk=self.customer.pk).update(
+            date_joined=start_at - timedelta(days=1),
+            last_login=None,
+        )
+        newly_registered = get_user_model().objects.create_user(
+            username='new-customer',
+            email='new-customer@example.com',
+            password='StrongPassword!2026',
+        )
+        get_user_model().objects.filter(pk=newly_registered.pk).update(
+            date_joined=start_at,
+            last_login=None,
+        )
+
+        self.client.force_authenticate(self.staff)
+        response = self.client.get(
+            f'/api/dashboard/analytics/?start={today.isoformat()}&end={today.isoformat()}',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['users']['active_users'], 1)
+        self.assertEqual(response.data['users']['new_users'], 1)
+        self.assertEqual(response.data['users']['daily'][0]['active_users'], 1)
+        self.assertEqual(response.data['users']['daily'][0]['new_users'], 1)
+
+    def test_staff_can_mark_fulfilled_order_paid_and_accounting_includes_it(self):
+        order = Order.objects.create(
+            user=self.customer,
+            customer_name='Coffee Customer',
+            customer_email=self.customer.email,
+            customer_phone='+256700000000',
+            delivery_address='1 Coffee Road',
+            delivery_city='Kampala',
+            total=3000,
+            status=Order.Status.FULFILLED,
+        )
+        self.client.force_authenticate(self.staff)
+
+        payment_response = self.client.patch(
+            f'/api/dashboard/orders/{order.reference}/payment/',
+            {'is_paid': True, 'payment_method': Order.PaymentMethod.MOBILE_MONEY},
+            format='json',
+        )
+
+        self.assertEqual(payment_response.status_code, 200)
+        self.assertTrue(payment_response.data['is_paid'])
+        self.assertEqual(payment_response.data['payment_method'], Order.PaymentMethod.MOBILE_MONEY)
+        self.assertIsNotNone(payment_response.data['paid_at'])
+        order.refresh_from_db()
+        self.assertEqual(order.paid_by, self.staff)
+        self.assertEqual(order.payment_method, Order.PaymentMethod.MOBILE_MONEY)
+
+        today = timezone.localdate()
+        analytics_response = self.client.get(
+            f'/api/dashboard/analytics/?start={today.isoformat()}&end={today.isoformat()}',
+        )
+        self.assertEqual(analytics_response.status_code, 200)
+        self.assertEqual(analytics_response.data['sales']['paid_order_count'], 1)
+        self.assertEqual(str(analytics_response.data['sales']['paid_order_value']), '3000')
+        self.assertEqual(analytics_response.data['sales']['daily'][-1]['paid_orders'], 1)
+        self.assertEqual(str(analytics_response.data['sales']['daily'][-1]['paid_order_value']), '3000')
+        self.assertEqual(analytics_response.data['accounting']['paid_order_count'], 1)
+        self.assertEqual(str(analytics_response.data['accounting']['paid_order_value']), '3000')
+
+    def test_only_fulfilled_orders_can_be_marked_paid_and_staff_can_correct_payment_status(self):
+        pending_order = Order.objects.create(
+            customer_name='Coffee Customer',
+            customer_email=self.customer.email,
+            customer_phone='+256700000000',
+            delivery_address='1 Coffee Road',
+            delivery_city='Kampala',
+            total=3000,
+        )
+        fulfilled_order = Order.objects.create(
+            customer_name='Coffee Customer',
+            customer_email=self.customer.email,
+            customer_phone='+256700000000',
+            delivery_address='1 Coffee Road',
+            delivery_city='Kampala',
+            total=3000,
+            status=Order.Status.FULFILLED,
+            is_paid=True,
+            payment_method=Order.PaymentMethod.BANK,
+            paid_by=self.staff,
+            paid_at=timezone.now(),
+        )
+        self.client.force_authenticate(self.staff)
+
+        rejected = self.client.patch(
+            f'/api/dashboard/orders/{pending_order.reference}/payment/',
+            {'is_paid': True, 'payment_method': Order.PaymentMethod.CASH},
+            format='json',
+        )
+        missing_method = self.client.patch(
+            f'/api/dashboard/orders/{fulfilled_order.reference}/payment/',
+            {'is_paid': True},
+            format='json',
+        )
+        invalid_method = self.client.patch(
+            f'/api/dashboard/orders/{fulfilled_order.reference}/payment/',
+            {'is_paid': True, 'payment_method': 'cheque'},
+            format='json',
+        )
+        corrected = self.client.patch(
+            f'/api/dashboard/orders/{fulfilled_order.reference}/payment/',
+            {'is_paid': False},
+            format='json',
+        )
+
+        self.assertEqual(rejected.status_code, 400)
+        self.assertEqual(missing_method.status_code, 400)
+        self.assertEqual(invalid_method.status_code, 400)
+        self.assertEqual(corrected.status_code, 200)
+        self.assertFalse(corrected.data['is_paid'])
+        self.assertEqual(corrected.data['payment_method'], '')
+        fulfilled_order.refresh_from_db()
+        self.assertIsNone(fulfilled_order.paid_at)
+        self.assertIsNone(fulfilled_order.paid_by)
+
+    def test_analytics_counts_opted_in_anonymous_visitors_and_excludes_registered(self):
+        today = timezone.localdate()
+        start = today - timedelta(days=2)
+        first_seen = timezone.make_aware(datetime.combine(today, time.min))
+        AnonymousVisitor.objects.create(first_seen_at=first_seen)
+        AnonymousVisitor.objects.create(first_seen_at=first_seen, is_registered=True)
+
+        self.client.force_authenticate(self.staff)
+        response = self.client.get(
+            f'/api/dashboard/analytics/?start={start.isoformat()}&end={today.isoformat()}',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['users']['new_visitors'], 1)
+        self.assertEqual(response.data['users']['daily'][-1]['new_visitors'], 1)
+        self.assertEqual(response.data['users']['active_visitors'], 1)
+        self.assertEqual(response.data['users']['daily'][-1]['active_visitors'], 1)
+
+    def test_visitor_tracking_records_consenting_browser_and_excludes_registered_accounts(self):
+        visitor_id = '11223344-5566-4788-99aa-bbccddeeff00'
+        first_response = self.client.post(
+            '/api/dashboard/visitor/',
+            {'visitor_id': visitor_id},
+            format='json',
+        )
+        self.assertEqual(first_response.status_code, 204)
+        visitor = AnonymousVisitor.objects.get(visitor_id=visitor_id)
+        self.assertFalse(visitor.is_registered)
+
+        self.client.force_authenticate(self.customer)
+        registered_response = self.client.post(
+            '/api/dashboard/visitor/',
+            {'visitor_id': visitor_id},
+            format='json',
+        )
+        self.assertEqual(registered_response.status_code, 204)
+        visitor.refresh_from_db()
+        self.assertTrue(visitor.is_registered)
 
     def test_staff_can_read_summary(self):
         self.client.force_authenticate(self.staff)
@@ -186,6 +352,7 @@ class DashboardApiTests(APITestCase):
         customer_with_name = get_user_model().objects.create_user(
             username='sabira',
             email='sabira@example.com',
+            phone='+256700000010',
             first_name='Sabira',
             last_name='Coffee',
             password='StrongPassword!2026',
@@ -212,9 +379,15 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['name'], 'Sabira Coffee')
         self.assertEqual(response.data['results'][0]['email'], customer_with_name.email)
+        self.assertEqual(response.data['results'][0]['phone'], '+256700000010')
         self.assertEqual(response.data['results'][0]['order_count'], 1)
         self.assertNotIn('password', response.data['results'][0])
         self.assertEqual(response.data['count'], 1)
+
+        phone_search_response = self.client.get('/api/dashboard/users/?search=256700000010')
+        self.assertEqual(phone_search_response.status_code, 200)
+        self.assertEqual(phone_search_response.data['count'], 1)
+        self.assertEqual(phone_search_response.data['results'][0]['id'], customer_with_name.id)
 
     def test_staff_can_create_update_publish_and_delete_products(self):
         payload = {

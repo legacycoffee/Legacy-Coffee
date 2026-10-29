@@ -84,6 +84,7 @@ class NotificationReadView(APIView):
         return Response({
             'id': notification.pk,
             'is_read': notification.is_read,
+            'unread_count': request.user.notifications.filter(is_read=False).count(),
         })
 
 

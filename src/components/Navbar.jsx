@@ -30,6 +30,7 @@ export default function Navbar() {
   const [authMessage, setAuthMessage] = useState('')
   const [unreadCount, setUnreadCount] = useState(0)
   const accountMenuRef = useRef(null)
+  const unreadCountRequestId = useRef(0)
   const accountLinks = [
     { label: 'My account', to: '/my-account' },
     { label: 'Notifications', to: '/notifications' },
@@ -50,14 +51,23 @@ export default function Navbar() {
 
     let isCurrent = true
     const loadUnreadCount = async () => {
+      const requestId = ++unreadCountRequestId.current
       try {
         const data = await apiRequest('/auth/notifications/', { token })
-        if (isCurrent) setUnreadCount(data.unread_count)
+        if (isCurrent && requestId === unreadCountRequestId.current) setUnreadCount(data.unread_count)
       } catch (requestError) {
         if (isCurrent) setAuthMessage(requestError.message)
       }
     }
-    const refreshUnreadCount = () => loadUnreadCount()
+    const refreshUnreadCount = event => {
+      const nextUnreadCount = event instanceof CustomEvent ? event.detail?.unreadCount : undefined
+      if (Number.isInteger(nextUnreadCount) && nextUnreadCount >= 0) {
+        unreadCountRequestId.current += 1
+        setUnreadCount(nextUnreadCount)
+      } else {
+        loadUnreadCount()
+      }
+    }
 
     loadUnreadCount()
     window.addEventListener('legacy-notifications-updated', refreshUnreadCount)

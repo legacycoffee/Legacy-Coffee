@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { LuCoffee, LuLockKeyhole } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
-import { getCurrentCoordinates } from '../context/geolocation.js'
 
 const inputClass = 'mt-1.5 w-full border border-peach-mid px-3.5 py-3 text-sm text-black outline-none placeholder:text-black/40 focus:border-primary focus:ring-2 focus:ring-primary/20'
 
@@ -12,14 +11,11 @@ export default function AuthPage({ mode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [form, setForm] = useState({
-    username: '', email: '', password: '', first_name: '', last_name: '',
-    delivery_address: '', delivery_city: '', delivery_notes: '',
+    username: '', email: '', phone: '', password: '', confirm_password: '', first_name: '', last_name: '',
+    delivery_city: '',
     location_latitude: '', location_longitude: '',
   })
   const [error, setError] = useState('')
-  const [locationError, setLocationError] = useState('')
-  const [locationStatus, setLocationStatus] = useState('')
-  const [isFetchingLocation, setIsFetchingLocation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const destination = location.state?.from || '/checkout'
   const authenticatedDestination = !isSignUp && user?.is_staff ? '/admin' : destination
@@ -32,24 +28,13 @@ export default function AuthPage({ mode }) {
     setForm(current => ({ ...current, [event.target.name]: event.target.value }))
   }
 
-  const fetchLocation = async () => {
-    setLocationError('')
-    setLocationStatus('')
-    setIsFetchingLocation(true)
-    try {
-      const coordinates = await getCurrentCoordinates()
-      setForm(current => ({ ...current, ...coordinates }))
-      setLocationStatus(`Device coordinates captured: ${coordinates.location_latitude}, ${coordinates.location_longitude}`)
-    } catch (requestError) {
-      setLocationError(requestError.message)
-    } finally {
-      setIsFetchingLocation(false)
-    }
-  }
-
   const handleSubmit = async event => {
     event.preventDefault()
     setError('')
+    if (isSignUp && form.password !== form.confirm_password) {
+      setError('Passwords do not match.')
+      return
+    }
     setIsSubmitting(true)
 
     try {
@@ -116,16 +101,14 @@ export default function AuthPage({ mode }) {
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {isSignUp && (
               <>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block text-sm font-medium text-black" htmlFor="signup-first-name">
-                    First name
-                    <input id="signup-first-name" autoComplete="given-name" name="first_name" value={form.first_name} onChange={handleChange} className={inputClass} />
-                  </label>
-                  <label className="block text-sm font-medium text-black" htmlFor="signup-last-name">
-                    Last name
-                    <input id="signup-last-name" autoComplete="family-name" name="last_name" value={form.last_name} onChange={handleChange} className={inputClass} />
-                  </label>
-                </div>
+                <label className="block text-sm font-medium text-black" htmlFor="signup-first-name">
+                  First name
+                  <input id="signup-first-name" autoComplete="given-name" name="first_name" value={form.first_name} onChange={handleChange} className={inputClass} />
+                </label>
+                <label className="block text-sm font-medium text-black" htmlFor="signup-last-name">
+                  Last name
+                  <input id="signup-last-name" autoComplete="family-name" name="last_name" value={form.last_name} onChange={handleChange} className={inputClass} />
+                </label>
                 <label className="block text-sm font-medium text-black" htmlFor="signup-username">
                   Username
                   <input id="signup-username" required autoComplete="username" name="username" value={form.username} onChange={handleChange} className={inputClass} />
@@ -133,43 +116,46 @@ export default function AuthPage({ mode }) {
                 <div className="border-t border-peach-mid/40 pt-4">
                   <p className="font-semibold text-black">Delivery location <span className="font-normal text-black/55">(optional)</span></p>
                   <p className="mt-1 text-xs leading-relaxed text-black/60">
-                    Save an address for checkout, or capture device coordinates. Coordinates stay with your account and are not sent to a geocoding service.
+                    Save an address for checkout.
                   </p>
                   <div className="mt-3 grid gap-4 sm:grid-cols-2">
-                    <label className="block text-sm font-medium text-black" htmlFor="signup-delivery-city">
+                    <label className="block text-sm font-medium text-black sm:col-span-2" htmlFor="signup-delivery-city">
                       Town or city
                       <input id="signup-delivery-city" autoComplete="address-level2" name="delivery_city" value={form.delivery_city} onChange={handleChange} className={inputClass} />
                     </label>
-                    <label className="block text-sm font-medium text-black sm:col-span-2" htmlFor="signup-delivery-address">
-                      Street address
-                      <input id="signup-delivery-address" autoComplete="street-address" name="delivery_address" value={form.delivery_address} onChange={handleChange} className={inputClass} />
-                    </label>
-                    <label className="block text-sm font-medium text-black sm:col-span-2" htmlFor="signup-delivery-notes">
-                      Delivery notes
-                      <textarea id="signup-delivery-notes" name="delivery_notes" rows={2} value={form.delivery_notes} onChange={handleChange} className={`${inputClass} resize-y`} />
-                    </label>
                   </div>
-                  <button
-                    type="button"
-                    disabled={isFetchingLocation}
-                    onClick={fetchLocation}
-                    className="mt-3 border border-primary px-4 py-2.5 text-sm font-semibold text-primary hover:bg-peach-light/40 disabled:opacity-60"
-                  >
-                    {isFetchingLocation ? 'Fetching location…' : 'Fetch device location'}
-                  </button>
-                  {locationError && <p role="alert" className="mt-2 text-sm text-red-700">{locationError}</p>}
-                  {locationStatus && <p role="status" className="mt-2 text-sm text-green-700">{locationStatus}</p>}
                 </div>
               </>
             )}
+            {isSignUp && (
+              <label className="block text-sm font-medium text-black" htmlFor="signup-phone">
+                Phone number
+                <input id="signup-phone" required type="tel" autoComplete="tel" name="phone" value={form.phone} onChange={handleChange} className={inputClass} />
+              </label>
+            )}
             <label className="block text-sm font-medium text-black" htmlFor="auth-email">
-              Email address
-              <input id="auth-email" required type="email" autoComplete="email" name="email" value={form.email} onChange={handleChange} className={inputClass} />
+              {isSignUp ? 'Email address (optional)' : 'Email address or phone number'}
+              <input
+                id="auth-email"
+                required={!isSignUp}
+                type={isSignUp ? 'email' : 'text'}
+                autoComplete={isSignUp ? 'email' : 'username'}
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                className={inputClass}
+              />
             </label>
             <label className="block text-sm font-medium text-black" htmlFor="auth-password">
               Password
               <input id="auth-password" required type="password" autoComplete={isSignUp ? 'new-password' : 'current-password'} name="password" value={form.password} onChange={handleChange} className={inputClass} />
             </label>
+            {isSignUp && (
+              <label className="block text-sm font-medium text-black" htmlFor="auth-confirm-password">
+                Confirm password
+                <input id="auth-confirm-password" required type="password" autoComplete="new-password" name="confirm_password" value={form.confirm_password} onChange={handleChange} className={inputClass} />
+              </label>
+            )}
 
             {error && <p role="alert" className="border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
 

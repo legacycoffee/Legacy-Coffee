@@ -86,7 +86,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         order_items = validated_data.pop('items')
         user = self.context['request'].user
-        validated_data['customer_email'] = user.email
+        validated_data['customer_email'] = user.email or validated_data['customer_email']
         user.delivery_address = validated_data['delivery_address']
         user.delivery_city = validated_data['delivery_city']
         user.delivery_notes = validated_data.get('delivery_notes', '')

@@ -11,7 +11,7 @@ const sections = [
   {
     heading: 'Necessary storage',
     paragraphs: [
-      'Necessary local storage is used to keep your account signed in and to remember your cart, checkout-related wholesale details, and latest order information. A preference record stores whether optional embedded content is allowed. These features are required for the website to work as expected and cannot be switched off through this preference panel.',
+      'Necessary local storage is used to keep your account signed in and to remember your cart, checkout-related wholesale details, and latest order information. A preference record stores your optional feature choices. These necessary features are required for the website to work as expected and cannot be switched off through this preference panel.',
     ],
   },
   {
@@ -21,15 +21,15 @@ const sections = [
     ],
   },
   {
-    heading: 'Analytics and advertising',
+    heading: 'Optional visitor analytics',
     paragraphs: [
-      'The website does not currently use analytics or advertising cookies. If our use changes, this policy and the available preferences will be updated.',
+      'If you opt in to anonymous visitor analytics, the website stores a random identifier in your browser and records first and last observed timestamps to count first-time visitors. This metric does not store your name, email address, or page URLs. Browser identifiers observed while signed in are excluded from the unregistered visitor count. You can withdraw this choice at any time in cookie preferences; tracking then stops and the browser identifier is removed.',
     ],
   },
   {
     heading: 'Change or withdraw your choice',
     paragraphs: [
-      'Use the preference controls below to allow or block the optional farm story video at any time. The location map remains visible regardless of this choice. You can also clear browser storage in your browser settings; doing so may sign you out and clear your cart or saved order information.',
+      'Use the preference controls below to allow or block the optional farm story video and anonymous visitor analytics at any time. The location map remains visible regardless of these choices. You can also clear browser storage in your browser settings; doing so may sign you out and clear your cart or saved order information.',
     ],
   },
 ]
@@ -41,7 +41,7 @@ export default function CookiePolicy() {
     <>
       <LegalPageLayout
         title="Cookie Policy"
-        introduction="This policy explains the cookies and browser storage used by Legacy Coffee Uganda and how you can control optional embedded content."
+        introduction="This policy explains the cookies and browser storage used by Legacy Coffee Uganda and how you can control optional features."
         sections={sections}
       />
       <div className="bg-[#fffdfa] px-4 pb-10 sm:px-8 lg:px-12">

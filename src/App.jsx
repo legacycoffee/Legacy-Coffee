@@ -23,6 +23,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
 import TermsAndConditions from './pages/TermsAndConditions.jsx'
 import CookiePolicy from './pages/CookiePolicy.jsx'
 import CookieConsentManager from './components/CookieConsentManager.jsx'
+import VisitorAnalyticsTracker from './components/VisitorAnalyticsTracker.jsx'
 import { CookieConsentProvider } from './context/CookieConsentContext.jsx'
 import { CartProvider } from './context/CartContext.jsx'
 import AuthPage from './pages/AuthPage'
@@ -62,6 +63,7 @@ export default function App() {
       <CartProvider>
         <AuthProvider>
           <CookieConsentProvider>
+            <VisitorAnalyticsTracker />
             <Routes>
               <Route path="/" element={<Layout><Home /></Layout>} />
               <Route path="/about" element={<Layout><AboutUs /></Layout>} />

@@ -36,7 +36,7 @@ class OrderInboxSerializer(serializers.ModelSerializer):
             'reference', 'customer_name', 'business_name', 'customer_email', 'customer_phone',
             'delivery_address', 'delivery_city', 'delivery_notes',
             'delivery_latitude', 'delivery_longitude', 'status',
-            'total', 'items', 'created_at',
+            'is_paid', 'payment_method', 'paid_at', 'total', 'items', 'created_at',
         )
 
 
@@ -55,10 +55,15 @@ class UserInboxSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'name', 'email', 'date_joined', 'last_login', 'order_count', 'is_active')
+        fields = ('id', 'name', 'email', 'phone', 'date_joined', 'last_login', 'order_count', 'is_active')
 
     def get_name(self, user):
-        return ' '.join(part for part in (user.first_name, user.last_name) if part) or user.email
+        return (
+            ' '.join(part for part in (user.first_name, user.last_name) if part)
+            or user.email
+            or user.phone
+            or user.username
+        )
 
 
 class SubscriberInboxSerializer(serializers.ModelSerializer):

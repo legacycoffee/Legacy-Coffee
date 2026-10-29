@@ -18,7 +18,7 @@ export default function CheckoutPage() {
     name: wholesaleDetails?.name || [user?.first_name, user?.last_name].filter(Boolean).join(' '),
     business_name: wholesaleDetails?.business_name || '',
     email: user?.email || '',
-    phone: '',
+    phone: user?.phone || '',
     address: user?.delivery_address || '',
     city: user?.delivery_city || '',
     notes: user?.delivery_notes || '',

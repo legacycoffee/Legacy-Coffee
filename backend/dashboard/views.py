@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import Count, DecimalField, ExpressionWrapper, F, Sum
+from django.db.models import Count, DecimalField, ExpressionWrapper, F, Q, Sum
 from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -11,7 +11,7 @@ from django.utils.dateparse import parse_date
 from rest_framework import filters, generics, serializers, status
 from rest_framework.exceptions import APIException
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -28,6 +28,7 @@ from .serializers import (
     SubscriberInboxSerializer,
     UserInboxSerializer,
 )
+from .models import AnonymousVisitor
 
 
 ORDER_STATUS_TRANSITIONS = {
@@ -61,6 +62,22 @@ class OrderStatusSerializer(serializers.Serializer):
                 f'An order cannot move from {current_status} to {value}.',
             )
         return value
+
+
+class OrderPaymentSerializer(serializers.Serializer):
+    is_paid = serializers.BooleanField()
+    payment_method = serializers.ChoiceField(
+        choices=Order.PaymentMethod.choices,
+        required=False,
+        allow_blank=True,
+    )
+
+    def validate(self, attrs):
+        if attrs['is_paid'] and not attrs.get('payment_method'):
+            raise serializers.ValidationError({
+                'payment_method': 'Select how the payment was received.',
+            })
+        return attrs
 
 
 class DashboardSummaryView(APIView):
@@ -104,13 +121,27 @@ class DashboardAnalyticsView(APIView):
             datetime.combine(end_date + timedelta(days=1), time.min),
         )
         orders = Order.objects.filter(created_at__gte=start_at, created_at__lt=end_at)
+        paid_orders = orders.filter(is_paid=True)
         customer_users = get_user_model().objects.filter(
             is_staff=False,
             is_superuser=False,
             is_active=True,
         )
         period_users = customer_users.filter(date_joined__gte=start_at, date_joined__lt=end_at)
-        period_active_users = customer_users.filter(last_login__gte=start_at, last_login__lt=end_at)
+        period_active_users = customer_users.filter(
+            Q(last_login__gte=start_at, last_login__lt=end_at)
+            | Q(date_joined__gte=start_at, date_joined__lt=end_at),
+        )
+        period_new_visitors = AnonymousVisitor.objects.filter(
+            is_registered=False,
+            first_seen_at__gte=start_at,
+            first_seen_at__lt=end_at,
+        )
+        period_active_visitors = AnonymousVisitor.objects.filter(
+            is_registered=False,
+            last_seen_at__gte=start_at,
+            last_seen_at__lt=end_at,
+        )
 
         status_rows = list(
             orders.values('status').annotate(
@@ -133,28 +164,62 @@ class DashboardAnalyticsView(APIView):
                 order_value=Sum('total'),
             ).order_by('day')
         }
+        daily_paid_orders = {
+            row['day']: row
+            for row in paid_orders.annotate(day=TruncDate('created_at')).values('day').annotate(
+                paid_orders=Count('id'),
+                paid_order_value=Sum('total'),
+            ).order_by('day')
+        }
         daily_new_users = {
             row['day']: row['count']
             for row in period_users.annotate(day=TruncDate('date_joined')).values('day').annotate(
                 count=Count('id'),
             ).order_by('day')
         }
+        daily_active_user_ids = {}
+        for row in customer_users.filter(
+            last_login__gte=start_at,
+            last_login__lt=end_at,
+        ).annotate(day=TruncDate('last_login')).values('id', 'day'):
+            daily_active_user_ids.setdefault(row['day'], set()).add(row['id'])
+        for row in period_users.annotate(day=TruncDate('date_joined')).values('id', 'day'):
+            daily_active_user_ids.setdefault(row['day'], set()).add(row['id'])
         daily_active_users = {
+            day: len(user_ids)
+            for day, user_ids in daily_active_user_ids.items()
+        }
+        daily_new_visitors = {
             row['day']: row['count']
-            for row in period_active_users.annotate(day=TruncDate('last_login')).values('day').annotate(
-                count=Count('id'),
+            for row in period_new_visitors.annotate(day=TruncDate('first_seen_at')).values('day').annotate(
+                count=Count('visitor_id'),
             ).order_by('day')
         }
+        daily_active_visitors = {
+            row['day']: row['count']
+            for row in period_active_visitors.annotate(day=TruncDate('last_seen_at')).values('day').annotate(
+                count=Count('visitor_id'),
+            ).order_by('day')
+        }
+        paid_order_summary = orders.filter(is_paid=True).aggregate(
+            count=Count('id'),
+            order_value=Sum('total'),
+        )
         daily = []
         current_date = start_date
         while current_date <= end_date:
             order_data = daily_orders.get(current_date, {})
+            paid_order_data = daily_paid_orders.get(current_date, {})
             daily.append({
                 'date': current_date.isoformat(),
                 'orders': order_data.get('orders', 0),
                 'order_value': order_data.get('order_value') or Decimal('0'),
+                'paid_orders': paid_order_data.get('paid_orders', 0),
+                'paid_order_value': paid_order_data.get('paid_order_value') or Decimal('0'),
                 'new_users': daily_new_users.get(current_date, 0),
+                'new_visitors': daily_new_visitors.get(current_date, 0),
                 'active_users': daily_active_users.get(current_date, 0),
+                'active_visitors': daily_active_visitors.get(current_date, 0),
             })
             current_date += timedelta(days=1)
 
@@ -173,6 +238,8 @@ class DashboardAnalyticsView(APIView):
             'period': {'start': start_date.isoformat(), 'end': end_date.isoformat()},
             'sales': {
                 'order_count': orders.count(),
+                'paid_order_count': paid_orders.count(),
+                'paid_order_value': paid_orders.aggregate(order_value=Sum('total'))['order_value'] or Decimal('0'),
                 'non_cancelled_order_value': sum(
                     (row['order_value'] for row in status_rows if row['status'] != Order.Status.CANCELLED),
                     Decimal('0'),
@@ -197,7 +264,9 @@ class DashboardAnalyticsView(APIView):
             },
             'users': {
                 'active_users': period_active_users.count(),
+                'active_visitors': period_active_visitors.count(),
                 'new_users': period_users.count(),
+                'new_visitors': period_new_visitors.count(),
                 'daily': daily,
             },
             'accounting': {
@@ -209,6 +278,8 @@ class DashboardAnalyticsView(APIView):
                 'confirmed_order_value': status_summary.get(Order.Status.CONFIRMED, {}).get('order_value', Decimal('0')),
                 'fulfilled_order_value': status_summary.get(Order.Status.FULFILLED, {}).get('order_value', Decimal('0')),
                 'cancelled_order_value': status_summary.get(Order.Status.CANCELLED, {}).get('order_value', Decimal('0')),
+                'paid_order_count': paid_order_summary['count'],
+                'paid_order_value': paid_order_summary['order_value'] or Decimal('0'),
                 'by_status': [
                     {
                         'status': order_status,
@@ -221,6 +292,34 @@ class DashboardAnalyticsView(APIView):
         })
         response['Cache-Control'] = 'no-store'
         return response
+
+
+class VisitorTrackingSerializer(serializers.Serializer):
+    visitor_id = serializers.UUIDField()
+
+
+class VisitorTrackingView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = VisitorTrackingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        now = timezone.now()
+        visitor, created = AnonymousVisitor.objects.get_or_create(
+            visitor_id=serializer.validated_data['visitor_id'],
+            defaults={
+                'last_seen_at': now,
+                'is_registered': request.user.is_authenticated,
+            },
+        )
+        if not created:
+            visitor.last_seen_at = now
+            update_fields = ['last_seen_at']
+            if request.user.is_authenticated and not visitor.is_registered:
+                visitor.is_registered = True
+                update_fields.append('is_registered')
+            visitor.save(update_fields=update_fields)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class OrderInboxView(generics.ListAPIView):
@@ -246,6 +345,33 @@ class OrderStatusUpdateView(APIView):
         return Response(OrderInboxSerializer(order).data, status=status.HTTP_200_OK)
 
 
+class OrderPaymentUpdateView(APIView):
+    permission_classes = [IsAdminUser]
+
+    @transaction.atomic
+    def patch(self, request, reference):
+        order = get_object_or_404(
+            Order.objects.select_for_update().prefetch_related('items__product'),
+            reference=reference,
+        )
+        serializer = OrderPaymentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        is_paid = serializer.validated_data['is_paid']
+        payment_method = serializer.validated_data.get('payment_method', '')
+        if order.status != Order.Status.FULFILLED:
+            raise serializers.ValidationError({
+                'is_paid': 'Only fulfilled orders can be marked as paid.',
+            })
+
+        if order.is_paid != is_paid or order.payment_method != payment_method:
+            order.is_paid = is_paid
+            order.payment_method = payment_method if is_paid else ''
+            order.paid_at = timezone.now() if is_paid else None
+            order.paid_by = request.user if is_paid else None
+            order.save(update_fields=('is_paid', 'payment_method', 'paid_at', 'paid_by', 'updated_at'))
+        return Response(OrderInboxSerializer(order).data, status=status.HTTP_200_OK)
+
+
 class InquiryInboxView(generics.ListAPIView):
     permission_classes = [IsAdminUser]
     serializer_class = InquiryInboxSerializer
@@ -256,7 +382,7 @@ class UserInboxView(generics.ListAPIView):
     permission_classes = [IsAdminUser]
     serializer_class = UserInboxSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['email', 'first_name', 'last_name']
+    search_fields = ['email', 'phone', 'first_name', 'last_name']
 
     def get_queryset(self):
         user_model = get_user_model()

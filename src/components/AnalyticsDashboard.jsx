@@ -4,9 +4,9 @@ import { apiRequest } from '../context/api.js'
 
 const analyticsTabs = [
   { id: 'sales', label: 'Sales' },
+  { id: 'accounting', label: 'Accounting' },
   { id: 'active-users', label: 'Active users' },
   { id: 'new-users', label: 'New users' },
-  { id: 'accounting', label: 'Accounting' },
 ]
 
 const statusColors = {
@@ -46,12 +46,15 @@ function formatShortDate(value) {
   }).format(new Date(`${value}T12:00:00`))
 }
 
-function MetricCard({ label, value, note }) {
+function MetricCard({ label, value, note, className = '', valueClassName = '', shrinkValue = false }) {
+  const valueText = String(value)
+  const valueFontSize = `${Math.min(24, Math.max(11, 190 / valueText.length))}px`
+
   return (
-    <article className="border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-      <p className="text-xs font-medium text-stone-500">{label}</p>
-      <p className="mt-2 text-2xl font-bold tracking-tight text-stone-900">{value}</p>
-      {note && <p className="mt-1 text-xs leading-5 text-stone-400">{note}</p>}
+    <article className={`min-w-0 overflow-hidden border border-stone-200 bg-white p-2 shadow-sm sm:p-5 ${className}`}>
+      <p className="break-words text-[9px] font-medium leading-3 text-stone-500 sm:text-xs sm:leading-normal">{label}</p>
+      <p style={shrinkValue ? { fontSize: valueFontSize } : undefined} className={`mt-1 break-words text-xs font-bold leading-tight tracking-tight text-stone-900 sm:mt-2 sm:text-2xl ${valueClassName}`}>{value}</p>
+      {note && <p className="mt-1 break-words text-[8px] leading-[10px] text-stone-400 sm:text-xs sm:leading-5">{note}</p>}
     </article>
   )
 }
@@ -104,15 +107,21 @@ function TrendChart({ data, lines, valueFormatter = value => String(value) }) {
         )
       })}
       {lines.map(line => {
-        const points = data.map((point, index) => `${x(index)},${y(point[line.key])}`).join(' ')
+        const lineIndex = lines.indexOf(line)
+        const lineOffset = lines.length > 1 ? (lineIndex - (lines.length - 1) / 2) * 3 : 0
+        const points = data.map((point, index) => `${x(index)},${y(point[line.key]) + lineOffset}`).join(' ')
         return (
           <g key={line.key}>
-            <polyline points={points} fill="none" stroke={line.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-            {data.map((point, index) => (
-              <circle key={point.date} cx={x(index)} cy={y(point[line.key])} r={data.length > 40 ? 1.5 : 3} fill={line.color}>
-                <title>{`${formatShortDate(point.date)}: ${line.label} ${valueFormatter(point[line.key])}`}</title>
-              </circle>
-            ))}
+            <polyline
+              points={points}
+              fill="none"
+              stroke={line.color}
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <title>{`${line.label}: ${data.map(point => `${formatShortDate(point.date)} ${valueFormatter(point[line.key])}`).join(', ')}`}</title>
+            </polyline>
           </g>
         )
       })}
@@ -125,21 +134,26 @@ function TrendChart({ data, lines, valueFormatter = value => String(value) }) {
   )
 }
 
-function ChartLegend({ entries, valueFor }) {
+function ChartLegend({ entries, valueFor, fullWidth = false }) {
+  const maxValueLength = Math.max(1, ...entries.map(entry => String(valueFor(entry.value)).length))
+  const valueFontSize = `${Math.max(8, Math.min(12, 72 / maxValueLength))}px`
+
   return (
-    <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+    <ul className={`mt-4 grid w-full min-w-0 grid-cols-2 gap-px border border-stone-200 bg-stone-200 sm:mt-0 ${fullWidth ? 'sm:grid-cols-3' : 'sm:max-w-xs'}`}>
       {entries.map(entry => (
-        <li key={entry.key} className="flex min-w-0 items-center gap-2 text-xs">
-          <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="min-w-0 flex-1 truncate text-stone-600">{entry.label}</span>
-          <span className="shrink-0 font-semibold text-stone-800">{valueFor(entry.value)}</span>
+        <li key={entry.key} className="flex min-w-0 items-start gap-1.5 bg-white p-2.5 text-xs">
+          <span aria-hidden="true" className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: entry.color }} />
+          <span className="flex min-w-0 flex-1 items-baseline justify-between gap-1">
+            <span className="min-w-0 truncate font-medium text-stone-600">{entry.label}</span>
+            <span style={{ fontSize: valueFontSize }} className="shrink-0 text-right font-semibold leading-tight tabular-nums text-stone-800">{valueFor(entry.value)}</span>
+          </span>
         </li>
       ))}
     </ul>
   )
 }
 
-function DonutChart({ entries, valueKey = 'count', formatter = value => String(value) }) {
+function DonutChart({ entries, valueKey = 'count', formatter = value => String(value), legendBelow = false }) {
   const values = entries.map(entry => Number(entry[valueKey]) || 0)
   const total = values.reduce((sum, value) => sum + value, 0)
   let current = 0
@@ -151,7 +165,7 @@ function DonutChart({ entries, valueKey = 'count', formatter = value => String(v
   })
 
   return (
-    <div className="flex flex-col items-center gap-5 py-2 sm:flex-row sm:justify-center sm:gap-8">
+    <div className={`flex flex-col items-center gap-4 py-2 ${legendBelow ? 'sm:flex-col sm:gap-4' : 'sm:flex-row sm:justify-center sm:gap-8'}`}>
       <div
         role="img"
         aria-label={total ? `Chart showing ${formatter(total)} across categories` : 'No data'}
@@ -159,7 +173,7 @@ function DonutChart({ entries, valueKey = 'count', formatter = value => String(v
         style={{ background: total ? `conic-gradient(${stops.join(', ')})` : '#e7e5e4' }}
       >
         <div className="absolute inset-5 flex flex-col items-center justify-center rounded-full bg-white text-center">
-          <span className="text-lg font-bold text-stone-900">{formatter(total)}</span>
+          <span className="max-w-full break-all px-1 text-[10px] font-bold leading-tight text-stone-900 sm:text-xs">{formatter(total)}</span>
           <span className="text-[10px] text-stone-500">Total</span>
         </div>
       </div>
@@ -171,6 +185,7 @@ function DonutChart({ entries, valueKey = 'count', formatter = value => String(v
           value: values[index],
         }))}
         valueFor={formatter}
+        fullWidth={legendBelow}
       />
     </div>
   )
@@ -229,16 +244,68 @@ export default function AnalyticsDashboard({ token }) {
   const sales = analytics?.sales
   const users = analytics?.users
   const accounting = analytics?.accounting
-  const statusEntries = sales?.statuses.map(item => ({
-    ...item,
-    label: statusLabels[item.status],
-    color: statusColors[item.status],
-  })) || []
-  const accountingEntries = accounting?.by_status.map(item => ({
-    ...item,
-    label: statusLabels[item.status],
-    color: statusColors[item.status],
-  })) || []
+  const statusEntries = sales?.statuses.flatMap(item => {
+    if (item.status !== 'fulfilled') {
+      return [{
+        ...item,
+        key: item.status,
+        label: statusLabels[item.status],
+        color: statusColors[item.status],
+      }]
+    }
+
+    const paidCount = Number(sales.paid_order_count) || 0
+    return [
+      {
+        key: 'fulfilled-unpaid',
+        label: 'Fulfilled · unpaid',
+        color: statusColors.fulfilled,
+        count: Math.max(0, Number(item.count) - paidCount),
+      },
+      {
+        key: 'paid',
+        label: 'Paid',
+        color: '#7c3aed',
+        count: paidCount,
+      },
+    ]
+  }) || []
+  const accountingEntries = accounting?.by_status.flatMap(item => {
+    if (item.status !== 'fulfilled') {
+      return [{
+        ...item,
+        key: item.status,
+        label: statusLabels[item.status],
+        color: statusColors[item.status],
+      }]
+    }
+
+    const paidValue = Number(accounting.paid_order_value) || 0
+    const fulfilledValue = Number(item.order_value) || 0
+    return [
+      {
+        key: 'fulfilled-unpaid',
+        label: 'Fulfilled · unpaid',
+        color: statusColors.fulfilled,
+        order_value: Math.max(0, fulfilledValue - paidValue),
+      },
+      {
+        key: 'paid',
+        label: 'Paid',
+        color: '#7c3aed',
+        order_value: paidValue,
+      },
+    ]
+  }) || []
+  const userTrendLines = activeTab === 'active-users'
+    ? [
+      { key: 'active_users', label: 'Registered users', color: '#2563eb' },
+      { key: 'active_visitors', label: 'Unregistered users', color: '#b86638' },
+    ]
+    : [
+      { key: 'new_users', label: 'Registered users', color: '#059669' },
+      { key: 'new_visitors', label: 'Unregistered users', color: '#b86638' },
+    ]
 
   return (
     <section aria-labelledby="analytics-heading">
@@ -295,20 +362,28 @@ export default function AnalyticsDashboard({ token }) {
         <>
           {activeTab === 'sales' && (
             <div id="analytics-panel-sales" role="tabpanel" aria-labelledby="analytics-tab-sales">
-              <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                <MetricCard label="Orders placed" value={sales.order_count} note={`${formatShortDate(analytics.period.start)} – ${formatShortDate(analytics.period.end)}`} />
-                <MetricCard label="Non-cancelled order value" value={formatCurrency(sales.non_cancelled_order_value)} note="Order requests, not payment-confirmed revenue" />
-                <MetricCard label="Confirmed + fulfilled value" value={formatCurrency(sales.confirmed_fulfilled_order_value)} note="Still not proof of payment collected" />
+              <div className="mb-4 grid grid-cols-2 gap-1 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
+                <MetricCard className="min-w-0" shrinkValue valueClassName="tabular-nums whitespace-nowrap" label="Orders placed" value={sales.order_count} note={`${formatShortDate(analytics.period.start)} – ${formatShortDate(analytics.period.end)}`} />
+                <MetricCard className="min-w-0" shrinkValue valueClassName="tabular-nums whitespace-nowrap" label="Non-cancelled order value" value={formatCurrency(sales.non_cancelled_order_value)} note="Order requests, not payment-confirmed revenue" />
+                <MetricCard className="min-w-0" shrinkValue valueClassName="tabular-nums whitespace-nowrap" label="Confirmed + fulfilled value" value={formatCurrency(sales.confirmed_fulfilled_order_value)} note="Still not proof of payment collected" />
+                <MetricCard className="min-w-0" shrinkValue valueClassName="tabular-nums whitespace-nowrap" label="Paid order value" value={formatCurrency(sales.paid_order_value)} note={`${sales.paid_order_count} fulfilled orders marked paid by staff`} />
               </div>
               <div className="grid gap-4 xl:grid-cols-[1.4fr_0.8fr]">
                 <ChartPanel title="Orders over time" description="Daily submitted order count for the selected period.">
                   <TrendChart data={sales.daily} lines={[{ key: 'orders', label: 'Orders', color: '#b86638' }]} />
                 </ChartPanel>
-                <ChartPanel title="Orders by status" description="Order count distribution.">
+                <ChartPanel title="Orders by status and payment" description="Paid orders are split from fulfilled unpaid orders so every order is counted once.">
                   <DonutChart entries={statusEntries} formatter={value => String(value)} />
                 </ChartPanel>
                 <ChartPanel title="Order value trend" description="Daily order request value, including all statuses.">
-                  <TrendChart data={sales.daily} lines={[{ key: 'order_value', label: 'Order value', color: '#7c3f20' }]} valueFormatter={value => formatCurrency(value)} />
+                  <TrendChart
+                    data={sales.daily}
+                    lines={[
+                      { key: 'order_value', label: 'Order value', color: '#7c3f20' },
+                      { key: 'paid_order_value', label: 'Paid order value', color: '#7c3aed' },
+                    ]}
+                    valueFormatter={value => formatCurrency(value)}
+                  />
                 </ChartPanel>
                 <ChartPanel title="Top products" description="Product line value across non-cancelled orders.">
                   {sales.products.length ? (
@@ -337,33 +412,58 @@ export default function AnalyticsDashboard({ token }) {
 
           {(activeTab === 'active-users' || activeTab === 'new-users') && (
             <div id={`analytics-panel-${activeTab}`} role="tabpanel" aria-labelledby={`analytics-tab-${activeTab}`}>
-              <div className="mb-4 grid gap-3 sm:grid-cols-2">
+              <div className="mb-4 grid grid-cols-3 gap-1 sm:gap-3">
                 <MetricCard
-                  label={activeTab === 'active-users' ? 'Active customer accounts' : 'New customer accounts'}
+                  className="min-w-0"
+                  label={activeTab === 'active-users' ? 'Active registered accounts' : 'New registered accounts'}
                   value={activeTab === 'active-users' ? users.active_users : users.new_users}
-                  note={activeTab === 'active-users' ? 'Accounts whose most recent sign-in was in this period' : 'Accounts registered in this period'}
+                  note={activeTab === 'active-users' ? 'Registered or signed in during this period' : 'Registered in this period'}
                 />
                 <MetricCard
-                  label={activeTab === 'active-users' ? 'New customer accounts' : 'Active customer accounts'}
-                  value={activeTab === 'active-users' ? users.new_users : users.active_users}
-                  note={activeTab === 'active-users' ? 'Registered during the selected period' : 'Most recent sign-in was in the selected period'}
+                  className="min-w-0"
+                  label={activeTab === 'active-users' ? 'Active unregistered visitors' : 'New unregistered visitors'}
+                  value={activeTab === 'active-users' ? users.active_visitors : users.new_visitors}
+                  note={activeTab === 'active-users'
+                    ? 'Consented browser IDs observed in this period'
+                    : 'First-time browser IDs after analytics consent'}
                 />
+                {activeTab === 'active-users' ? (
+                  <MetricCard
+                    className="min-w-0"
+                    label="Total active users"
+                    value={users.active_users + users.active_visitors}
+                    note="Registered accounts and unregistered visitors"
+                  />
+                ) : (
+                  <MetricCard
+                    className="min-w-0"
+                    label="Active registered accounts"
+                    value={users.active_users}
+                    note="Most recent sign-in was in this period"
+                  />
+                )}
               </div>
               <ChartPanel
-                title={activeTab === 'active-users' ? 'Active users over time' : 'New users over time'}
+                title={activeTab === 'active-users' ? 'Registered and unregistered active users over time' : 'Registered accounts and unregistered visitors over time'}
                 description={activeTab === 'active-users'
-                  ? 'Daily count of customer accounts with a recorded most recent login on that date.'
-                  : 'Daily customer account registrations.'}
+                  ? 'Daily registered accounts created or signed in, and consented unregistered visitor browser IDs seen during the selected period.'
+                  : 'Daily new customer registrations compared with first-time unregistered browser visitors who opted in to analytics.'}
               >
                 <TrendChart
                   data={users.daily}
-                  lines={activeTab === 'active-users'
-                    ? [{ key: 'active_users', label: 'Active accounts', color: '#2563eb' }]
-                    : [{ key: 'new_users', label: 'New accounts', color: '#059669' }]}
+                  lines={userTrendLines}
                 />
+                <ul aria-label="Chart color key" className="mt-3 flex flex-wrap gap-x-5 gap-y-2 border-t border-stone-100 pt-3">
+                  {userTrendLines.map(line => (
+                    <li key={line.key} className="flex items-center gap-2 text-xs text-stone-600">
+                      <span aria-hidden="true" className="h-1 w-5 rounded-full" style={{ backgroundColor: line.color }} />
+                      <span>{line.label}</span>
+                    </li>
+                  ))}
+                </ul>
               </ChartPanel>
               <p className="mt-3 text-xs leading-5 text-stone-500">
-                These metrics use registered customer accounts only; staff and anonymous site visitors are not included. Active users are based on each account’s last recorded login, not session or page-view tracking.
+                Active registered users include customer accounts created or signed in during the selected period. Active unregistered visitors are consented browser IDs seen during the period; browser IDs observed while signed in are excluded.
               </p>
             </div>
           )}
@@ -371,42 +471,46 @@ export default function AnalyticsDashboard({ token }) {
           {activeTab === 'accounting' && (
             <div id="analytics-panel-accounting" role="tabpanel" aria-labelledby="analytics-tab-accounting">
               <div role="note" className="mb-4 border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                <strong>Order values only:</strong> this system does not record payment transactions or expenses. Amounts below are order values, not verified collected revenue, balances, or profit.
+                <strong>Order values only:</strong> paid totals include fulfilled orders manually marked as paid by staff. This system does not record payment transactions or expenses, so amounts are not a full ledger or profit report.
               </div>
-              <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <MetricCard label="Non-cancelled order value" value={formatCurrency(accounting.order_value_non_cancelled)} note="Pending, confirmed, and fulfilled" />
-                <MetricCard label="Pending order value" value={formatCurrency(accounting.pending_order_value)} note="Awaiting order confirmation" />
-                <MetricCard label="Confirmed order value" value={formatCurrency(accounting.confirmed_order_value)} note="Not payment verified" />
-                <MetricCard label="Fulfilled order value" value={formatCurrency(accounting.fulfilled_order_value)} note="Fulfillment does not confirm payment" />
+              <div className="mb-4 grid grid-cols-2 gap-1 sm:grid-cols-2 sm:gap-3 xl:grid-cols-5">
+                <MetricCard className="min-w-0" shrinkValue valueClassName="tabular-nums whitespace-nowrap" label="Pending order value" value={formatCurrency(accounting.pending_order_value)} note="Awaiting order confirmation" />
+                <MetricCard className="min-w-0" shrinkValue valueClassName="tabular-nums whitespace-nowrap" label="Confirmed order value" value={formatCurrency(accounting.confirmed_order_value)} note="Not payment verified" />
+                <MetricCard className="min-w-0" shrinkValue valueClassName="tabular-nums whitespace-nowrap" label="Fulfilled order value" value={formatCurrency(accounting.fulfilled_order_value)} note="Fulfillment does not confirm payment" />
+                <MetricCard className="min-w-0" shrinkValue valueClassName="tabular-nums whitespace-nowrap" label="Paid order value" value={formatCurrency(accounting.paid_order_value)} note={`${accounting.paid_order_count} fulfilled orders marked paid by staff`} />
               </div>
               <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
-                <ChartPanel title="Order value by status" description="Distribution of submitted order totals; cancelled orders are shown separately.">
-                  <DonutChart entries={accountingEntries} valueKey="order_value" formatter={formatCurrency} />
+                <ChartPanel title="Order value by status and payment" description="Paid orders are split from fulfilled unpaid orders so each order value is counted only once.">
+                  <DonutChart entries={accountingEntries} valueKey="order_value" formatter={formatCurrency} legendBelow />
                 </ChartPanel>
                 <ChartPanel title="Accounting summary" description="Order requests recorded during the selected period.">
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[360px] text-left text-sm">
+                    <table className="w-full min-w-[360px] border-collapse text-left text-sm">
                       <thead>
-                        <tr className="border-b border-stone-100 text-xs text-stone-500">
-                          <th scope="col" className="py-3 font-medium">Order status</th>
-                          <th scope="col" className="py-3 text-right font-medium">Orders</th>
-                          <th scope="col" className="py-3 text-right font-medium">Order value</th>
+                        <tr className="bg-[#7c3f20] text-xs text-white">
+                          <th scope="col" className="border border-[#6a351b] px-3 py-3 font-semibold">Order status</th>
+                          <th scope="col" className="border border-[#6a351b] px-3 py-3 text-right font-semibold">Orders</th>
+                          <th scope="col" className="border border-[#6a351b] px-3 py-3 text-right font-semibold">Order value</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-stone-100">
+                      <tbody>
                         {accounting.by_status.map(row => (
-                          <tr key={row.status}>
-                            <th scope="row" className="py-3 font-medium text-stone-700">{statusLabels[row.status]}</th>
-                            <td className="py-3 text-right text-stone-600">{row.count}</td>
-                            <td className="py-3 text-right font-semibold text-stone-800">{formatCurrency(row.order_value)}</td>
+                          <tr key={row.status} className="odd:bg-white even:bg-stone-50/50">
+                            <th scope="row" className="border border-stone-200 px-3 py-3 font-medium text-stone-700">{statusLabels[row.status]}</th>
+                            <td className="border border-stone-200 px-3 py-3 text-right text-stone-600">{row.count}</td>
+                            <td className="border border-stone-200 px-3 py-3 text-right font-semibold text-stone-800">{formatCurrency(row.order_value)}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                  <p className="mt-4 border-t border-stone-100 pt-4 text-xs text-stone-500">
-                    Cancelled order value: <span className="font-semibold text-stone-700">{formatCurrency(accounting.cancelled_order_value)}</span>
+                  <p className="mt-4 border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
+                    Paid orders: <strong>{accounting.paid_order_count}</strong> · Paid order value: <strong>{formatCurrency(accounting.paid_order_value)}</strong>. Paid orders are included in the fulfilled status totals above.
                   </p>
+                  <div className="mt-4 grid grid-cols-2 border border-stone-200 bg-stone-200 text-xs sm:max-w-xs">
+                    <span className="bg-stone-50 px-3 py-2 font-medium text-stone-600">Cancelled order value</span>
+                    <span className="break-all bg-white px-3 py-2 text-right font-semibold text-stone-800">{formatCurrency(accounting.cancelled_order_value)}</span>
+                  </div>
                 </ChartPanel>
               </div>
             </div>

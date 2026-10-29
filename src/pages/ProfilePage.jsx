@@ -349,7 +349,7 @@ export default function ProfilePage() {
           {photoError && <p role="alert" className="mt-3 text-sm text-red-700">{photoError}</p>}
           {photoSuccess && <p role="status" className="mt-3 text-sm text-green-700">{photoSuccess}</p>}
 
-          <dl className="mt-5 grid grid-cols-3 gap-3 sm:gap-5">
+          <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">
             <div>
               <dt className="text-xs font-bold text-black/70">Full name</dt>
               <dd className="mt-1 text-sm font-normal text-black">{name}</dd>
@@ -357,6 +357,10 @@ export default function ProfilePage() {
             <div>
               <dt className="text-xs font-bold text-black/70">Email address</dt>
               <dd className="mt-1 break-all text-sm font-normal text-black">{user?.email || 'Not provided'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-bold text-black/70">Phone number</dt>
+              <dd className="mt-1 break-all text-sm font-normal text-black">{user?.phone || 'Not provided'}</dd>
             </div>
             <div>
               <dt className="text-xs font-bold text-black/70">Username</dt>

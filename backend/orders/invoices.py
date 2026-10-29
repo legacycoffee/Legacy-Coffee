@@ -11,7 +11,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 
 def build_invoice_pdf(order):
@@ -43,15 +43,6 @@ def build_invoice_pdf(order):
     styles['Normal'].fontName = regular_font
     styles['Normal'].fontSize = 9
     styles['Normal'].leading = 13
-    styles.add(ParagraphStyle(
-        'InvoiceTitle',
-        parent=styles['Title'],
-        fontName=bold_font,
-        fontSize=24,
-        leading=28,
-        textColor=colors.HexColor('#4b2e20'),
-        alignment=0,
-    ))
     styles.add(ParagraphStyle(
         'InvoiceMeta',
         parent=styles['Normal'],
@@ -94,8 +85,7 @@ def build_invoice_pdf(order):
         ('FONTNAME', (0, 0), (-1, 0), bold_font),
         ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('LINEBELOW', (0, 0), (-1, 0), 0.8, colors.HexColor('#bd8d69')),
-        ('LINEBELOW', (0, 1), (-1, -1), 0.35, colors.HexColor('#e8ded5')),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#bd8d69')),
         ('LEFTPADDING', (0, 0), (-1, -1), 7),
         ('RIGHTPADDING', (0, 0), (-1, -1), 7),
         ('TOPPADDING', (0, 0), (-1, -1), 8),
@@ -109,16 +99,29 @@ def build_invoice_pdf(order):
     customer_lines.append(f'{order.delivery_address}, {order.delivery_city}')
 
     invoice_date = timezone.localtime(order.created_at).strftime('%d %b %Y, %H:%M (EAT)')
+    logo = Image(
+        os.path.join(os.path.dirname(__file__), 'assets', 'legacy-coffee-logo.png'),
+        width=48 * mm,
+        height=48 * mm,
+    )
     story = [
         Table(
-            [[paragraph('Legacy Coffee', 'InvoiceTitle'), paragraph(
+            [[logo, paragraph(
                 f'<b>INVOICE</b><br/>Order {escape(order.reference)}<br/>'
                 f'{escape(invoice_date)}',
                 'InvoiceMeta',
                 markup=True,
             )]],
             colWidths=(90 * mm, 82 * mm),
-            style=TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]),
+            style=TableStyle([
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+                ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+                ('TOPPADDING', (0, 0), (-1, -1), 0),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+            ]),
         ),
         Spacer(1, 12 * mm),
         paragraph('<b>Bill to</b>', markup=True),
@@ -141,8 +144,10 @@ def build_invoice_pdf(order):
         ),
         Spacer(1, 7 * mm),
         paragraph(
-            'Pro forma order invoice. This document confirms your order request only; no payment has been collected. '
-            'Delivery costs and final order details will be confirmed by our team.',
+            'This document confirms receipt of your order request and is not a final invoice or proof of payment. '
+            'No payment has been collected at this stage. Our team will review your order and confirm the delivery '
+            'charges, availability, and final order details before proceeding. Any payment instructions will be '
+            'provided once your order has been confirmed.',
             'InvoiceSmall',
         ),
     ]
