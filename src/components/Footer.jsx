@@ -52,7 +52,7 @@ export default function Footer() {
             <a href="mailto:info@legacycoffee.org" className="text-white text-sm hover:underline block mb-1">
               info@legacycoffee.org
             </a>
-            <p className="text-white/80 text-sm mb-4">+256 752 254 962</p>
+            <p className="text-white/80 text-sm mb-4">+256 789 069 263</p>
 
             {/* Social Icons */}
             <div className="flex gap-3 text-white text-xl mb-4">

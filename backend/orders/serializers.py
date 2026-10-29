@@ -17,7 +17,7 @@ class OrderItemInputSerializer(serializers.Serializer):
         slug_field='slug',
         queryset=Product.objects.filter(is_active=True),
     )
-    quantity = serializers.IntegerField(min_value=1, max_value=99)
+    quantity = serializers.IntegerField(min_value=1, max_value=32767)
     is_wholesale = serializers.BooleanField(default=False)
 
 
@@ -80,6 +80,12 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         product_ids = [entry['product'].pk for entry in items]
         if len(product_ids) != len(set(product_ids)):
             raise serializers.ValidationError('Each product can only appear once. Combine quantities for duplicate products.')
+        for entry in items:
+            maximum_quantity = 32767 if entry['product'].slug == 'coffee-seedlings' else 99
+            if entry['quantity'] > maximum_quantity:
+                raise serializers.ValidationError(
+                    f'{entry["product"].name} quantity cannot exceed {maximum_quantity}.'
+                )
         return items
 
     @transaction.atomic
@@ -111,6 +117,8 @@ class OrderCreateSerializer(serializers.ModelSerializer):
                 unit_price=(
                     product.wholesale_price
                     if entry['is_wholesale'] and product.wholesale_price is not None
+                    else product.price * Decimal('0.95')
+                    if product.slug == 'coffee-seedlings' and entry['quantity'] > 1000
                     else product.price
                 ),
                 quantity=entry['quantity'],

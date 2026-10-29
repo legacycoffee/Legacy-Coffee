@@ -168,7 +168,7 @@ export default function Home() {
             </p>
             <div className="mx-auto mt-8 flex w-full max-w-xs flex-col items-center gap-3 sm:mx-0 sm:max-w-none sm:flex-row">
               <a
-                href="https://wa.me/256752254962?text=Hi%20Legacy%20Coffee!%20I%E2%80%99d%20like%20to%20pre-order%20a%20coffee%20drink.%20Please%20share%20today%E2%80%99s%20menu%20and%20pickup%20times."
+                href="https://wa.me/256789069263?text=Hi%20Legacy%20Coffee!%20I%E2%80%99d%20like%20to%20pre-order%20a%20coffee%20drink.%20Please%20share%20today%E2%80%99s%20menu%20and%20pickup%20times."
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white hover:text-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"

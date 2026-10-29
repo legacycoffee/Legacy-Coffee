@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { CartContext } from './cartContext.js'
+import { getCartItemUnitPrice } from '../data/products.js'
 
 const CART_STORAGE_KEY = 'legacy-coffee-cart'
 const ORDER_STORAGE_KEY = 'legacy-coffee-latest-order'
@@ -23,7 +24,7 @@ export function CartProvider({ children }) {
   const addToCart = (product, quantity = 1) => {
     const existingItem = items.find(item => item.id === product.id)
     const nextItems = existingItem
-      ? items.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item)
+      ? items.map(item => item.id === product.id ? { ...item, ...product, quantity: item.quantity + quantity } : item)
       : [...items, { ...product, quantity }]
     saveItems(nextItems)
   }
@@ -74,7 +75,7 @@ export function CartProvider({ children }) {
   }
 
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0)
-  const cartTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const cartTotal = items.reduce((sum, item) => sum + getCartItemUnitPrice(item) * item.quantity, 0)
   const value = {
     items,
     cartCount,

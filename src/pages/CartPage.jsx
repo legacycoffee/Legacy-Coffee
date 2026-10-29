@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { LuArrowLeft, LuMinus, LuPlus, LuTrash2 } from 'react-icons/lu'
 import { formatPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
+import { getCartItemUnitPrice } from '../data/products.js'
 import { useAuth } from '../context/useAuth.js'
 import ProductImage from '../components/ProductImage.jsx'
 
@@ -53,8 +54,8 @@ export default function CartPage() {
                 <div className="col-start-2 row-start-1 min-w-0 md:col-start-2">
                   <p className="truncate text-[9px] font-bold uppercase tracking-[0.12em] text-brown/65 sm:text-[10px]">Legacy Coffee</p>
                   <Link to={`/products/${item.id}`} title={item.name} className="mt-0.5 block truncate text-xs font-bold leading-snug text-brown transition-colors hover:text-primary sm:text-sm">{item.name}</Link>
-                  <p className="mt-1 truncate text-sm font-bold leading-tight text-brown sm:text-base">{formatPrice(item.price * item.quantity)}</p>
-                  <p className="mt-0.5 truncate text-[10px] text-brown/65 sm:text-xs">{formatPrice(item.price)} each · {item.weight}</p>
+                  <p className="mt-1 truncate text-sm font-bold leading-tight text-brown sm:text-base">{formatPrice(getCartItemUnitPrice(item) * item.quantity)}</p>
+                  <p className="mt-0.5 truncate text-[10px] text-brown/65 sm:text-xs">{formatPrice(getCartItemUnitPrice(item))} each · {item.weight}</p>
                   <div className="mt-1.5 hidden md:block">
                     <p className="text-xs text-brown/65">Delivery fee confirmed by our team.</p>
                     {!isAuthenticated && (
@@ -81,16 +82,16 @@ export default function CartPage() {
                       id={`quantity-${item.id}`}
                       type="number"
                       min="1"
-                      max="99"
+                      max={item.id === 'coffee-seedlings' ? 32767 : 99}
                       value={item.quantity}
-                      onChange={event => updateQuantity(item.id, Math.max(1, Math.min(99, Number(event.target.value) || 1)))}
+                      onChange={event => updateQuantity(item.id, Math.max(1, Math.min(item.id === 'coffee-seedlings' ? 32767 : 99, Number(event.target.value) || 1)))}
                       className="h-7 w-8 appearance-none bg-transparent text-center text-sm font-bold tabular-nums text-brown outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                     />
                     <button
                       type="button"
                       aria-label={`Increase quantity of ${item.name}`}
-                      disabled={item.quantity >= 99}
-                      onClick={() => updateQuantity(item.id, Math.min(99, item.quantity + 1))}
+                      disabled={item.quantity >= (item.id === 'coffee-seedlings' ? 32767 : 99)}
+                      onClick={() => updateQuantity(item.id, Math.min(item.id === 'coffee-seedlings' ? 32767 : 99, item.quantity + 1))}
                       className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-brown transition-colors hover:bg-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       <LuPlus aria-hidden="true" className="h-3 w-3" />

@@ -6,7 +6,7 @@ from rest_framework.test import APITestCase
 from accounts.models import Notification
 from shop.models import Product
 
-from .models import Order
+from .models import Order, OrderItem
 
 
 class OrderApiTests(APITestCase):
@@ -127,6 +127,68 @@ class OrderApiTests(APITestCase):
         self.assertEqual(response.data['total'], '36000')
         self.assertEqual(response.data['order_items'][0]['unit_price'], '18000')
         self.assertTrue(response.data['order_items'][0]['is_wholesale'])
+
+    def test_seedling_order_over_1000_receives_five_percent_discount(self):
+        seedlings = Product.objects.create(
+            slug='coffee-seedlings',
+            name='Coffee Seedlings',
+            weight='1 seedling',
+            price=2000,
+            description='Coffee seedlings.',
+            details='Approved varieties.',
+            tasting_notes='N/A',
+            roast='N/A',
+            image='https://example.com/seedlings.jpg',
+            image_alt='Coffee seedlings',
+        )
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post('/api/orders/', {
+            **self.payload,
+            'items': [{'product_id': seedlings.slug, 'quantity': 1001}],
+        }, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        order_item = OrderItem.objects.get(order__user=self.user)
+        self.assertEqual(order_item.unit_price, Decimal('1900'))
+        self.assertEqual(order_item.line_total, Decimal('1901900'))
+        self.assertEqual(response.data['total'], '1901900')
+
+    def test_seedling_order_at_1000_has_no_bulk_discount(self):
+        seedlings = Product.objects.create(
+            slug='coffee-seedlings',
+            name='Coffee Seedlings',
+            weight='1 seedling',
+            price=2000,
+            description='Coffee seedlings.',
+            details='Approved varieties.',
+            tasting_notes='N/A',
+            roast='N/A',
+            image='https://example.com/seedlings.jpg',
+            image_alt='Coffee seedlings',
+        )
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post('/api/orders/', {
+            **self.payload,
+            'items': [{'product_id': seedlings.slug, 'quantity': 1000}],
+        }, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        order_item = OrderItem.objects.get(order__user=self.user)
+        self.assertEqual(order_item.unit_price, Decimal('2000'))
+        self.assertEqual(order_item.line_total, Decimal('2000000'))
+
+    def test_regular_products_keep_quantity_limit_of_99(self):
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post('/api/orders/', {
+            **self.payload,
+            'items': [{'product_id': self.product.slug, 'quantity': 100}],
+        }, format='json')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Order.objects.count(), 0)
 
     def test_order_generates_invoice_pdf_available_to_order_owner(self):
         self.client.force_authenticate(self.user)

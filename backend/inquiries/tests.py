@@ -24,3 +24,20 @@ class InquiryApiTests(APITestCase):
         })
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Inquiry.objects.count(), 0)
+
+    def test_seedling_reservation_is_saved_for_staff_tracking(self):
+        response = self.client.post('/api/inquiries/', {
+            'kind': 'seedling_reservation',
+            'name': 'Seedling Customer',
+            'email': 'customer@example.com',
+            'phone': '+256700000000',
+            'product': 'Coffee seedlings',
+            'quantity': '1200',
+            'subject': 'Coffee seedling reservation',
+            'message': 'Requested quantity: 1200 seedlings',
+        })
+
+        self.assertEqual(response.status_code, 201)
+        inquiry = Inquiry.objects.get()
+        self.assertEqual(inquiry.kind, Inquiry.Kind.SEEDLING_RESERVATION)
+        self.assertEqual(inquiry.quantity, '1200')

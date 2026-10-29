@@ -37,6 +37,12 @@ export const products = [
   },
 ]
 
+export function getCartItemUnitPrice(item) {
+  return item.id === 'coffee-seedlings' && item.quantity > 1000
+    ? Math.round(item.price * 0.95)
+    : item.price
+}
+
 export function formatPrice(price) {
   return `UGX ${new Intl.NumberFormat('en-UG', {
     maximumFractionDigits: 0,

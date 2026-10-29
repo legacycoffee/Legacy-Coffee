@@ -51,7 +51,7 @@ export default function ContactUs() {
                 <FiPhone className="text-primary mt-1 flex-shrink-0" size={20} />
                 <div>
                   <p className="text-brown font-semibold">Phone</p>
-                  <p className="text-brown/80 text-sm">+256 752 254 962</p>
+                  <p className="text-brown/80 text-sm">+256 789 069 263</p>
                 </div>
               </div>
             </div>

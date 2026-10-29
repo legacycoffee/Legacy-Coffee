@@ -17,6 +17,15 @@ body {
   color: #5C3A1E;
 }
 
+.farm-reservation-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.farm-reservation-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 .newsletter-editor:empty::before {
   color: #a8a29e;
   content: attr(data-placeholder);

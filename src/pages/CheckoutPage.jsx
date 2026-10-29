@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { LuArrowLeft, LuCheck, LuClipboardList, LuMapPin, LuShieldCheck } from 'react-icons/lu'
-import { formatPrice } from '../data/products.js'
+import { formatPrice, getCartItemUnitPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
@@ -26,6 +26,14 @@ export default function CheckoutPage() {
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const cartCount = items.reduce((total, item) => total + item.quantity, 0)
+  const seedlingsCount = items.reduce(
+    (total, item) => total + (item.id === 'coffee-seedlings' ? item.quantity : 0),
+    0,
+  )
+  const includesSeedlings = seedlingsCount > 0
+  const [seedlingType, setSeedlingType] = useState(
+    () => items.find(item => item.id === 'coffee-seedlings')?.seedling_type || '',
+  )
 
   if (items.length === 0) {
     return <Navigate to="/cart" replace />
@@ -36,6 +44,10 @@ export default function CheckoutPage() {
   const handleSubmit = async event => {
     event.preventDefault()
     setSubmitError('')
+    if (includesSeedlings && !seedlingType.trim()) {
+      setSubmitError('Enter the type of coffee seedlings you need.')
+      return
+    }
     setIsSubmitting(true)
 
     try {
@@ -49,7 +61,10 @@ export default function CheckoutPage() {
           customer_phone: customer.phone,
           delivery_address: customer.address,
           delivery_city: customer.city,
-          delivery_notes: customer.notes,
+          delivery_notes: [
+            includesSeedlings ? `Coffee seedling type needed: ${seedlingType.trim()}` : '',
+            customer.notes,
+          ].filter(Boolean).join('\n'),
           items: items.map(item => ({
             product_id: item.id,
             quantity: item.quantity,
@@ -170,6 +185,19 @@ export default function CheckoutPage() {
                   Street address
                   <input id="checkout-address" required autoComplete="street-address" name="address" value={customer.address} onChange={handleChange} placeholder="Street, building, or delivery location" className={inputClass} />
                 </label>
+                {includesSeedlings && (
+                  <label className={`${labelClass} sm:col-span-2`} htmlFor="checkout-seedling-type">
+                    Type of coffee seedlings needed
+                    <input
+                      id="checkout-seedling-type"
+                      required
+                      value={seedlingType}
+                      onChange={event => setSeedlingType(event.target.value)}
+                      placeholder="Enter the variety you need"
+                      className={inputClass}
+                    />
+                  </label>
+                )}
                 <label className={`${labelClass} sm:col-span-2`} htmlFor="checkout-notes">
                   Delivery notes <span className="font-normal text-black">(optional)</span>
                   <textarea id="checkout-notes" name="notes" value={customer.notes} onChange={handleChange} rows={3} placeholder="Helpful directions or delivery instructions" className={`${inputClass} resize-y`} />
@@ -214,11 +242,17 @@ export default function CheckoutPage() {
                     <p className="truncate font-semibold">{item.name}</p>
                     <p className="mt-0.5 text-xs text-black">{item.weight} · Qty {item.quantity}</p>
                   </div>
-                  <span className="shrink-0 text-right text-xs font-semibold sm:text-sm">{formatPrice(item.price * item.quantity)}</span>
+                  <span className="shrink-0 text-right text-xs font-semibold sm:text-sm">{formatPrice(getCartItemUnitPrice(item) * item.quantity)}</span>
                 </li>
               ))}
             </ul>
             <div className="space-y-3 border-t border-peach-mid/50 pt-4 text-sm text-black">
+              {includesSeedlings && (
+                <div className="flex justify-between gap-4 font-semibold">
+                  <span>Total coffee seedlings</span>
+                  <span>{seedlingsCount.toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex justify-between gap-4">
                 <span>Subtotal</span><span className="font-semibold">{formatPrice(cartTotal)}</span>
               </div>

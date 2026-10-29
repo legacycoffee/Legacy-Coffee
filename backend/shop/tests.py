@@ -30,7 +30,7 @@ class SeedProductsCommandTests(TestCase):
         existing_product.refresh_from_db()
         self.assertEqual(existing_product.name, 'Custom product name')
         self.assertTrue(Product.objects.filter(slug='single-origin-arabica').exists())
-        self.assertEqual(Product.objects.count(), 4)
+        self.assertEqual(Product.objects.count(), 5)
         self.assertIn('Skipped: robusta-blend', output.getvalue())
 
 
