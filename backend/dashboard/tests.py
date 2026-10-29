@@ -1,7 +1,9 @@
+from datetime import datetime, time, timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from accounts.models import Notification
@@ -33,10 +35,74 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(self.client.get('/api/dashboard/inquiries/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/subscribers/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/users/').status_code, 403)
+        self.assertEqual(self.client.get('/api/dashboard/analytics/').status_code, 403)
         self.assertEqual(
             self.client.patch('/api/dashboard/orders/LC-TEST/status/', {'status': 'confirmed'}).status_code,
             403,
         )
+
+    def test_staff_can_read_date_filtered_analytics(self):
+        today = timezone.localdate()
+        start = today - timedelta(days=2)
+        recent_login = timezone.make_aware(datetime.combine(today, time.min))
+        get_user_model().objects.filter(pk=self.customer.pk).update(
+            date_joined=recent_login,
+            last_login=recent_login,
+        )
+        order_values = (
+            (Order.Status.PENDING, 1000),
+            (Order.Status.CONFIRMED, 2000),
+            (Order.Status.FULFILLED, 3000),
+            (Order.Status.CANCELLED, 4000),
+        )
+        for order_status, total in order_values:
+            order = Order.objects.create(
+                user=self.customer,
+                customer_name='Coffee Customer',
+                customer_email=self.customer.email,
+                customer_phone='+256700000000',
+                delivery_address='1 Coffee Road',
+                delivery_city='Kampala',
+                total=total,
+                status=order_status,
+            )
+            OrderItem.objects.create(
+                order=order,
+                product_name='Arabica',
+                weight='500g',
+                unit_price=total,
+                quantity=1,
+            )
+
+        self.client.force_authenticate(self.staff)
+        response = self.client.get(
+            f'/api/dashboard/analytics/?start={start.isoformat()}&end={today.isoformat()}',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Cache-Control'], 'no-store')
+        self.assertEqual(response.data['sales']['order_count'], 4)
+        self.assertEqual(str(response.data['sales']['non_cancelled_order_value']), '6000')
+        self.assertEqual(str(response.data['accounting']['cancelled_order_value']), '4000')
+        self.assertEqual(response.data['users']['active_users'], 1)
+        self.assertEqual(response.data['users']['new_users'], 1)
+        self.assertEqual(len(response.data['sales']['daily']), 3)
+        self.assertEqual(response.data['sales']['products'][0]['product_name'], 'Arabica')
+        self.assertEqual(
+            [row['count'] for row in response.data['sales']['statuses']],
+            [1, 1, 1, 1],
+        )
+
+    def test_analytics_rejects_invalid_date_ranges(self):
+        self.client.force_authenticate(self.staff)
+
+        invalid_date = self.client.get('/api/dashboard/analytics/?start=not-a-date')
+        reversed_range = self.client.get('/api/dashboard/analytics/?start=2026-10-10&end=2026-10-01')
+        long_range = self.client.get('/api/dashboard/analytics/?start=2024-01-01&end=2026-10-01')
+
+        self.assertEqual(invalid_date.status_code, 400)
+        self.assertEqual(reversed_range.status_code, 400)
+        self.assertEqual(long_range.status_code, 400)
 
     def test_staff_can_read_summary(self):
         self.client.force_authenticate(self.staff)

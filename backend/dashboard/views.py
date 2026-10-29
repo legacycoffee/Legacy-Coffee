@@ -1,7 +1,13 @@
+from datetime import datetime, time, timedelta
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, DecimalField, ExpressionWrapper, F, Sum
+from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.utils.dateparse import parse_date
 from rest_framework import filters, generics, serializers, status
 from rest_framework.exceptions import APIException
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -11,7 +17,7 @@ from rest_framework.views import APIView
 
 from inquiries.models import Inquiry
 from newsletter.models import Subscriber
-from orders.models import Order
+from orders.models import Order, OrderItem
 from shop.models import Product, ShareEvent
 from .serializers import (
     InquiryInboxSerializer,
@@ -72,6 +78,149 @@ class DashboardSummaryView(APIView):
             'active_subscribers': Subscriber.objects.filter(is_active=True).count(),
             'product_shares': ShareEvent.objects.count(),
         })
+
+
+class DashboardAnalyticsView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        today = timezone.localdate()
+        start_value = request.query_params.get('start')
+        end_value = request.query_params.get('end')
+        start_date = parse_date(start_value) if start_value else today - timedelta(days=29)
+        end_date = parse_date(end_value) if end_value else today
+
+        if not start_date:
+            raise serializers.ValidationError({'start': 'Use a valid date in YYYY-MM-DD format.'})
+        if not end_date:
+            raise serializers.ValidationError({'end': 'Use a valid date in YYYY-MM-DD format.'})
+        if start_date > end_date:
+            raise serializers.ValidationError({'end': 'End date must be on or after the start date.'})
+        if (end_date - start_date).days > 365:
+            raise serializers.ValidationError({'end': 'Select a date range of 366 days or fewer.'})
+
+        start_at = timezone.make_aware(datetime.combine(start_date, time.min))
+        end_at = timezone.make_aware(
+            datetime.combine(end_date + timedelta(days=1), time.min),
+        )
+        orders = Order.objects.filter(created_at__gte=start_at, created_at__lt=end_at)
+        customer_users = get_user_model().objects.filter(
+            is_staff=False,
+            is_superuser=False,
+            is_active=True,
+        )
+        period_users = customer_users.filter(date_joined__gte=start_at, date_joined__lt=end_at)
+        period_active_users = customer_users.filter(last_login__gte=start_at, last_login__lt=end_at)
+
+        status_rows = list(
+            orders.values('status').annotate(
+                count=Count('id'),
+                order_value=Sum('total'),
+            ).order_by('status'),
+        )
+        status_summary = {
+            row['status']: {
+                'count': row['count'],
+                'order_value': row['order_value'] or Decimal('0'),
+            }
+            for row in status_rows
+        }
+
+        daily_orders = {
+            row['day']: row
+            for row in orders.annotate(day=TruncDate('created_at')).values('day').annotate(
+                orders=Count('id'),
+                order_value=Sum('total'),
+            ).order_by('day')
+        }
+        daily_new_users = {
+            row['day']: row['count']
+            for row in period_users.annotate(day=TruncDate('date_joined')).values('day').annotate(
+                count=Count('id'),
+            ).order_by('day')
+        }
+        daily_active_users = {
+            row['day']: row['count']
+            for row in period_active_users.annotate(day=TruncDate('last_login')).values('day').annotate(
+                count=Count('id'),
+            ).order_by('day')
+        }
+        daily = []
+        current_date = start_date
+        while current_date <= end_date:
+            order_data = daily_orders.get(current_date, {})
+            daily.append({
+                'date': current_date.isoformat(),
+                'orders': order_data.get('orders', 0),
+                'order_value': order_data.get('order_value') or Decimal('0'),
+                'new_users': daily_new_users.get(current_date, 0),
+                'active_users': daily_active_users.get(current_date, 0),
+            })
+            current_date += timedelta(days=1)
+
+        order_value_expression = ExpressionWrapper(
+            F('unit_price') * F('quantity'),
+            output_field=DecimalField(max_digits=16, decimal_places=0),
+        )
+        product_rows = OrderItem.objects.filter(
+            order__in=orders.exclude(status=Order.Status.CANCELLED),
+        ).values('product_name').annotate(
+            quantity_sold=Sum('quantity'),
+            order_value=Sum(order_value_expression),
+        ).order_by('-order_value', 'product_name')[:10]
+
+        response = Response({
+            'period': {'start': start_date.isoformat(), 'end': end_date.isoformat()},
+            'sales': {
+                'order_count': orders.count(),
+                'non_cancelled_order_value': sum(
+                    (row['order_value'] for row in status_rows if row['status'] != Order.Status.CANCELLED),
+                    Decimal('0'),
+                ),
+                'confirmed_fulfilled_order_value': sum(
+                    (
+                        status_summary.get(order_status, {}).get('order_value', Decimal('0'))
+                        for order_status in (Order.Status.CONFIRMED, Order.Status.FULFILLED)
+                    ),
+                    Decimal('0'),
+                ),
+                'statuses': [
+                    {
+                        'status': order_status,
+                        'count': status_summary.get(order_status, {}).get('count', 0),
+                        'order_value': status_summary.get(order_status, {}).get('order_value', Decimal('0')),
+                    }
+                    for order_status, _ in Order.Status.choices
+                ],
+                'daily': daily,
+                'products': list(product_rows),
+            },
+            'users': {
+                'active_users': period_active_users.count(),
+                'new_users': period_users.count(),
+                'daily': daily,
+            },
+            'accounting': {
+                'order_value_non_cancelled': sum(
+                    (row['order_value'] for row in status_rows if row['status'] != Order.Status.CANCELLED),
+                    Decimal('0'),
+                ),
+                'pending_order_value': status_summary.get(Order.Status.PENDING, {}).get('order_value', Decimal('0')),
+                'confirmed_order_value': status_summary.get(Order.Status.CONFIRMED, {}).get('order_value', Decimal('0')),
+                'fulfilled_order_value': status_summary.get(Order.Status.FULFILLED, {}).get('order_value', Decimal('0')),
+                'cancelled_order_value': status_summary.get(Order.Status.CANCELLED, {}).get('order_value', Decimal('0')),
+                'by_status': [
+                    {
+                        'status': order_status,
+                        'count': status_summary.get(order_status, {}).get('count', 0),
+                        'order_value': status_summary.get(order_status, {}).get('order_value', Decimal('0')),
+                    }
+                    for order_status, _ in Order.Status.choices
+                ],
+            },
+        })
+        response['Cache-Control'] = 'no-store'
+        return response
 
 
 class OrderInboxView(generics.ListAPIView):

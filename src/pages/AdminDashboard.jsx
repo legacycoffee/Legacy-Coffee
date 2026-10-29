@@ -14,9 +14,11 @@ import {
 } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
+import AnalyticsDashboard from '../components/AnalyticsDashboard.jsx'
 
 const sections = [
   { id: 'Overview', label: 'Overview' },
+  { id: 'Analytics', label: 'Analytics' },
   { id: 'Orders', label: 'Order page' },
   { id: 'Products', label: 'Products' },
   { id: 'Requests', label: 'Requests' },
@@ -1403,6 +1405,8 @@ export default function AdminDashboard() {
             </div>
           )}
           {isLoading && <p role="status" className="mb-5 rounded-lg border border-stone-200 bg-white p-4 text-sm text-stone-500">Loading workspace data…</p>}
+
+          {activeTab === 'Analytics' && <AnalyticsDashboard token={token} />}
 
           {activeTab === 'Overview' && (
             <section aria-labelledby="overview-heading">
