@@ -4,6 +4,7 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import NewsletterSignup from './components/NewsletterSignup.jsx'
 import Home from './pages/Home'
+import OurCoffeeFarm from './pages/OurCoffeeFarm'
 import AboutUs from './pages/AboutUs'
 import PartnerWithUs from './pages/PartnerWithUs'
 import WholesalePage from './pages/WholesalePage'
@@ -66,6 +67,7 @@ export default function App() {
             <VisitorAnalyticsTracker />
             <Routes>
               <Route path="/" element={<Layout><Home /></Layout>} />
+              <Route path="/coffee-farm" element={<Layout><OurCoffeeFarm /></Layout>} />
               <Route path="/about" element={<Layout><AboutUs /></Layout>} />
               <Route path="/about/patrick-muhereza" element={<Layout><PatrickStoryPage /></Layout>} />
               <Route path="/shop" element={<Navigate to="/" replace />} />
