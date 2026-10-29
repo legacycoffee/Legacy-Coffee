@@ -38,6 +38,81 @@ const tourPackages = [
   },
 ]
 
+const farmSlides = [
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1793259784/farm_4.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1793268712/coffee_farm_7.png',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1793259782/farm_6.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1793259782/farm_2.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1793259782/farm_5.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1793259782/farm_3.jpg',
+]
+
+function FarmImageSlider() {
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide(current => (current + 1) % farmSlides.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const changeSlide = direction => {
+    setCurrentSlide(current => (current + direction + farmSlides.length) % farmSlides.length)
+  }
+
+  return (
+    <div
+      aria-label="Coffee farm photo slideshow"
+      aria-roledescription="carousel"
+      className="relative mx-auto mb-8 aspect-[16/9] max-w-6xl overflow-hidden rounded-2xl bg-brown shadow-lg sm:aspect-[2/1] lg:mb-10"
+    >
+      {farmSlides.map((image, index) => (
+        <img
+          key={image}
+          src={image}
+          alt={`Coffee farm view ${index + 1} of ${farmSlides.length}`}
+          loading={index === 0 ? 'eager' : 'lazy'}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+            index === currentSlide ? 'opacity-100' : 'opacity-0'
+          }`}
+          aria-hidden={index !== currentSlide}
+        />
+      ))}
+      <button
+        type="button"
+        aria-label="Show previous farm photo"
+        onClick={() => changeSlide(-1)}
+        className="absolute left-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-brown/65 text-2xl text-white transition-colors hover:bg-brown/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:left-5 sm:h-12 sm:w-12"
+      >
+        <span aria-hidden="true">‹</span>
+      </button>
+      <button
+        type="button"
+        aria-label="Show next farm photo"
+        onClick={() => changeSlide(1)}
+        className="absolute right-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-brown/65 text-2xl text-white transition-colors hover:bg-brown/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:right-5 sm:h-12 sm:w-12"
+      >
+        <span aria-hidden="true">›</span>
+      </button>
+      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2" aria-label="Choose farm photo">
+        {farmSlides.map((image, index) => (
+          <button
+            key={image}
+            type="button"
+            aria-label={`Show farm photo ${index + 1}`}
+            aria-current={index === currentSlide ? 'true' : undefined}
+            onClick={() => setCurrentSlide(index)}
+            className={`h-2.5 rounded-full transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+              index === currentSlide ? 'w-7 bg-white' : 'w-2.5 bg-white/65 hover:bg-white'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function OurCoffeeFarm() {
   const { products, isLoading: isProductsLoading, error: productsError } = useProducts()
   const { addToCart } = useCart()
@@ -256,6 +331,7 @@ export default function OurCoffeeFarm() {
       <section id="farm-visits" className="scroll-mt-20 px-6 py-16 md:py-20">
         <div className="mx-auto max-w-7xl">
           <h2 className="mb-10 text-center text-3xl font-black text-brown md:mb-12 md:text-5xl">Visit Our Coffee Farm</h2>
+          <FarmImageSlider />
           <div className="mb-8 text-left lg:w-[calc(50%-0.75rem)]">
             <p className="mb-2 text-base leading-relaxed text-brown md:text-lg">
               <strong className="font-bold">1. Educational Tours:</strong>
