@@ -43,6 +43,35 @@ const slides = [
   { img: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792514667/coffee_1_farm.jpg', pos: 'center' },
 ]
 
+const partnerTypes = ['NGO / Donor', 'Restaurant / Hotel', 'Exporter / Importer', 'Corporate Gifting', 'Community Project', 'Other']
+
+const partnerLogos = [
+  {
+    src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596313/OIP-1.webp',
+    alt: 'Partner organization logo',
+  },
+  {
+    src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596313/Yonder-Life-Final-Logo-03.png',
+    alt: 'Yonder Life',
+  },
+  {
+    src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/partner.png',
+    alt: 'Partner organization logo',
+  },
+  {
+    src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/KCCA-Kampala-Capital-City-Authority-Logo-Vector.svg-.png',
+    alt: 'Kampala Capital City Authority',
+  },
+  {
+    src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/logo-color-2.png',
+    alt: 'Partner organization logo',
+  },
+  {
+    src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596315/Imagine-Her-Logo-Full-Colour-1-2.png',
+    alt: 'Imagine Her',
+  },
+]
+
 function HeroSlider() {
   const [current, setCurrent] = useState(0)
 
@@ -171,12 +200,26 @@ function OurCoffeeSection() {
 export default function AboutUs() {
   const { consent, openPreferences } = useCookieConsent()
   const location = useLocation()
+  const [partnershipForm, setPartnershipForm] = useState({
+    name: '',
+    org: '',
+    email: '',
+    phone: '',
+    type: '',
+    message: '',
+  })
+  const [partnershipSubmitted, setPartnershipSubmitted] = useState(false)
 
   useEffect(() => {
     if (location.hash === '#patrick-story') {
       document.getElementById('patrick-story')?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [location.hash])
+
+  const handlePartnershipSubmit = event => {
+    event.preventDefault()
+    setPartnershipSubmitted(true)
+  }
 
   return (
     <div className="home-page overflow-x-hidden">
@@ -400,6 +443,75 @@ export default function AboutUs() {
 
       {/* ── OUR COFFEE ───────────────────────────────────────── */}
       <OurCoffeeSection />
+
+      {/* ── PARTNERSHIP ─────────────────────────────────────── */}
+      <section id="partnership" className="bg-white px-6 py-16 md:py-20">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="mb-4 text-3xl font-black text-brown md:text-4xl">Partner With Us</h2>
+          <p className="mx-auto max-w-3xl text-base leading-relaxed text-brown/75 md:text-lg">
+            We welcome collaborations with NGOs, restaurants, hotels, exporters, and institutions. Whether through bulk orders, corporate gifting, or joint community projects, together we can make a greater impact.
+          </p>
+        </div>
+
+        <div id="partnership-form" className="mx-auto mt-12 max-w-2xl scroll-mt-24">
+          <h3 className="mb-2 text-center text-3xl font-bold text-primary">Start a Partnership</h3>
+          <p className="mb-8 text-center text-sm text-brown">Fill in the form and our team will reach out within 48 hours.</p>
+
+          {partnershipSubmitted ? (
+            <div className="rounded-xl bg-peach-light p-8 text-center">
+              <div className="mb-4 text-5xl">🎉</div>
+              <h4 className="mb-2 text-xl font-bold text-primary">Thank You!</h4>
+              <p className="text-sm text-brown">We've received your partnership request and will be in touch soon.</p>
+            </div>
+          ) : (
+            <form onSubmit={handlePartnershipSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <input required placeholder="Your Name" value={partnershipForm.name} onChange={event => setPartnershipForm({ ...partnershipForm, name: event.target.value })}
+                  className="rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
+                <input required placeholder="Organisation Name" value={partnershipForm.org} onChange={event => setPartnershipForm({ ...partnershipForm, org: event.target.value })}
+                  className="rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
+                <input required type="email" placeholder="Email Address" value={partnershipForm.email} onChange={event => setPartnershipForm({ ...partnershipForm, email: event.target.value })}
+                  className="rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
+                <input placeholder="Phone Number" value={partnershipForm.phone} onChange={event => setPartnershipForm({ ...partnershipForm, phone: event.target.value })}
+                  className="rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
+              </div>
+              <select required value={partnershipForm.type} onChange={event => setPartnershipForm({ ...partnershipForm, type: event.target.value })}
+                className="w-full rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary">
+                <option value="">Partnership Type</option>
+                {partnerTypes.map(type => <option key={type} value={type}>{type}</option>)}
+              </select>
+              <textarea rows={4} required placeholder="Tell us about your partnership idea..." value={partnershipForm.message} onChange={event => setPartnershipForm({ ...partnershipForm, message: event.target.value })}
+                className="w-full resize-none rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
+              <button type="submit" className="w-full rounded bg-primary py-3 font-semibold text-white transition-opacity hover:opacity-90">
+                Submit Partnership Request
+              </button>
+            </form>
+          )}
+        </div>
+      </section>
+
+      <section id="partnerships" className="overflow-hidden bg-peach-light px-6 py-16 md:py-20">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="mb-12 text-center text-3xl font-black text-brown md:text-4xl">Our Partners</h2>
+          <div className="overflow-hidden">
+            <div className="partner-logo-track flex w-max items-center">
+              {[0, 1].map(copy => (
+                <div key={copy} className="flex shrink-0 items-center gap-16 pr-16" aria-hidden={copy === 1}>
+                  {partnerLogos.map(logo => (
+                    <img
+                      key={logo.src}
+                      src={logo.src}
+                      alt={logo.alt}
+                      loading="lazy"
+                      className="h-16 w-36 shrink-0 object-contain md:h-20 md:w-44"
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ── FARMER TRANSFORMATION VIDEO ─────────────────────── */}
       <section className="bg-white px-6 py-16 md:py-20">
