@@ -290,6 +290,45 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(response.data['results'][0]['id'], matching.id)
         self.assertEqual(response.data['results'][0]['email'], matching.email)
         self.assertTrue(response.data['results'][0]['is_active'])
+
+    def test_staff_inquiry_inbox_includes_farm_and_seedling_reservations(self):
+        reservations = (
+            {
+                'kind': Inquiry.Kind.FARM_RESERVATION,
+                'name': 'Farm Customer',
+                'email': 'farm@example.com',
+                'subject': 'Coffee farm tour reservation',
+                'message': 'Package: Individual Package',
+            },
+            {
+                'kind': Inquiry.Kind.SEEDLING_RESERVATION,
+                'name': 'Seedling Customer',
+                'email': 'seedling@example.com',
+                'subject': 'Coffee seedling reservation',
+                'message': 'Type: Robusta',
+            },
+        )
+        for reservation in reservations:
+            Inquiry.objects.create(**reservation)
+        self.client.force_authenticate(self.staff)
+
+        response = self.client.get('/api/dashboard/inquiries/')
+
+        self.assertEqual(response.status_code, 200)
+        requests_by_kind = {item['kind']: item for item in response.data['results']}
+        self.assertEqual(
+            set(requests_by_kind),
+            {Inquiry.Kind.FARM_RESERVATION, Inquiry.Kind.SEEDLING_RESERVATION},
+        )
+        self.assertEqual(
+            requests_by_kind[Inquiry.Kind.FARM_RESERVATION]['message'],
+            'Package: Individual Package',
+        )
+        self.assertEqual(
+            requests_by_kind[Inquiry.Kind.SEEDLING_RESERVATION]['message'],
+            'Type: Robusta',
+        )
+
     def test_staff_can_read_order_and_inquiry_inboxes(self):
         product = Product.objects.create(
             slug='arabica',

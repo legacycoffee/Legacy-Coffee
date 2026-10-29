@@ -135,6 +135,7 @@ export default function OurCoffeeFarm() {
   const [reservationOpen, setReservationOpen] = useState(false)
   const [reservationError, setReservationError] = useState('')
   const [reservationSubmitting, setReservationSubmitting] = useState(false)
+  const [reservationSubmitted, setReservationSubmitted] = useState(false)
   const [reservation, setReservation] = useState({
     name: '',
     email: '',
@@ -170,16 +171,6 @@ export default function OurCoffeeFarm() {
     setReservationSubmitting(true)
     const selectedPackage = tourPackages.find(item => item.id === reservation.package)
     const subject = `Coffee farm tour reservation - ${selectedPackage.title}`
-    const body = [
-      'Coffee farm tour reservation request',
-      `Name: ${reservation.name}`,
-      `Email: ${reservation.email}`,
-      `Phone: ${reservation.phone || 'Not provided'}`,
-      `Package: ${selectedPackage.title}`,
-      `Preferred date: ${reservation.date}`,
-      `Number of visitors/students: ${reservation.visitors}`,
-      `Additional details: ${reservation.message || 'None'}`,
-    ].join('\n')
     const inquiryMessage = [
       `Package: ${selectedPackage.title}`,
       `Preferred date: ${reservation.date}`,
@@ -201,21 +192,12 @@ export default function OurCoffeeFarm() {
           message: inquiryMessage,
         },
       })
+      setReservationSubmitted(true)
     } catch (error) {
       setReservationError(error.message)
-      return
     } finally {
       setReservationSubmitting(false)
     }
-
-    setReservationError('')
-    const deliveryMethod = event.nativeEvent.submitter?.value
-    if (deliveryMethod === 'whatsapp') {
-      window.location.href = `https://wa.me/${farmWhatsApp}?text=${encodeURIComponent(body)}`
-      return
-    }
-
-    window.location.href = `mailto:${farmEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   }
 
   const handleSeedlingBuy = () => {
@@ -232,17 +214,6 @@ export default function OurCoffeeFarm() {
       return
     }
     setSeedlingReservationSubmitting(true)
-
-    const subject = 'Coffee seedling reservation'
-    const message = [
-      'Coffee seedling reservation request',
-      `Name: ${seedlingReservation.name}`,
-      `Email: ${seedlingReservation.email}`,
-      `Phone: ${seedlingReservation.phone || 'Not provided'}`,
-      `Type of coffee seedlings needed: ${seedlingReservation.seedlingType.trim()}`,
-      `Requested quantity: ${seedlingReservation.quantity} seedlings`,
-      seedlingReservation.message ? `Additional details: ${seedlingReservation.message}` : '',
-    ].filter(Boolean).join('\n')
 
     try {
       await apiRequest('/inquiries/', {
@@ -263,11 +234,6 @@ export default function OurCoffeeFarm() {
         },
       })
       setSeedlingReservationSubmitted(true)
-      if (event.nativeEvent.submitter?.value === 'whatsapp') {
-        window.location.href = `https://wa.me/${farmWhatsApp}?text=${encodeURIComponent(message)}`
-      } else {
-        window.location.href = `mailto:${farmEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`
-      }
     } catch (error) {
       setSeedlingReservationError(error.message)
     } finally {
@@ -365,6 +331,7 @@ export default function OurCoffeeFarm() {
                     onClick={() => {
                       setReservation(current => ({ ...current, package: tour.id }))
                       setReservationError('')
+                      setReservationSubmitted(false)
                       setReservationOpen(true)
                     }}
                     className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-2 py-3 text-center text-xs font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-5 sm:text-sm"
@@ -490,11 +457,24 @@ export default function OurCoffeeFarm() {
           <div className="mb-8 text-center">
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-primary">Plan your visit</p>
             <h2 id="farm-reservation-title" className="mb-3 text-3xl font-black text-brown md:text-4xl">Make a Reservation</h2>
-            <p className="text-sm leading-relaxed text-brown/70">
-              Fill in your details, then choose to send your reservation request by email or WhatsApp.
-            </p>
           </div>
 
+          {reservationSubmitted ? (
+            <div role="status" className="rounded-2xl bg-white p-8 text-center shadow-sm">
+              <p className="text-4xl" aria-hidden="true">✓</p>
+              <h3 className="mt-3 text-xl font-bold text-brown">Reservation request sent</h3>
+              <p className="mt-2 text-sm leading-relaxed text-brown/70">
+                Your request has been received. Our team will be in touch.
+              </p>
+              <button
+                type="button"
+                onClick={() => setReservationOpen(false)}
+                className="mt-6 rounded-full bg-primary px-6 py-3 font-bold text-white transition-colors hover:bg-brown"
+              >
+                Done
+              </button>
+            </div>
+          ) : (
           <form onSubmit={handleReservation} className="space-y-4 rounded-2xl bg-white p-6 shadow-sm md:p-8">
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-2 text-sm font-semibold text-brown">
@@ -572,31 +552,17 @@ export default function OurCoffeeFarm() {
               />
             </label>
             {reservationError && <p role="alert" className="text-sm text-red-700">{reservationError}</p>}
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div>
               <button
                 type="submit"
-                name="delivery"
-                value="email"
                 disabled={reservationSubmitting}
-                className="w-full rounded-full bg-primary px-6 py-3.5 font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="w-full rounded-full bg-primary px-6 py-3.5 font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"
               >
-                {reservationSubmitting ? 'Saving reservation…' : 'Continue to Email'}
-              </button>
-              <button
-                type="submit"
-                name="delivery"
-                value="whatsapp"
-                disabled={reservationSubmitting}
-                className="w-full rounded-full border border-primary px-6 py-3.5 font-bold text-primary transition-colors hover:bg-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                {reservationSubmitting ? 'Saving reservation…' : 'Send via WhatsApp'}
+                {reservationSubmitting ? 'Sending reservation…' : 'Send reservation request'}
               </button>
             </div>
-            <p className="text-center text-xs leading-relaxed text-brown/60">
-              Email requests are addressed to{' '}
-              <a href={`mailto:${farmEmail}`} className="font-semibold underline underline-offset-2">{farmEmail}</a>. WhatsApp requests open a chat with Legacy Coffee.
-            </p>
           </form>
+          )}
             </div>
           </section>
         </div>
@@ -628,7 +594,7 @@ export default function OurCoffeeFarm() {
                 <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-primary">Coffee Seedlings</p>
                 <h2 id="seedling-reservation-title" className="mb-3 text-3xl font-black text-brown md:text-4xl">Make a Reservation</h2>
                 <p className="text-sm leading-relaxed text-brown/70">
-                  Submit your request and our team will follow up. Your reservation will be recorded so we can track it.
+                  Submit your request and it will be emailed directly to {farmEmail}.
                 </p>
               </div>
 
@@ -637,7 +603,7 @@ export default function OurCoffeeFarm() {
                   <p className="text-4xl" aria-hidden="true">✓</p>
                   <h3 className="mt-3 text-xl font-bold text-brown">Reservation request received</h3>
                   <p className="mt-2 text-sm leading-relaxed text-brown/70">
-                    We’ve recorded your request for {seedlingReservation.quantity} seedlings. Our team will be in touch.
+                    Your request for {seedlingReservation.quantity} seedlings has been received. Our team will be in touch.
                   </p>
                   <button
                     type="button"
@@ -715,29 +681,15 @@ export default function OurCoffeeFarm() {
                     />
                   </label>
                   {seedlingReservationError && <p role="alert" className="text-sm text-red-700">{seedlingReservationError}</p>}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div>
                     <button
                       type="submit"
-                      name="delivery"
-                      value="email"
                       disabled={seedlingReservationSubmitting}
-                      className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-2 py-3 text-center text-xs font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60 sm:px-5 sm:text-sm"
+                      className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"
                     >
-                      {seedlingReservationSubmitting ? 'Saving…' : 'Send via Email'}
-                    </button>
-                    <button
-                      type="submit"
-                      name="delivery"
-                      value="whatsapp"
-                      disabled={seedlingReservationSubmitting}
-                      className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-primary px-2 py-3 text-center text-xs font-bold text-primary transition-colors hover:bg-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60 sm:px-5 sm:text-sm"
-                    >
-                      {seedlingReservationSubmitting ? 'Saving…' : 'Send via WhatsApp'}
+                      {seedlingReservationSubmitting ? 'Sending reservation…' : 'Send reservation request'}
                     </button>
                   </div>
-                  <p className="text-center text-xs leading-relaxed text-brown/60 sm:col-span-2">
-                    Your reservation is recorded on the website. Choose email or WhatsApp to share the request with our team.
-                  </p>
                 </form>
               )}
             </div>

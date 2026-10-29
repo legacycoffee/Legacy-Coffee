@@ -122,6 +122,28 @@ class NewsletterApiTests(APITestCase):
         self.assertEqual(Newsletter.objects.get().created_by, self.staff)
         self.assertEqual(self.client.get('/api/dashboard/newsletters/').data['count'], 1)
 
+    def test_staff_can_delete_drafts_but_not_sent_newsletters(self):
+        self.client.force_authenticate(self.staff)
+        draft = Newsletter.objects.create(
+            subject='Draft to delete',
+            content_html='<p>Draft content.</p>',
+            status=Newsletter.Status.DRAFT,
+        )
+        sent = Newsletter.objects.create(
+            subject='Sent newsletter',
+            content_html='<p>Sent content.</p>',
+            status=Newsletter.Status.SENT,
+            sent_at=timezone.now(),
+        )
+
+        delete_response = self.client.delete(f'/api/dashboard/newsletters/{draft.pk}/')
+        sent_response = self.client.delete(f'/api/dashboard/newsletters/{sent.pk}/')
+
+        self.assertEqual(delete_response.status_code, 204)
+        self.assertFalse(Newsletter.objects.filter(pk=draft.pk).exists())
+        self.assertEqual(sent_response.status_code, 409)
+        self.assertTrue(Newsletter.objects.filter(pk=sent.pk).exists())
+
     def test_newsletter_draft_requires_a_subject_with_a_clear_message(self):
         self.client.force_authenticate(self.staff)
 

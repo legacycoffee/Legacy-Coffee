@@ -1503,6 +1503,9 @@ export default function AdminDashboard() {
   const [newsletters, setNewsletters] = useState([])
   const [newsletterError, setNewsletterError] = useState('')
   const [newsletterNotice, setNewsletterNotice] = useState('')
+  const [deletingNewsletterId, setDeletingNewsletterId] = useState(null)
+  const [pendingNewsletterDelete, setPendingNewsletterDelete] = useState(null)
+  const [newsletterDeleteError, setNewsletterDeleteError] = useState('')
   const [newsletterSubject, setNewsletterSubject] = useState('')
   const newsletterSubjectInputRef = useRef(null)
   const newsletterExitSubjectInputRef = useRef(null)
@@ -1959,6 +1962,34 @@ export default function AdminDashboard() {
     }
   }
 
+  const deleteNewsletterFromList = async newsletter => {
+    if (newsletter.status !== 'draft' || deletingNewsletterId === newsletter.id) return
+    setNewsletterDeleteError('')
+    setPendingNewsletterDelete(newsletter)
+  }
+
+  const confirmNewsletterListDelete = async () => {
+    if (!pendingNewsletterDelete || deletingNewsletterId !== null) return
+    const newsletter = pendingNewsletterDelete
+    setDeletingNewsletterId(newsletter.id)
+    setNewsletterDeleteError('')
+    setNewsletterError('')
+    setNewsletterNotice('')
+    try {
+      await apiRequest(`/dashboard/newsletters/${newsletter.id}/`, {
+        method: 'DELETE',
+        token,
+      })
+      setNewsletters(current => current.filter(item => item.id !== newsletter.id))
+      setNewsletterNotice('Draft deleted.')
+      setPendingNewsletterDelete(null)
+    } catch (error) {
+      setNewsletterDeleteError(`Could not delete the draft: ${error.message}`)
+    } finally {
+      setDeletingNewsletterId(null)
+    }
+  }
+
   const handleLogin = async event => {
     event.preventDefault()
     setLoginError('')
@@ -2409,7 +2440,7 @@ export default function AdminDashboard() {
     { label: 'Total orders', value: summary.orders, note: `${summary.pending_orders} awaiting review` },
     { label: 'Pending orders', value: summary.pending_orders, note: 'Need your attention' },
     { label: 'All requests', value: summary.inquiries, note: `${summary.new_inquiries} new requests` },
-    { label: 'New requests', value: summary.new_inquiries, note: 'Contact and business enquiries' },
+    { label: 'New requests', value: summary.new_inquiries, note: 'Messages, enquiries, and reservations' },
     { label: 'Active products', value: summary.active_products, note: `${summary.products} in catalog` },
     { label: 'Subscribers', value: summary.active_subscribers, note: 'Active newsletter subscribers' },
     { label: 'Product shares', value: summary.product_shares, note: 'Customer shares recorded' },
@@ -2689,14 +2720,14 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between gap-3 border-b border-stone-100 px-5 py-4">
                     <div>
                       <h2 className="text-sm font-semibold text-stone-900">Recent requests</h2>
-                      <p className="mt-0.5 text-xs text-stone-400">Messages from customers and businesses</p>
+                      <p className="mt-0.5 text-xs text-stone-400">Customer messages, business enquiries, and reservations</p>
                     </div>
                     <button type="button" onClick={() => changeSection('Requests')} className="text-xs font-semibold text-[#a75a31] hover:text-[#784126]">
                       View requests
                     </button>
                   </div>
                   {inquiries.length === 0 ? (
-                    <EmptyState title="No requests yet" description="Contact and business enquiries will show here." />
+                    <EmptyState title="No requests yet" description="Customer messages, business enquiries, and reservations will show here." />
                   ) : (
                     <ul className="divide-y divide-stone-100 px-5">
                       {inquiries.slice(0, 5).map(inquiry => (
@@ -3505,7 +3536,7 @@ export default function AdminDashboard() {
                   </SectionHeading>
                   {newsletterError && (
                     <p role="alert" className="mb-4 break-words border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                      Could not load newsletters: {newsletterError}
+                      Newsletter error: {newsletterError}
                     </p>
                   )}
                   {newsletterNotice && (
@@ -3530,7 +3561,7 @@ export default function AdminDashboard() {
                               <p className="mt-1 text-xs text-red-700">Some deliveries did not complete. Reopen this draft to retry the remaining subscribers.</p>
                             )}
                           </div>
-                          <div className="flex items-center justify-between gap-3 sm:justify-end">
+                          <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
                             <StatusBadge>{newsletter.status}</StatusBadge>
                             <button
                               type="button"
@@ -3539,6 +3570,22 @@ export default function AdminDashboard() {
                             >
                               {newsletter.status === 'draft' ? 'Edit draft' : 'View'}
                             </button>
+                            {newsletter.status === 'draft' && (
+                              <button
+                                type="button"
+                                disabled={deletingNewsletterId === newsletter.id}
+                                aria-label={`Delete draft ${newsletter.subject}`}
+                                onClick={() => deleteNewsletterFromList(newsletter)}
+                                className="flex min-h-10 items-center justify-center gap-1.5 border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-50"
+                              >
+                                {deletingNewsletterId === newsletter.id ? (
+                                  <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                                ) : (
+                                  <LuTrash2 aria-hidden="true" className="h-3.5 w-3.5" />
+                                )}
+                                Delete
+                              </button>
+                            )}
                           </div>
                         </li>
                       ))}
@@ -3549,6 +3596,74 @@ export default function AdminDashboard() {
                         title="No newsletters yet"
                         description="Create a draft, format your content, preview the email, and send it to active subscribers when ready."
                       />
+                    </div>
+                  )}
+                  {pendingNewsletterDelete && (
+                    <div
+                      className="fixed inset-0 z-[110] flex items-center justify-center bg-stone-950/45 p-4"
+                      onMouseDown={event => {
+                        if (event.target === event.currentTarget && deletingNewsletterId === null) {
+                          setPendingNewsletterDelete(null)
+                          setNewsletterDeleteError('')
+                        }
+                      }}
+                      onKeyDown={event => {
+                        if (event.key === 'Escape' && deletingNewsletterId === null) {
+                          setPendingNewsletterDelete(null)
+                          setNewsletterDeleteError('')
+                        }
+                      }}
+                    >
+                      <section
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="delete-newsletter-title"
+                        aria-describedby="delete-newsletter-description"
+                        className="w-full max-w-md rounded-lg border border-stone-200 bg-white p-5 shadow-2xl"
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-700">
+                            <LuTrash2 aria-hidden="true" className="h-5 w-5" />
+                          </span>
+                          <div className="min-w-0 pt-0.5">
+                            <h2 id="delete-newsletter-title" className="text-base font-semibold text-stone-900">
+                              Delete newsletter draft?
+                            </h2>
+                            <p id="delete-newsletter-description" className="mt-1 break-words text-sm leading-6 text-stone-600">
+                              {`Delete the draft “${pendingNewsletterDelete.subject}”? This cannot be undone.`}
+                            </p>
+                          </div>
+                        </div>
+                        {newsletterDeleteError && (
+                          <p role="alert" className="mt-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                            {newsletterDeleteError}
+                          </p>
+                        )}
+                        <div className="mt-5 flex justify-end gap-2">
+                          <button
+                            type="button"
+                            disabled={deletingNewsletterId !== null}
+                            onClick={() => {
+                              setPendingNewsletterDelete(null)
+                              setNewsletterDeleteError('')
+                            }}
+                            className="min-h-10 rounded border border-stone-300 px-4 text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            disabled={deletingNewsletterId !== null}
+                            onClick={confirmNewsletterListDelete}
+                            className="inline-flex min-h-10 items-center gap-2 rounded bg-red-700 px-4 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-wait disabled:opacity-60"
+                          >
+                            {deletingNewsletterId !== null && (
+                              <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                            )}
+                            Delete draft
+                          </button>
+                        </div>
+                      </section>
                     </div>
                   )}
                 </>
@@ -3766,7 +3881,7 @@ export default function AdminDashboard() {
                 <div className="rounded-xl border border-stone-200/80 bg-white">
                   <EmptyState
                     title={requestSearch ? 'No matching requests' : 'No requests to show'}
-                    description={requestSearch ? 'Try a different name, email, subject, or business.' : 'Customer messages and business enquiries will appear here.'}
+                    description={requestSearch ? 'Try a different name, email, subject, or business.' : 'Customer messages, business enquiries, and reservations will appear here.'}
                   />
                 </div>
               ) : (
