@@ -1,5 +1,8 @@
+from importlib import import_module
 from io import StringIO
+from types import SimpleNamespace
 
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from rest_framework.test import APITestCase
@@ -33,19 +36,15 @@ class SeedProductsCommandTests(APITestCase):
         self.assertIn('Skipped: robusta-blend', output.getvalue())
 
     def test_skip_existing_reactivates_customized_coffee_seedlings(self):
-        seedlings = Product.objects.create(
-            slug='coffee-seedlings',
-            name='Legacy Coffee Seedlings',
-            weight='1 seedling',
-            price=2500,
-            description='Available coffee seedlings.',
-            details='Locally managed catalog entry.',
-            tasting_notes='N/A',
-            roast='N/A',
-            image='https://example.com/seedlings.jpg',
-            image_alt='Coffee seedlings',
-            is_active=False,
-        )
+        seedlings = Product.objects.get(slug='coffee-seedlings')
+        seedlings.name = 'Legacy Coffee Seedlings'
+        seedlings.price = 2500
+        seedlings.description = 'Available coffee seedlings.'
+        seedlings.details = 'Locally managed catalog entry.'
+        seedlings.image = 'https://example.com/seedlings.jpg'
+        seedlings.image_alt = 'Coffee seedlings'
+        seedlings.is_active = False
+        seedlings.save()
         output = StringIO()
 
         call_command('seed_products', skip_existing=True, stdout=output)
@@ -61,6 +60,34 @@ class SeedProductsCommandTests(APITestCase):
             'coffee-seedlings',
             [product['id'] for product in response.data['results']],
         )
+
+    def test_seedlings_data_migration_adds_active_product_to_catalog(self):
+        seedlings = Product.objects.get(slug='coffee-seedlings')
+        self.assertTrue(seedlings.is_active)
+        response = self.client.get('/api/shop/products/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            'coffee-seedlings',
+            [product['id'] for product in response.data['results']],
+        )
+
+    def test_seedlings_data_migration_reactivates_without_overwriting_custom_product(self):
+        seedlings = Product.objects.get(slug='coffee-seedlings')
+        seedlings.name = 'Custom Seedlings'
+        seedlings.price = 2500
+        seedlings.is_active = False
+        seedlings.save()
+        migration = import_module('shop.migrations.0006_ensure_coffee_seedlings_product')
+
+        migration.ensure_seedlings_product(
+            apps,
+            SimpleNamespace(connection=SimpleNamespace(alias='default')),
+        )
+
+        seedlings.refresh_from_db()
+        self.assertTrue(seedlings.is_active)
+        self.assertEqual(seedlings.name, 'Custom Seedlings')
+        self.assertEqual(seedlings.price, 2500)
 
 
 class ShopApiTests(APITestCase):
@@ -86,9 +113,11 @@ class ShopApiTests(APITestCase):
     def test_products_are_public_and_use_frontend_id_field(self):
         response = self.client.get('/api/shop/products/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['results'][0]['id'], self.product.slug)
-        self.assertEqual(response.data['results'][0]['price'], '18')
-        self.assertIsNone(response.data['results'][0]['wholesale_price'])
+        product = next(
+            item for item in response.data['results'] if item['id'] == self.product.slug
+        )
+        self.assertEqual(product['price'], '18')
+        self.assertIsNone(product['wholesale_price'])
 
     def test_product_api_exposes_admin_configured_wholesale_price(self):
         self.product.wholesale_price = 15
@@ -97,7 +126,10 @@ class ShopApiTests(APITestCase):
         response = self.client.get('/api/shop/products/')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['results'][0]['wholesale_price'], '15')
+        product = next(
+            item for item in response.data['results'] if item['id'] == self.product.slug
+        )
+        self.assertEqual(product['wholesale_price'], '15')
 
     def test_review_creation_requires_auth_and_includes_rating(self):
         payload = {'product': self.product.slug, 'rating': 5, 'text': 'Excellent coffee.'}

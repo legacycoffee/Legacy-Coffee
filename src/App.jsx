@@ -32,6 +32,15 @@ const CookiePolicy = lazy(() => import('./pages/CookiePolicy.jsx'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
 const PatrickStoryPage = lazy(() => import('./pages/PatrickStoryPage'))
 
+const githubPagesRedirect = sessionStorage.getItem('gh-pages-redirect')
+if (githubPagesRedirect) {
+  sessionStorage.removeItem('gh-pages-redirect')
+  const redirectUrl = new URL(githubPagesRedirect, window.location.origin)
+  if (redirectUrl.origin === window.location.origin) {
+    window.history.replaceState(null, '', redirectUrl)
+  }
+}
+
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
 
