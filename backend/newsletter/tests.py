@@ -122,6 +122,20 @@ class NewsletterApiTests(APITestCase):
         self.assertEqual(Newsletter.objects.get().created_by, self.staff)
         self.assertEqual(self.client.get('/api/dashboard/newsletters/').data['count'], 1)
 
+    def test_newsletter_draft_requires_a_subject_with_a_clear_message(self):
+        self.client.force_authenticate(self.staff)
+
+        response = self.client.post('/api/dashboard/newsletters/', {
+            'subject': '   ',
+            'content_html': '<p>Fresh coffee.</p>',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data['subject'][0],
+            'Add a subject before saving this newsletter.',
+        )
+
     def test_newsletter_html_sanitizer_removes_unsafe_markup_and_links(self):
         sanitized = sanitize_newsletter_html(
             '<p onclick="alert(1)">Hello</p>'
@@ -129,6 +143,20 @@ class NewsletterApiTests(APITestCase):
         )
 
         self.assertEqual(sanitized, '<p>Hello</p><span>unsafe link</span>')
+
+    def test_newsletter_html_sanitizer_preserves_clickable_safe_links(self):
+        sanitized = sanitize_newsletter_html(
+            '<a href="https://example.com">Website</a>'
+            '<a href="http://example.com">HTTP website</a>'
+            '<a href="mailto:hello@example.com">Email</a>'
+        )
+
+        self.assertEqual(
+            sanitized,
+            '<a href="https://example.com" target="_blank" rel="noopener noreferrer">Website</a>'
+            '<a href="http://example.com" target="_blank" rel="noopener noreferrer">HTTP website</a>'
+            '<a href="mailto:hello@example.com" target="_blank" rel="noopener noreferrer">Email</a>',
+        )
 
     def test_newsletter_html_sanitizer_preserves_safe_image_size_and_alignment(self):
         sanitized = sanitize_newsletter_html(
@@ -139,6 +167,31 @@ class NewsletterApiTests(APITestCase):
         self.assertIn('width:60%', sanitized)
         self.assertIn('margin:16px auto', sanitized)
         self.assertNotIn('position:absolute', sanitized)
+
+    def test_newsletter_html_sanitizer_preserves_cropped_image_height(self):
+        sanitized = sanitize_newsletter_html(
+            '<img src="https://res.cloudinary.com/test/image/upload/coffee.jpg" '
+            'alt="Coffee" style="width:100%;height:220px;object-fit:cover">'
+        )
+
+        self.assertIn('height:220px;object-fit:cover', sanitized)
+
+    def test_newsletter_html_sanitizer_preserves_full_width_recommendation_cards(self):
+        sanitized = sanitize_newsletter_html(
+            '<div class="newsletter-recommendation">'
+            '<img src="https://res.cloudinary.com/test/image/upload/coffee.jpg" '
+            'alt="Coffee" style="width:100%;margin:16px 0">'
+            '<h3 class="newsletter-recommendation-title">Coffee beans</h3>'
+            '<p class="newsletter-recommendation-description">A fresh roast.</p>'
+            '</div>'
+        )
+
+        self.assertIn(
+            'style="display:block;width:100%;max-width:100%;height:auto;margin:16px 0"',
+            sanitized,
+        )
+        self.assertIn('<h3>Coffee beans</h3>', sanitized)
+        self.assertIn('<p>A fresh roast.</p>', sanitized)
 
     @override_settings(RESEND_API_KEY='re_test_key', NEWSLETTER_FROM_EMAIL='Legacy Coffee <news@example.com>')
     @patch('newsletter.views.send_resend_batch')

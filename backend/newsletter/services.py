@@ -36,8 +36,11 @@ class NewsletterHtmlSanitizer(HTMLParser):
         attributes = dict(attrs)
         if tag == 'a':
             href = attributes.get('href', '')
-            if href.startswith(('https://', 'mailto:')):
-                self.output.append(f'<a href="{html.escape(href, quote=True)}" rel="noopener noreferrer">')
+            if href.startswith(('http://', 'https://', 'mailto:')):
+                self.output.append(
+                    f'<a href="{html.escape(href, quote=True)}" '
+                    'target="_blank" rel="noopener noreferrer">'
+                )
                 self.open_tags.append(tag)
                 return
             self.output.append('<span>')
@@ -54,9 +57,21 @@ class NewsletterHtmlSanitizer(HTMLParser):
                 alignment = margin_match.group(1).strip() if margin_match else '16px 0'
                 if alignment not in {'16px 0', '16px auto', '16px 0 16px auto'}:
                     alignment = '16px 0'
+                height_match = re.search(r'(?:^|;)\s*height:\s*(\d{2,4})px\s*(?:;|$)', width)
+                height = min(3000, max(60, int(height_match.group(1)))) if height_match else None
+                object_fit = 'cover' if height and re.search(
+                    r'(?:^|;)\s*object-fit:\s*cover\s*(?:;|$)',
+                    width,
+                ) else None
+                image_style = (
+                    f'display:block;width:{width_percent}%;max-width:100%;'
+                    f'height:{height}px;object-fit:cover;margin:{alignment}'
+                    if object_fit else
+                    f'display:block;width:{width_percent}%;max-width:100%;height:auto;margin:{alignment}'
+                )
                 self.output.append(
                     f'<img src="{html.escape(src, quote=True)}" alt="{alt}" '
-                    f'style="display:block;width:{width_percent}%;max-width:100%;height:auto;margin:{alignment}">'
+                    f'style="{image_style}">'
                 )
             return
 

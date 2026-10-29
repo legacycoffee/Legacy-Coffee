@@ -32,6 +32,13 @@ body {
   pointer-events: none;
 }
 
+.newsletter-editor h1 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
 .newsletter-editor h2 {
   margin: 1.25rem 0 0.5rem;
   font-size: 1.35rem;
@@ -39,8 +46,52 @@ body {
   line-height: 1.35;
 }
 
+.newsletter-editor h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 .newsletter-editor p {
   margin: 0.5rem 0;
+}
+
+.newsletter-editor p:empty {
+  min-height: 1.75em;
+}
+
+.newsletter-editor a {
+  color: #1d4ed8;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.newsletter-editor a:hover {
+  color: #1e40af;
+}
+
+.newsletter-editor .newsletter-recommendation {
+  margin: 1.5rem 0;
+}
+
+.newsletter-editor .newsletter-recommendation-title {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.newsletter-editor .newsletter-recommendation-title:empty::before {
+  color: #a8a29e;
+  content: "Product name";
+  pointer-events: none;
+}
+
+.newsletter-editor .newsletter-recommendation-description:empty::before {
+  color: #a8a29e;
+  content: "Add a short product description";
+  pointer-events: none;
 }
 
 .newsletter-editor ul,
@@ -69,6 +120,16 @@ body {
   max-width: 100%;
   height: auto;
   margin: 1rem 0;
+  cursor: grab;
+}
+
+.newsletter-editor img:active {
+  cursor: grabbing;
+}
+
+.newsletter-editor img[data-newsletter-image-selected="true"] {
+  outline: 2px solid #f58537;
+  outline-offset: 3px;
 }
 
 .home-page h1,

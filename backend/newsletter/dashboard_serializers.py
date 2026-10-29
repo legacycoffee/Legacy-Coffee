@@ -16,6 +16,9 @@ class NewsletterSerializer(serializers.ModelSerializer):
             'id', 'status', 'recipient_count', 'last_error',
             'created_at', 'updated_at', 'sent_at',
         )
+        extra_kwargs = {
+            'subject': {'allow_blank': True},
+        }
 
     def validate_subject(self, value):
         value = value.strip()

@@ -1,20 +1,35 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
+  LuAlignCenter,
+  LuAlignJustify,
+  LuAlignLeft,
+  LuAlignRight,
   LuBold,
+  LuCaseSensitive,
+  LuChevronRight,
+  LuCrop,
+  LuEraser,
+  LuHighlighter,
   LuImage,
   LuItalic,
   LuLink,
   LuList,
   LuListOrdered,
+  LuRedo,
   LuSend,
+  LuStrikethrough,
   LuStore,
+  LuTrash2,
   LuTriangleAlert,
   LuUnderline,
+  LuUndo,
 } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
+import { prepareNewsletterImage } from '../utils/prepareNewsletterImage.js'
 import AnalyticsDashboard from '../components/AnalyticsDashboard.jsx'
+import NewsletterImageEditor from '../components/NewsletterImageEditor.jsx'
 
 const sections = [
   { id: 'Overview', label: 'Overview' },
@@ -26,6 +41,37 @@ const sections = [
   { id: 'Subscribers', label: 'Subscribers' },
   { id: 'Newsletter', label: 'Newsletter' },
   { id: 'Settings', label: 'Settings' },
+]
+
+const newsletterCommonColors = [
+  { name: 'Black', value: '#000000' },
+  { name: 'Dark gray', value: '#444444' },
+  { name: 'Brown', value: '#5c3a1e' },
+  { name: 'Red', value: '#d32f2f' },
+  { name: 'Orange', value: '#f58537' },
+  { name: 'Yellow', value: '#fbc02d' },
+  { name: 'Green', value: '#388e3c' },
+  { name: 'Blue', value: '#1976d2' },
+  { name: 'Purple', value: '#7b1fa2' },
+  { name: 'White', value: '#ffffff' },
+]
+
+const newsletterMoreColors = [
+  '#ffffff', '#f2f2f2', '#d9d9d9', '#bfbfbf', '#a6a6a6', '#808080', '#595959', '#404040', '#262626', '#000000',
+  '#fce4d6', '#f4b183', '#ed7d31', '#c65911', '#843c0c', '#fff2cc', '#ffe699', '#ffd966', '#bf9000', '#7f6000',
+  '#d9ead3', '#b6d7a8', '#93c47d', '#6aa84f', '#38761d', '#d0e0e3', '#a2c4c9', '#76a5af', '#45818e', '#134f5c',
+  '#deebf7', '#bdd7ee', '#9dc3e6', '#5b9bd5', '#2f75b5', '#203864', '#e4dfec', '#ccc1da', '#a78cc2', '#7030a0',
+  '#f4cccc', '#ea9999', '#e06666', '#cc0000', '#990000', '#ead1dc', '#d5a6bd', '#c27ba0', '#a64d79', '#741b47',
+  '#fff5f5', '#ffd6d6', '#ffadad', '#ff8585', '#f55', '#d93636', '#a61e1e', '#701010',
+  '#fff0e6', '#ffd8bf', '#ffb085', '#ff8c42', '#e66b16', '#c75000', '#943900', '#662500',
+  '#fff7cc', '#ffec99', '#ffdf66', '#ffd43b', '#f0b800', '#cc9400', '#997000', '#664b00',
+  '#ebfbee', '#c3fae8', '#96f2d7', '#63e6be', '#38d9a9', '#20a878', '#087f5b', '#05543d',
+  '#e6fcf5', '#c5f6fa', '#99e9f2', '#66d9e8', '#3bc9db', '#1098ad', '#0b7285', '#064c59',
+  '#e7f5ff', '#c5f6fa', '#a5d8ff', '#74c0fc', '#4dabf7', '#228be6', '#1864ab', '#104477',
+  '#f3f0ff', '#e5dbff', '#d0bfff', '#b197fc', '#9775fa', '#7950f2', '#5f3dc4', '#452c91',
+  '#f8f0fc', '#f3d9fa', '#eebefa', '#e599f7', '#da77f2', '#be4bdb', '#862e9c', '#5f1f70',
+  '#fff0f6', '#ffdeeb', '#fcc2d7', '#faa2c1', '#f783ac', '#e64980', '#a61e4d', '#70143a',
+  '#f1f3f5', '#e9ecef', '#dee2e6', '#ced4da', '#adb5bd', '#868e96', '#495057', '#212529',
 ]
 
 const emptyProduct = {
@@ -122,6 +168,147 @@ function SavingButton({ isSaving, savingLabel, children, className, ...props }) 
   )
 }
 
+function NewsletterColorPalette({
+  label,
+  icon: Icon,
+  colors,
+  expandedColors,
+  isExpanded,
+  onToggle,
+  onSelect,
+  disabled,
+  defaultColor,
+  showActiveColor = false,
+}) {
+  const [showMoreColors, setShowMoreColors] = useState(false)
+  const [selectedColor, setSelectedColor] = useState(defaultColor)
+  const paletteRef = useRef(null)
+
+  useEffect(() => {
+    if (!isExpanded) return undefined
+
+    const closeOnOutsideClick = event => {
+      if (!paletteRef.current?.contains(event.target)) onToggle()
+    }
+    const closeOnEscape = event => {
+      if (event.key === 'Escape') onToggle()
+    }
+
+    document.addEventListener('pointerdown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [isExpanded, onToggle])
+
+  const selectColor = color => {
+    setSelectedColor(color)
+    onSelect(color)
+    onToggle()
+  }
+
+  return (
+    <div ref={paletteRef} className="relative inline-flex">
+      <button
+        type="button"
+        disabled={disabled}
+        aria-expanded={isExpanded}
+        aria-haspopup="dialog"
+        aria-label={label}
+        onMouseDown={event => event.preventDefault()}
+        onClick={onToggle}
+        className="flex h-9 items-center justify-center gap-1 border border-transparent px-1.5 text-stone-700 transition hover:border-stone-200 hover:bg-white hover:text-[#8b4a2b] disabled:opacity-50"
+      >
+        <span className="relative inline-flex h-5 w-5 items-center justify-center">
+          <Icon aria-hidden="true" className="h-4 w-4" />
+          {showActiveColor && (
+            <span aria-hidden="true" className="absolute bottom-0 h-0.5 w-3 rounded-sm" style={{ backgroundColor: selectedColor }} />
+          )}
+        </span>
+        <span className="text-[11px] font-medium">{label}</span>
+        <LuChevronRight
+          aria-hidden="true"
+          className={`h-3 w-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+        />
+      </button>
+      {isExpanded && (
+        <section
+          role="dialog"
+          aria-label={`${label} colors`}
+          className="absolute left-0 top-full z-[70] mt-1.5 w-72 max-w-[calc(100vw-2rem)] rounded-md border border-stone-200 bg-white p-3 shadow-xl"
+        >
+          <div className="mb-2 flex items-center justify-between border-b border-stone-100 pb-2">
+            <h2 className="text-xs font-semibold text-stone-800">{label}</h2>
+            <span className="font-mono text-[10px] uppercase text-stone-400">{selectedColor}</span>
+          </div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-stone-500">Theme colors</p>
+          <div role="group" aria-label={`Theme ${label.toLowerCase()} colors`} className="grid grid-cols-10 justify-items-center gap-1">
+            {colors.map(color => (
+              <button
+                key={color.value}
+                type="button"
+                disabled={disabled}
+                title={color.name}
+                aria-label={`${label} ${color.name}`}
+                onMouseDown={event => event.preventDefault()}
+                onClick={() => selectColor(color.value)}
+                className="h-5 w-5 rounded-sm border border-stone-300 transition hover:scale-110 hover:ring-2 hover:ring-[#b86638] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#b86638] disabled:opacity-50"
+                style={{ backgroundColor: color.value }}
+              />
+            ))}
+          </div>
+          <div className="relative mt-2 border-t border-stone-100 pt-1.5">
+            <button
+              type="button"
+              aria-expanded={showMoreColors}
+              aria-haspopup="listbox"
+              onMouseDown={event => event.preventDefault()}
+              onClick={() => setShowMoreColors(current => !current)}
+              className="flex min-h-8 w-full items-center justify-between rounded px-1.5 text-left text-xs font-medium text-stone-700 hover:bg-stone-50"
+            >
+              More colors
+              <LuChevronRight aria-hidden="true" className={`h-3.5 w-3.5 transition-transform ${showMoreColors ? 'rotate-90' : ''}`} />
+            </button>
+            {showMoreColors && (
+              <div
+                role="group"
+                aria-label={`More ${label.toLowerCase()} colors`}
+                className="mt-1 grid max-h-36 grid-cols-10 justify-items-center gap-1 overflow-y-auto rounded border border-stone-200 bg-stone-50 p-2"
+              >
+                {expandedColors.map((value, index) => (
+                  <button
+                    key={`${value}-${index}`}
+                    type="button"
+                    disabled={disabled}
+                    title={value}
+                    aria-label={`${label} ${value}`}
+                    onMouseDown={event => event.preventDefault()}
+                    onClick={() => selectColor(value)}
+                    className="h-4 w-4 rounded-[2px] border border-stone-300 transition hover:scale-125 hover:ring-2 hover:ring-[#b86638] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#b86638] disabled:opacity-50"
+                    style={{ backgroundColor: value }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+          <label className="mt-1 flex min-h-9 cursor-pointer items-center justify-between border-t border-stone-100 pt-2 text-xs font-medium text-stone-700">
+            More colors…
+            <input
+              type="color"
+              aria-label={`Custom ${label.toLowerCase()} color`}
+              disabled={disabled}
+              onMouseDown={event => event.preventDefault()}
+              onChange={event => selectColor(event.target.value)}
+              className="h-6 w-8 cursor-pointer border-0 bg-transparent p-0"
+            />
+          </label>
+        </section>
+      )}
+    </div>
+  )
+}
+
 function SectionHeading({ eyebrow, title, description, children }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
@@ -150,163 +337,517 @@ function SearchBox({ value, onChange, label }) {
   )
 }
 
-function NewsletterImageCropDialog({ src, onClose, onApply, isUploading }) {
-  const [zoom, setZoom] = useState(1)
-  const [horizontalPosition, setHorizontalPosition] = useState(50)
-  const [verticalPosition, setVerticalPosition] = useState(50)
-  const [error, setError] = useState('')
-  const [imageDimensions, setImageDimensions] = useState({ width: 16, height: 9 })
-  const imageAspect = imageDimensions.width / imageDimensions.height
-  const previewWidth = Math.max(100, (9 / 16) * imageAspect * 100) * zoom
-  const previewHeight = Math.max(100, (16 / 9) / imageAspect * 100) * zoom
+function getCaretRangeAtPoint(x, y) {
+  if (document.caretRangeFromPoint) return document.caretRangeFromPoint(x, y)
+  const caret = document.caretPositionFromPoint?.(x, y)
+  if (!caret) return null
+  const range = document.createRange()
+  range.setStart(caret.offsetNode, caret.offset)
+  range.collapse(true)
+  return range
+}
 
-  const applyCrop = async () => {
-    setError('')
-    try {
-      const image = new Image()
-      image.crossOrigin = 'anonymous'
-      image.src = src
-      await new Promise((resolve, reject) => {
-        image.onload = resolve
-        image.onerror = () => reject(new Error('This image could not be loaded for cropping.'))
-      })
+function getNewsletterDropRange(editor, x, y) {
+  const caretRange = getCaretRangeAtPoint(x, y)
+  if (caretRange && editor.contains(caretRange.commonAncestorContainer)) return caretRange
 
-      const outputWidth = 1200
-      const outputHeight = 675
-      const scale = Math.max(outputWidth / image.naturalWidth, outputHeight / image.naturalHeight) * zoom
-      const renderedWidth = image.naturalWidth * scale
-      const renderedHeight = image.naturalHeight * scale
-      const canvas = document.createElement('canvas')
-      canvas.width = outputWidth
-      canvas.height = outputHeight
-      const context = canvas.getContext('2d')
-      if (!context) throw new Error('Your browser could not prepare the crop.')
-      const offsetX = (outputWidth - renderedWidth) * horizontalPosition / 100
-      const offsetY = (outputHeight - renderedHeight) * verticalPosition / 100
-      context.drawImage(image, offsetX, offsetY, renderedWidth, renderedHeight)
+  const target = document.elementFromPoint(x, y)
+  if (!target || !editor.contains(target)) return null
 
-      const blob = await new Promise((resolve, reject) => {
-        canvas.toBlob(result => {
-          if (result) resolve(result)
-          else reject(new Error('The cropped image could not be created.'))
-        }, 'image/jpeg', 0.9)
-      })
-      await onApply(new File([blob], 'newsletter-crop.jpg', { type: 'image/jpeg' }))
-      onClose()
-    } catch (cropError) {
-      setError(cropError.message || 'The image could not be cropped. Try another image.')
-    }
+  const textBlock = target.closest('p, h1, h2, h3, h4, h5, h6, blockquote, li')
+  if (textBlock && editor.contains(textBlock)) {
+    const range = document.createRange()
+    range.selectNodeContents(textBlock)
+    range.collapse(y >= textBlock.getBoundingClientRect().top + textBlock.getBoundingClientRect().height / 2)
+    return range
   }
 
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-stone-950/70 p-4" role="presentation" onMouseDown={event => {
-      if (event.target === event.currentTarget && !isUploading) onClose()
-    }}>
-      <section role="dialog" aria-modal="true" aria-labelledby="newsletter-crop-heading" className="w-full max-w-xl border border-stone-200 bg-white p-5 shadow-2xl sm:p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 id="newsletter-crop-heading" className="text-lg font-bold text-stone-900">Crop image</h2>
-            <p className="mt-1 text-sm text-stone-500">Adjust the zoom and position inside a 16:9 frame.</p>
-          </div>
-          <button type="button" disabled={isUploading} onClick={onClose} className="px-2 py-1 text-sm font-semibold text-stone-600 hover:bg-stone-100">Close</button>
-        </div>
-        <div className="relative mt-5 aspect-video overflow-hidden bg-stone-100">
-          <img
-            src={src}
-            alt="Crop preview"
-            crossOrigin="anonymous"
-            onLoad={event => setImageDimensions({
-              width: event.currentTarget.naturalWidth,
-              height: event.currentTarget.naturalHeight,
-            })}
-            className="absolute max-w-none"
-            style={{
-              width: `${previewWidth}%`,
-              height: `${previewHeight}%`,
-              left: `${(100 - previewWidth) * horizontalPosition / 100}%`,
-              top: `${(100 - previewHeight) * verticalPosition / 100}%`,
-            }}
-          />
-          <div className="pointer-events-none absolute inset-0 border border-white/80 shadow-[inset_0_0_0_1px_rgba(28,25,23,0.2)]" />
-        </div>
-        <div className="mt-5 grid gap-4 sm:grid-cols-3">
-          <label className="text-xs font-semibold text-stone-700">
-            Zoom · {zoom.toFixed(1)}×
-            <input aria-label="Crop zoom" type="range" min="1" max="3" step="0.1" value={zoom} onChange={event => setZoom(Number(event.target.value))} className="mt-2 block w-full accent-[#c77a4b]" />
-          </label>
-          <label className="text-xs font-semibold text-stone-700">
-            Horizontal position
-            <input aria-label="Crop horizontal position" type="range" min="0" max="100" value={horizontalPosition} onChange={event => setHorizontalPosition(Number(event.target.value))} className="mt-2 block w-full accent-[#c77a4b]" />
-          </label>
-          <label className="text-xs font-semibold text-stone-700">
-            Vertical position
-            <input aria-label="Crop vertical position" type="range" min="0" max="100" value={verticalPosition} onChange={event => setVerticalPosition(Number(event.target.value))} className="mt-2 block w-full accent-[#c77a4b]" />
-          </label>
-        </div>
-        {error && <p role="alert" className="mt-4 border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
-        <div className="mt-5 flex justify-end gap-2">
-          <button type="button" disabled={isUploading} onClick={onClose} className="min-h-10 border border-stone-300 px-4 text-sm font-semibold text-stone-700 disabled:opacity-50">Cancel</button>
-          <button type="button" disabled={isUploading} onClick={applyCrop} className="min-h-10 bg-[#593a27] px-4 text-sm font-semibold text-white disabled:opacity-50">
-            {isUploading ? 'Uploading crop…' : 'Apply crop'}
-          </button>
-        </div>
-      </section>
-    </div>
-  )
+  const children = [...editor.children]
+  const nearestChild = children.reduce((nearest, child) => {
+    const bounds = child.getBoundingClientRect()
+    const distance = y < bounds.top ? bounds.top - y : y > bounds.bottom ? y - bounds.bottom : 0
+    return !nearest || distance < nearest.distance ? { child, bounds, distance } : nearest
+  }, null)
+  const range = document.createRange()
+  if (nearestChild) {
+    range.setStartBefore(nearestChild.child)
+    if (y >= nearestChild.bounds.top + nearestChild.bounds.height / 2) {
+      range.setStartAfter(nearestChild.child)
+    }
+  } else {
+    range.selectNodeContents(editor)
+    range.collapse(false)
+  }
+  range.collapse(true)
+  return range
+}
+
+function placeNewsletterImage(editor, image, range) {
+  if (!range || !editor.contains(range.commonAncestorContainer)) {
+    range = document.createRange()
+    range.selectNodeContents(editor)
+    range.collapse(false)
+  }
+  range.deleteContents()
+  range.insertNode(image)
+
+  const textBlock = image.closest('p, h1, h2, h3, h4, h5, h6, blockquote, li')
+  if (!textBlock || textBlock === editor) return null
+
+  const trailingRange = document.createRange()
+  trailingRange.selectNodeContents(textBlock)
+  trailingRange.setStartAfter(image)
+  const followingParagraph = document.createElement('p')
+  followingParagraph.append(trailingRange.extractContents())
+  if (textBlock.tagName === 'LI') {
+    textBlock.append(followingParagraph)
+  } else {
+    textBlock.insertAdjacentElement('afterend', followingParagraph)
+  }
+  return followingParagraph
+}
+
+function normalizeStyleValue(property, value) {
+  const element = document.createElement('span')
+  element.style[property] = value
+  return element.style[property]
+}
+
+function selectionHasStyle(editor, range, property, value) {
+  const expected = normalizeStyleValue(property, value)
+  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT)
+  let selectedText = false
+  let allMatch = true
+  let textNode = walker.nextNode()
+
+  while (textNode) {
+    if (range.intersectsNode(textNode) && textNode.textContent) {
+      selectedText = true
+      const actual = window.getComputedStyle(textNode.parentElement)[property]
+      if (normalizeStyleValue(property, actual) !== expected) allMatch = false
+    }
+    textNode = walker.nextNode()
+  }
+
+  return selectedText && allMatch
 }
 
 function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnly }) {
   const editorRef = useRef(null)
   const selectedImageRef = useRef(null)
+  const editorSelectionRef = useRef(null)
+  const draggedImageRef = useRef(null)
+  const selectImageRef = useRef(null)
+  const publishEditorHtmlRef = useRef(null)
   const [selectedImage, setSelectedImage] = useState(null)
   const [imageAlt, setImageAlt] = useState('')
-  const [cropImage, setCropImage] = useState(null)
+  const [isImageEditorOpen, setIsImageEditorOpen] = useState(false)
   const [imageError, setImageError] = useState('')
+  const [expandedColorPalette, setExpandedColorPalette] = useState('')
+  const [linkModal, setLinkModal] = useState(null)
+  const [activeFormatting, setActiveFormatting] = useState({})
+  const activeFormattingUpdateRef = useRef(null)
+
+  const getEditorHtml = () => {
+    if (!editorRef.current) return ''
+    const copy = editorRef.current.cloneNode(true)
+    copy.querySelectorAll('[data-newsletter-image-selected]').forEach(image => {
+      image.removeAttribute('data-newsletter-image-selected')
+    })
+    copy.querySelectorAll('img').forEach(image => {
+      image.removeAttribute('draggable')
+    })
+    return copy.innerHTML
+  }
 
   const publishEditorHtml = () => {
-    if (editorRef.current) onChange(editorRef.current.innerHTML)
+    if (editorRef.current) onChange(getEditorHtml())
   }
+
+  const updateActiveFormatting = () => {
+    const editor = editorRef.current
+    const selection = window.getSelection()
+    const range = selection?.rangeCount ? selection.getRangeAt(0) : editorSelectionRef.current
+    if (!editor || !range || !editor.contains(range.commonAncestorContainer)) return
+
+    const textNodes = []
+    if (range.collapsed) {
+      const container = range.startContainer
+      const element = container.nodeType === Node.ELEMENT_NODE ? container : container.parentElement
+      if (element) textNodes.push(element)
+    } else {
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT)
+      let node = walker.nextNode()
+      while (node) {
+        if (range.intersectsNode(node) && node.textContent) textNodes.push(node.parentElement)
+        node = walker.nextNode()
+      }
+    }
+
+    const allMatch = predicate => textNodes.length > 0 && textNodes.every(predicate)
+    const hasStyle = (element, expected) => {
+      if (!element) return false
+      const style = window.getComputedStyle(element)
+      return expected(style, element)
+    }
+    const hasHighlight = element => {
+      let current = element
+      while (current && current !== editor) {
+        const { backgroundColor } = window.getComputedStyle(current)
+        if (backgroundColor !== 'transparent'
+          && backgroundColor !== 'rgba(0, 0, 0, 0)'
+          && backgroundColor !== 'rgb(255, 255, 255)') return true
+        current = current.parentElement
+      }
+      return false
+    }
+
+    const activeBlock = textNodes[0]?.closest('p, h1, h2, h3, blockquote, li, div') || editor
+    const textAlign = window.getComputedStyle(activeBlock).textAlign
+    setActiveFormatting({
+      bold: allMatch(element => hasStyle(element, style => Number.parseInt(style.fontWeight, 10) >= 600)),
+      italic: allMatch(element => hasStyle(element, style => style.fontStyle === 'italic')),
+      underline: allMatch(element => hasStyle(element, style => style.textDecorationLine.includes('underline'))),
+      strikeThrough: allMatch(element => hasStyle(element, style => style.textDecorationLine.includes('line-through'))),
+      highlight: allMatch(hasHighlight),
+      insertUnorderedList: Boolean(textNodes[0]?.closest('ul')),
+      insertOrderedList: Boolean(textNodes[0]?.closest('ol')),
+      justifyLeft: textAlign === 'left' || textAlign === 'start',
+      justifyCenter: textAlign === 'center',
+      justifyRight: textAlign === 'right' || textAlign === 'end',
+      justifyFull: textAlign === 'justify',
+    })
+  }
+  const captureEditorSelection = () => {
+    const selection = window.getSelection()
+    const range = selection?.rangeCount ? selection.getRangeAt(0) : null
+    if (range && editorRef.current?.contains(range.commonAncestorContainer)) {
+      editorSelectionRef.current = range.cloneRange()
+      updateActiveFormatting()
+    }
+  }
+
+  useEffect(() => {
+    activeFormattingUpdateRef.current = updateActiveFormatting
+    const handleSelectionChange = () => activeFormattingUpdateRef.current?.()
+    document.addEventListener('selectionchange', handleSelectionChange)
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange)
+      activeFormattingUpdateRef.current = null
+    }
+  }, [])
+
+  const restoreEditorSelection = () => {
+    const editor = editorRef.current
+    const range = editorSelectionRef.current?.cloneRange()
+    if (!editor || !range || !editor.contains(range.commonAncestorContainer)) return null
+
+    editor.focus()
+    const selection = window.getSelection()
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+    return range
+  }
+
+  const applyInlineStyle = (property, value, command) => {
+    const editor = editorRef.current
+    const range = restoreEditorSelection()
+    if (!editor || !range) return
+
+    if (range.collapsed) {
+      document.execCommand(command, false, value)
+      captureEditorSelection()
+      publishEditorHtml()
+      return
+    }
+
+    const shouldClear = selectionHasStyle(editor, range, property, value)
+    const content = range.extractContents()
+    const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT)
+    const selectedTextNodes = []
+    let textNode = walker.nextNode()
+    while (textNode) {
+      if (textNode.textContent) selectedTextNodes.push(textNode)
+      textNode = walker.nextNode()
+    }
+
+    selectedTextNodes.forEach(node => {
+      const wrapper = document.createElement('span')
+      wrapper.style[property] = shouldClear
+      ? property === 'backgroundColor' ? '#ffffff' : property === 'color' ? '#5c3a1e' : 'inherit'
+      : value
+      wrapper.append(node.cloneNode())
+      node.replaceWith(wrapper)
+    })
+
+    const firstNode = content.firstChild
+    const lastNode = content.lastChild
+    range.insertNode(content)
+    if (firstNode && lastNode) {
+      range.setStartBefore(firstNode)
+      range.setEndAfter(lastNode)
+    }
+
+    const selection = window.getSelection()
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+    editorSelectionRef.current = range.cloneRange()
+    updateActiveFormatting()
+    publishEditorHtml()
+  }
+
+  const applyBlockStyle = tagName => {
+    const range = restoreEditorSelection()
+    if (!range) return
+
+    const startElement = range.startContainer.nodeType === Node.ELEMENT_NODE
+      ? range.startContainer
+      : range.startContainer.parentElement
+    const currentBlock = startElement?.closest('p, h1, h2, h3, blockquote, li')
+    const nextBlock = currentBlock?.tagName.toLowerCase() === tagName ? 'p' : tagName
+    document.execCommand('formatBlock', false, nextBlock)
+    captureEditorSelection()
+    publishEditorHtml()
+  }
+
+  useEffect(() => {
+    const handlePointerMove = event => {
+      const drag = draggedImageRef.current
+      if (!drag || drag.pointerId !== event.pointerId) return
+
+      const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY)
+      if (!drag.preview && distance < 5) return
+
+      if (!drag.preview) {
+        const preview = drag.image.cloneNode(false)
+        const bounds = drag.image.getBoundingClientRect()
+        preview.removeAttribute('data-newsletter-image-selected')
+        preview.style.position = 'fixed'
+        preview.style.zIndex = '9999'
+        preview.style.pointerEvents = 'none'
+        preview.style.opacity = '0.8'
+        preview.style.width = `${bounds.width}px`
+        preview.style.height = `${bounds.height}px`
+        preview.style.maxWidth = 'none'
+        preview.style.margin = '0'
+        preview.style.left = `${event.clientX + 12}px`
+        preview.style.top = `${event.clientY + 12}px`
+        document.body.append(preview)
+        drag.preview = preview
+        drag.image.style.opacity = '0.35'
+      } else {
+        drag.preview.style.left = `${event.clientX + 12}px`
+        drag.preview.style.top = `${event.clientY + 12}px`
+      }
+      event.preventDefault()
+    }
+
+    const finishPointerDrag = (event, shouldDrop) => {
+      const drag = draggedImageRef.current
+      if (!drag || drag.pointerId !== event.pointerId) return
+      draggedImageRef.current = null
+      drag.preview?.remove()
+      drag.image.style.removeProperty('opacity')
+
+      if (!drag.preview || !shouldDrop) return
+      const editor = editorRef.current
+      if (!editor) return
+
+      let range = getNewsletterDropRange(editor, event.clientX, event.clientY)
+      if (!range) return
+      if (drag.image.contains(range.startContainer)) {
+        const bounds = drag.image.getBoundingClientRect()
+        range = document.createRange()
+        if (event.clientY < bounds.top + bounds.height / 2) {
+          range.setStartBefore(drag.image)
+        } else {
+          range.setStartAfter(drag.image)
+        }
+        range.collapse(true)
+      }
+
+      drag.image.remove()
+      placeNewsletterImage(editor, drag.image, range)
+      const caret = document.createRange()
+      caret.setStartAfter(drag.image)
+      caret.collapse(true)
+      const selection = window.getSelection()
+      selection?.removeAllRanges()
+      selection?.addRange(caret)
+      editorSelectionRef.current = caret.cloneRange()
+      editor.focus()
+      selectImageRef.current?.({ target: drag.image })
+      publishEditorHtmlRef.current?.()
+    }
+
+    const handlePointerUp = event => finishPointerDrag(event, true)
+    const handlePointerCancel = event => finishPointerDrag(event, false)
+    document.addEventListener('pointermove', handlePointerMove, { passive: false })
+    document.addEventListener('pointerup', handlePointerUp)
+    document.addEventListener('pointercancel', handlePointerCancel)
+    return () => {
+      document.removeEventListener('pointermove', handlePointerMove)
+      document.removeEventListener('pointerup', handlePointerUp)
+      document.removeEventListener('pointercancel', handlePointerCancel)
+      draggedImageRef.current?.preview?.remove()
+      draggedImageRef.current?.image.style.removeProperty('opacity')
+      draggedImageRef.current = null
+    }
+  }, [readOnly])
 
   const selectImage = event => {
     const target = event.target
     if (!(target instanceof HTMLImageElement) || !editorRef.current?.contains(target)) {
+      selectedImageRef.current?.removeAttribute('data-newsletter-image-selected')
       selectedImageRef.current = null
       setSelectedImage(null)
       setImageAlt('')
       return
     }
+    selectedImageRef.current?.removeAttribute('data-newsletter-image-selected')
+    target.setAttribute('data-newsletter-image-selected', 'true')
+    target.draggable = false
     selectedImageRef.current = target
+    const editorStyle = window.getComputedStyle(editorRef.current)
+    const editorWidth = editorRef.current.clientWidth
+      - Number.parseFloat(editorStyle.paddingLeft)
+      - Number.parseFloat(editorStyle.paddingRight)
+    const computedStyle = window.getComputedStyle(target)
+    const align = computedStyle.marginLeft === 'auto' && computedStyle.marginRight === 'auto'
+      ? 'center'
+      : computedStyle.marginLeft === 'auto'
+        ? 'right'
+        : 'left'
+    const textFlow = ['left', 'right'].includes(computedStyle.float) ? computedStyle.float : 'none'
+    const bounds = target.getBoundingClientRect()
+    const naturalHeight = target.naturalWidth
+      ? bounds.width * target.naturalHeight / target.naturalWidth
+      : bounds.height
+    const explicitHeight = Number.parseFloat(target.style.height)
+    const heightLimit = Math.max(60, Math.round(naturalHeight))
     setSelectedImage({
       alt: target.alt || '',
-      width: Math.round(Number.parseFloat(target.style.width) || 100),
       src: target.src,
+      width: Math.min(100, Math.max(10, Math.round(bounds.width / editorWidth * 100))),
+      height: Math.max(60, Math.round(Number.isFinite(explicitHeight) ? explicitHeight : naturalHeight)),
+      heightLimit,
+      heightAdjusted: Number.isFinite(explicitHeight) && target.style.height !== 'auto',
+      align,
+      textFlow,
     })
     setImageAlt(target.alt || '')
     setImageError('')
   }
 
   useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
+    selectImageRef.current = selectImage
+    publishEditorHtmlRef.current = publishEditorHtml
+  })
+
+  useEffect(() => {
+    if (editorRef.current && getEditorHtml() !== value) {
+      selectedImageRef.current = null
+      setSelectedImage(null)
       editorRef.current.innerHTML = value
     }
   }, [value])
 
-  const insertImage = async event => {
+  const insertImage = async (event, asRecommendation = false) => {
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file) return
 
+    const editor = editorRef.current
+    if (!editor) return
+    let insertionRange = editorSelectionRef.current?.cloneRange() || null
+    if (!insertionRange || !editor.contains(insertionRange.commonAncestorContainer)) {
+      const currentSelection = window.getSelection()
+      const currentRange = currentSelection?.rangeCount ? currentSelection.getRangeAt(0) : null
+      insertionRange = currentRange && editor.contains(currentRange.commonAncestorContainer)
+        ? currentRange.cloneRange()
+        : document.createRange()
+      if (!currentRange || !editor.contains(currentRange.commonAncestorContainer)) {
+        insertionRange.selectNodeContents(editor)
+        insertionRange.collapse(false)
+      }
+    }
+
     try {
       const imageUrl = await onImageUpload(file)
-      editorRef.current?.focus()
-      const previousImages = new Set(editorRef.current?.querySelectorAll('img') || [])
-      document.execCommand('insertHTML', false, `<img src="${imageUrl}" alt="" style="display:block;width:100%;max-width:100%;height:auto;margin:16px 0">`)
-      const insertedImage = Array.from(editorRef.current?.querySelectorAll('img') || [])
-        .find(image => !previousImages.has(image))
-      if (insertedImage) selectImage({ target: insertedImage })
+      if (!editor.isConnected) return
+      if (!editor.contains(insertionRange.commonAncestorContainer)) {
+        insertionRange = document.createRange()
+        insertionRange.selectNodeContents(editor)
+        insertionRange.collapse(false)
+      }
+
+      const image = document.createElement('img')
+      image.alt = ''
+      image.draggable = false
+      image.style.cssText = 'display:block;width:100%;max-width:100%;height:auto;margin:16px 0'
+      image.addEventListener('load', () => {
+        if (selectedImageRef.current === image) selectImage({ target: image })
+      }, { once: true })
+      image.src = imageUrl
+      let followingParagraph = placeNewsletterImage(editor, image, insertionRange)
+      if (!followingParagraph) {
+        followingParagraph = document.createElement('p')
+        image.insertAdjacentElement('afterend', followingParagraph)
+      }
+
+      let caretParagraph = followingParagraph
+      if (asRecommendation) {
+        const imageBlock = image.closest('p, h1, h2, h3, h4, h5, h6, blockquote, li')
+        const recommendation = document.createElement('div')
+        recommendation.className = 'newsletter-recommendation'
+        recommendation.append(image)
+
+        const title = document.createElement('h3')
+        title.className = 'newsletter-recommendation-title'
+        recommendation.append(title)
+
+        const description = document.createElement('p')
+        description.className = 'newsletter-recommendation-description'
+        recommendation.append(description)
+
+        caretParagraph = document.createElement('p')
+        caretParagraph.className = 'newsletter-recommendation-continuation'
+        recommendation.append(caretParagraph)
+
+        if (imageBlock) {
+          imageBlock.insertAdjacentElement('afterend', recommendation)
+          if (!imageBlock.textContent.trim() && imageBlock.children.length === 0) imageBlock.remove()
+        } else {
+          image.insertAdjacentElement('afterend', recommendation)
+        }
+      }
+
+      const caret = document.createRange()
+      caret.setStart(caretParagraph, 0)
+      caret.collapse(true)
+      const selection = window.getSelection()
+      selection?.removeAllRanges()
+      selection?.addRange(caret)
+      editorSelectionRef.current = caret.cloneRange()
+      editor.focus()
+      selectImage({ target: image })
       publishEditorHtml()
-    } catch {
-      // The parent displays the upload error.
+    } catch (error) {
+      setImageError(error.message)
+    }
+  }
+
+  const beginImageDrag = event => {
+    const image = event.target instanceof HTMLImageElement ? event.target : null
+    if (!image || readOnly || event.button !== 0 || !editorRef.current?.contains(image)) return
+    event.preventDefault()
+    selectImage({ target: image })
+    draggedImageRef.current = {
+      image,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      preview: null,
     }
   }
 
@@ -317,67 +858,268 @@ function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnl
     if (!button) return
 
     if (button.dataset.action === 'highlight') {
-      const selection = window.getSelection()
-      if (!selection || selection.isCollapsed || !editorRef.current?.contains(selection.anchorNode)) return
-
-      const range = selection.getRangeAt(0)
-      const mark = document.createElement('mark')
-      mark.append(range.extractContents())
-      range.insertNode(mark)
-      selection.removeAllRanges()
+      applyInlineStyle('backgroundColor', '#fff1a8', 'hiliteColor')
     } else if (button.dataset.action === 'link') {
-      const url = window.prompt('Enter the link URL (https:// or mailto:)')
-      if (!url) return
-      editorRef.current?.focus()
-      document.execCommand('createLink', false, url)
+      const range = editorSelectionRef.current?.cloneRange()
+      if (!range || !editorRef.current?.contains(range.commonAncestorContainer)) {
+        setLinkModal({ url: '', text: '', error: '' })
+        return
+      }
+
+      const selectedText = range.toString()
+      const startElement = range.startContainer.nodeType === Node.ELEMENT_NODE
+        ? range.startContainer
+        : range.startContainer.parentElement
+      const existingLink = startElement?.closest('a')
+      setLinkModal({
+        url: existingLink?.getAttribute('href') || '',
+        text: selectedText || existingLink?.textContent || '',
+        error: '',
+      })
+    } else if (button.dataset.action === 'clear-formatting') {
+      restoreEditorSelection()
+      document.execCommand('removeFormat')
+      captureEditorSelection()
+      publishEditorHtml()
+    } else if (button.dataset.command === 'formatBlock') {
+      applyBlockStyle(button.dataset.argument)
     } else {
-      editorRef.current?.focus()
+      restoreEditorSelection()
       document.execCommand(button.dataset.command, false, button.dataset.argument || null)
+      captureEditorSelection()
+      publishEditorHtml()
+    }
+  }
+
+  const applyNewsletterLink = event => {
+    event.preventDefault()
+    const urlInput = linkModal?.url.trim()
+    if (!urlInput) {
+      setLinkModal(current => ({ ...current, error: 'Enter a web address or email link.' }))
+      return
     }
 
+    const href = /^[\w.-]+\.[a-z]{2,}(?:[/:?#][^\s]*)?$/i.test(urlInput)
+      ? `https://${urlInput}`
+      : urlInput
+    let parsedUrl
+    try {
+      parsedUrl = new URL(href)
+    } catch {
+      setLinkModal(current => ({ ...current, error: 'Enter a valid web address or email link.' }))
+      return
+    }
+    if (!['http:', 'https:', 'mailto:'].includes(parsedUrl.protocol)) {
+      setLinkModal(current => ({ ...current, error: 'Links must use https, http, or mailto.' }))
+      return
+    }
+
+    const range = restoreEditorSelection()
+    const editor = editorRef.current
+    if (!range || !editor) {
+      setLinkModal(current => ({ ...current, error: 'Select text in the newsletter before adding a link.' }))
+      return
+    }
+
+    const enteredText = linkModal.text.trim()
+    if (!range.collapsed && enteredText && enteredText !== range.toString()) {
+      range.deleteContents()
+      const textNode = document.createTextNode(enteredText)
+      range.insertNode(textNode)
+      range.selectNodeContents(textNode)
+      const selection = window.getSelection()
+      selection?.removeAllRanges()
+      selection?.addRange(range)
+    }
+
+    const startElement = range.startContainer.nodeType === Node.ELEMENT_NODE
+      ? range.startContainer
+      : range.startContainer.parentElement
+    const existingLink = startElement?.closest('a')
+    if (existingLink && editor.contains(existingLink)) {
+      existingLink.href = href
+      existingLink.target = '_blank'
+      existingLink.rel = 'noopener noreferrer'
+    } else if (range.collapsed) {
+      const text = linkModal.text.trim() || href
+      const anchor = document.createElement('a')
+      anchor.href = href
+      anchor.target = '_blank'
+      anchor.rel = 'noopener noreferrer'
+      anchor.textContent = text
+      range.insertNode(anchor)
+      range.setStartAfter(anchor)
+      range.collapse(true)
+    } else {
+      document.execCommand('createLink', false, href)
+      const selection = window.getSelection()
+      const selectedRange = selection?.rangeCount ? selection.getRangeAt(0) : range
+      const anchor = (selectedRange.startContainer.nodeType === Node.ELEMENT_NODE
+        ? selectedRange.startContainer
+        : selectedRange.startContainer.parentElement)?.closest('a')
+      if (anchor && editor.contains(anchor)) {
+        anchor.target = '_blank'
+        anchor.rel = 'noopener noreferrer'
+      }
+    }
+
+    const selection = window.getSelection()
+    if (selection?.rangeCount) editorSelectionRef.current = selection.getRangeAt(0).cloneRange()
+    else editorSelectionRef.current = range.cloneRange()
+    setLinkModal(null)
+    captureEditorSelection()
     publishEditorHtml()
   }
 
-  const setImageAlignment = alignment => {
-    const image = selectedImageRef.current
-    if (!image?.isConnected) return
-    image.style.display = 'block'
-    image.style.margin = alignment === 'center'
-      ? '16px auto'
-      : alignment === 'right'
-        ? '16px 0 16px auto'
-        : '16px 0'
-    publishEditorHtml()
-  }
-
-  const setImageWidth = width => {
-    const image = selectedImageRef.current
-    if (!image?.isConnected) return
-    image.style.width = `${width}%`
-    image.style.maxWidth = '100%'
-    image.style.height = 'auto'
-    setSelectedImage(current => current ? { ...current, width } : current)
-    publishEditorHtml()
-  }
-
-  const moveSelectedImage = direction => {
-    const image = selectedImageRef.current
-    if (!image?.isConnected) return
-    const block = image.closest('p, div, blockquote') || image
-    const sibling = direction === 'up' ? block.previousElementSibling : block.nextElementSibling
-    if (!sibling || sibling.parentElement !== block.parentElement) return
-    if (direction === 'up') sibling.before(block)
-    else sibling.after(block)
-    publishEditorHtml()
-  }
-
-  const applyCrop = async file => {
+  const saveImageEdits = async (file, dimensions) => {
     const imageUrl = await onImageUpload(file)
     const image = selectedImageRef.current
     if (!image?.isConnected) throw new Error('The selected image is no longer in the newsletter.')
-    image.src = imageUrl
-    setSelectedImage(current => current ? { ...current, src: imageUrl } : current)
+    const previousStyle = window.getComputedStyle(image)
+    const updatedImage = document.createElement('img')
+    updatedImage.src = imageUrl
+    updatedImage.alt = image.alt
+    updatedImage.setAttribute('width', String(dimensions.width))
+    updatedImage.setAttribute('height', String(dimensions.height))
+    updatedImage.setAttribute('data-newsletter-image-selected', 'true')
+    updatedImage.draggable = false
+    updatedImage.style.display = 'block'
+    updatedImage.style.width = `${selectedImage?.width || 100}%`
+    updatedImage.style.maxWidth = '100%'
+    updatedImage.style.height = 'auto'
+    updatedImage.style.aspectRatio = `${dimensions.width} / ${dimensions.height}`
+    updatedImage.style.objectFit = 'fill'
+    updatedImage.style.margin = previousStyle.margin
+    updatedImage.style.float = previousStyle.float
+    const replacementHeightLimit = Math.max(60, Math.round(
+      selectedImage?.width
+        ? editorRef.current.clientWidth * selectedImage.width / 100 * dimensions.height / dimensions.width
+        : dimensions.height,
+    ))
+    const replacementHeight = selectedImage?.heightAdjusted
+      ? Math.min(selectedImage.height, replacementHeightLimit)
+      : replacementHeightLimit
+    if (selectedImage?.heightAdjusted) {
+      updatedImage.style.height = `${replacementHeight}px`
+      updatedImage.style.objectFit = 'cover'
+    }
+    image.replaceWith(updatedImage)
+    selectedImageRef.current = updatedImage
+    setSelectedImage(current => current ? {
+      ...current,
+      src: imageUrl,
+      ratio: dimensions.width / dimensions.height,
+      height: replacementHeight,
+      heightLimit: replacementHeightLimit,
+      heightAdjusted: current.heightAdjusted,
+    } : current)
     publishEditorHtml()
+  }
+
+  const updateImageWidth = width => {
+    const image = selectedImageRef.current
+    if (!image) return
+    const maxWidth = selectedImage?.textFlow === 'none' ? 100 : 75
+    const nextWidth = Math.min(width, maxWidth)
+    image.style.width = `${nextWidth}%`
+    image.style.maxWidth = '100%'
+    if (!selectedImage?.heightAdjusted) image.style.height = 'auto'
+    setSelectedImage(current => current ? { ...current, width: nextWidth } : current)
+    publishEditorHtml()
+  }
+
+  const updateImageHeight = height => {
+    const image = selectedImageRef.current
+    if (!image) return
+    image.style.height = `${height}px`
+    image.style.objectFit = 'cover'
+    setSelectedImage(current => current ? {
+      ...current,
+      height,
+      heightAdjusted: true,
+    } : current)
+    publishEditorHtml()
+  }
+
+  const resetImageHeight = () => {
+    const image = selectedImageRef.current
+    if (!image) return
+    image.style.height = 'auto'
+    image.style.removeProperty('object-fit')
+    setSelectedImage(current => current ? {
+      ...current,
+      height: current.heightLimit,
+      heightAdjusted: false,
+    } : current)
+    publishEditorHtml()
+  }
+
+  const alignSelectedImage = align => {
+    const image = selectedImageRef.current
+    if (!image) return
+    image.style.float = 'none'
+    image.style.margin = align === 'center'
+      ? '16px auto'
+      : align === 'right'
+        ? '16px 0 16px auto'
+        : '16px auto 16px 0'
+    setSelectedImage(current => current ? { ...current, align, textFlow: 'none' } : current)
+    publishEditorHtml()
+  }
+
+  const setImageTextFlow = textFlow => {
+    const image = selectedImageRef.current
+    if (!image) return
+    const width = Math.min(selectedImage?.width || 45, 75)
+    image.style.float = textFlow
+    image.style.width = textFlow === 'none' ? `${selectedImage?.width || width}%` : `${width}%`
+    image.style.maxWidth = '100%'
+    image.style.height = 'auto'
+    image.style.margin = textFlow === 'left'
+      ? '4px 16px 12px 0'
+      : textFlow === 'right'
+        ? '4px 0 12px 16px'
+        : '16px 0'
+    setSelectedImage(current => current ? {
+      ...current,
+      textFlow,
+      width: textFlow === 'none' ? current.width : width,
+      align: textFlow === 'right' ? 'right' : 'left',
+    } : current)
+    publishEditorHtml()
+  }
+
+  const deleteSelectedImage = () => {
+    selectedImageRef.current?.remove()
+    selectedImageRef.current = null
+    setSelectedImage(null)
+    setIsImageEditorOpen(false)
+    publishEditorHtml()
+  }
+
+  const handleEditorClick = event => {
+    const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null
+    if (anchor && editorRef.current?.contains(anchor)) {
+      let destination
+      try {
+        destination = new URL(anchor.href)
+      } catch {
+        return
+      }
+
+      if (['http:', 'https:'].includes(destination.protocol)) {
+        event.preventDefault()
+        window.open(destination.href, '_blank', 'noopener,noreferrer')
+        return
+      }
+      if (destination.protocol === 'mailto:') {
+        event.preventDefault()
+        window.location.assign(destination.href)
+        return
+      }
+    }
+
+    selectImage(event)
   }
 
   const tools = [
@@ -385,42 +1127,216 @@ function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnl
     { label: 'Italic', icon: LuItalic, command: 'italic' },
     { label: 'Underline', icon: LuUnderline, command: 'underline' },
     { label: 'Highlight', text: 'H', action: 'highlight' },
+    { label: 'Strikethrough', icon: LuStrikethrough, command: 'strikeThrough' },
     { label: 'Bulleted list', icon: LuList, command: 'insertUnorderedList' },
     { label: 'Numbered list', icon: LuListOrdered, command: 'insertOrderedList' },
-    { label: 'Heading', text: 'H2', command: 'formatBlock', argument: 'h2' },
-    { label: 'Quote', text: '“ ”', command: 'formatBlock', argument: 'blockquote' },
+    { label: 'Align left', icon: LuAlignLeft, command: 'justifyLeft' },
+    { label: 'Center', icon: LuAlignCenter, command: 'justifyCenter' },
+    { label: 'Align right', icon: LuAlignRight, command: 'justifyRight' },
+    { label: 'Justify', icon: LuAlignJustify, command: 'justifyFull' },
     { label: 'Link', icon: LuLink, action: 'link' },
+    { label: 'Undo', icon: LuUndo, command: 'undo' },
+    { label: 'Redo', icon: LuRedo, command: 'redo' },
   ]
 
   return (
-    <div className="overflow-hidden border border-stone-200 bg-white">
+    <div className="border border-stone-200 bg-white">
       <div className="flex flex-wrap gap-1 border-b border-stone-200 bg-stone-50 p-2" aria-label="Newsletter formatting tools" onClick={handleToolbarClick}>
-        {tools.map(({ label, icon: Icon, text, command, argument, action }) => (
-          <button
-            key={label}
-            type="button"
-            title={label}
-            aria-label={label}
-            data-command={command}
-            data-argument={argument}
-            data-action={action}
-            onMouseDown={event => event.preventDefault()}
-            className="flex h-9 min-w-9 items-center justify-center gap-1 border border-transparent px-2 text-sm font-semibold text-stone-700 transition hover:border-stone-200 hover:bg-white hover:text-[#8b4a2b] focus-visible:outline-2 focus-visible:outline-[#b86638]"
-          >
-            {Icon ? <Icon aria-hidden="true" className="h-4 w-4" /> : text}
-          </button>
-        ))}
+        <select
+          aria-label="Text style"
+          defaultValue=""
+          disabled={readOnly}
+          onMouseDown={captureEditorSelection}
+          onChange={event => {
+            if (event.target.value) applyBlockStyle(event.target.value)
+            event.target.value = ''
+          }}
+          className="h-9 max-w-36 border border-stone-200 bg-white px-2 text-xs text-stone-700 outline-none focus:border-[#b86638]"
+        >
+          <option value="" disabled>Text style</option>
+          <option value="p">Paragraph</option>
+          <option value="h1">Title</option>
+          <option value="h2">Heading 1</option>
+          <option value="h3">Heading 2</option>
+          <option value="blockquote">Quote</option>
+        </select>
+        <NewsletterColorPalette
+          label="Text color"
+          icon={LuCaseSensitive}
+          colors={newsletterCommonColors}
+          expandedColors={newsletterMoreColors}
+          isExpanded={expandedColorPalette === 'text'}
+          onToggle={() => setExpandedColorPalette(current => current === 'text' ? '' : 'text')}
+          onSelect={color => applyInlineStyle('color', color, 'foreColor')}
+          disabled={readOnly}
+          defaultColor="#5c3a1e"
+          showActiveColor
+        />
+        <NewsletterColorPalette
+          label="Highlight"
+          icon={LuHighlighter}
+          colors={[
+            { name: 'Light yellow', value: '#fff1a8' },
+            { name: 'Light orange', value: '#fce4d6' },
+            { name: 'Light red', value: '#f4cccc' },
+            { name: 'Light green', value: '#d9ead3' },
+            { name: 'Light blue', value: '#cfe2f3' },
+            { name: 'Light purple', value: '#d9d2e9' },
+            { name: 'White', value: '#ffffff' },
+          ]}
+          expandedColors={newsletterMoreColors}
+          isExpanded={expandedColorPalette === 'highlight'}
+          onToggle={() => setExpandedColorPalette(current => current === 'highlight' ? '' : 'highlight')}
+          onSelect={color => applyInlineStyle('backgroundColor', color, 'hiliteColor')}
+          disabled={readOnly}
+          defaultColor="#fff1a8"
+        />
+        {tools.map(({ label, icon: Icon, text, command, argument, action }) => {
+          const isToggle = ['bold', 'italic', 'underline', 'strikeThrough', 'insertUnorderedList', 'insertOrderedList', 'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'].includes(command)
+            || action === 'highlight'
+          const isActive = Boolean(activeFormatting[command || action])
+          return (
+            <button
+              key={label}
+              type="button"
+              disabled={readOnly}
+              title={label}
+              aria-label={label}
+              aria-pressed={isToggle ? isActive : undefined}
+              data-command={command}
+              data-argument={argument}
+              data-action={action}
+              onMouseDown={event => event.preventDefault()}
+              className={`flex h-9 min-w-9 items-center justify-center gap-1 border px-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-[#b86638] ${
+                isActive
+                  ? 'border-[#b86638] bg-orange-100 text-[#8b4a2b] shadow-inner'
+                  : 'border-transparent text-stone-700 hover:border-stone-200 hover:bg-white hover:text-[#8b4a2b]'
+              }`}
+            >
+              {Icon ? <Icon aria-hidden="true" className="h-4 w-4" /> : text}
+            </button>
+          )
+        })}
+        <button
+          type="button"
+          disabled={readOnly}
+          title="Clear text formatting"
+          aria-label="Clear text formatting"
+          data-action="clear-formatting"
+          onMouseDown={event => event.preventDefault()}
+          className="flex h-9 min-w-9 items-center justify-center border border-transparent px-2 text-sm text-stone-700 transition hover:border-stone-200 hover:bg-white hover:text-[#8b4a2b]"
+        >
+          <LuEraser aria-hidden="true" className="h-4 w-4" />
+        </button>
         <label
           onMouseDown={event => event.preventDefault()}
-          className={`flex h-9 min-w-9 items-center justify-center gap-1 border border-transparent px-2 text-sm font-semibold text-stone-700 transition hover:border-stone-200 hover:bg-white hover:text-[#8b4a2b] focus-within:outline-2 focus-within:outline-[#b86638] ${isUploading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
+          className={`flex h-9 min-w-9 items-center justify-center gap-1 border border-transparent px-2 text-sm font-semibold text-stone-700 transition hover:border-stone-200 hover:bg-white hover:text-[#8b4a2b] focus-within:outline-2 focus-within:outline-[#b86638] ${isUploading || readOnly ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
         >
           <LuImage aria-hidden="true" className="h-4 w-4" />
-          <span className="hidden text-xs sm:inline">{isUploading ? 'Uploading…' : 'Image'}</span>
-          <input aria-label="Add image" disabled={isUploading} type="file" accept="image/jpeg,image/png,image/webp" onChange={insertImage} className="sr-only" />
+          <span className="hidden text-xs sm:inline">{isUploading ? 'Preparing & uploading…' : 'Image'}</span>
+          <input aria-label="Add image" disabled={isUploading || readOnly} type="file" accept="image/jpeg,image/png,image/webp" onChange={insertImage} className="sr-only" />
+        </label>
+        <label
+          title="Add a full-width recommendation image with editable title and description"
+          onMouseDown={event => event.preventDefault()}
+          className={`flex h-9 items-center justify-center gap-1 border border-transparent px-2 text-sm font-semibold text-stone-700 transition hover:border-stone-200 hover:bg-white hover:text-[#8b4a2b] ${isUploading || readOnly ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
+        >
+          <LuImage aria-hidden="true" className="h-4 w-4" />
+          <span className="text-xs">Recommendation</span>
+          <input
+            aria-label="Add recommendation"
+            disabled={isUploading || readOnly}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={event => insertImage(event, true)}
+            className="sr-only"
+          />
         </label>
       </div>
       {selectedImage && !readOnly && (
-        <div className="flex flex-wrap items-end gap-3 border-b border-stone-200 bg-white px-3 py-3">
+        <div className="flex flex-wrap items-end gap-3 border-b border-stone-200 bg-orange-50/60 px-3 py-3">
+          <div className="flex min-w-48 flex-1 items-center gap-2">
+            <label htmlFor="newsletter-image-width" className="shrink-0 text-xs font-semibold text-stone-600">Image width</label>
+            <input
+              id="newsletter-image-width"
+              aria-label="Image width"
+              type="range"
+              min="10"
+              max={selectedImage.textFlow === 'none' ? 100 : 75}
+              step="1"
+              value={selectedImage.width}
+              onChange={event => updateImageWidth(Number(event.target.value))}
+              className="w-full accent-[#c77a4b]"
+            />
+            <span className="w-10 text-right text-xs tabular-nums text-stone-500">{selectedImage.width}%</span>
+          </div>
+          <div className="flex min-w-48 flex-1 items-center gap-2">
+            <label htmlFor="newsletter-image-height" className="shrink-0 text-xs font-semibold text-stone-600">Image height</label>
+            <input
+              id="newsletter-image-height"
+              aria-label="Image height"
+              type="range"
+              min={Math.min(60, selectedImage.heightLimit)}
+              max={selectedImage.heightLimit}
+              step="1"
+              value={Math.min(selectedImage.height, selectedImage.heightLimit)}
+              onChange={event => updateImageHeight(Number(event.target.value))}
+              className="w-full accent-[#c77a4b]"
+            />
+            <span className="w-12 text-right text-xs tabular-nums text-stone-500">{Math.round(selectedImage.height)}px</span>
+            {selectedImage.heightAdjusted && (
+              <button
+                type="button"
+                title="Restore the image's natural height"
+                aria-label="Fit image height"
+                onMouseDown={event => event.preventDefault()}
+                onClick={resetImageHeight}
+                className="shrink-0 px-2 py-1 text-xs font-semibold text-[#8b4a2b] hover:bg-white"
+              >
+                Fit
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-1" role="group" aria-label="Image alignment">
+            {[
+              { align: 'left', label: 'Align image left', Icon: LuAlignLeft },
+              { align: 'center', label: 'Center image', Icon: LuAlignCenter },
+              { align: 'right', label: 'Align image right', Icon: LuAlignRight },
+            ].map(({ align, label, Icon }) => (
+              <button
+                key={align}
+                type="button"
+                title={label}
+                aria-label={label}
+                aria-pressed={selectedImage.align === align}
+                onMouseDown={event => event.preventDefault()}
+                onClick={() => alignSelectedImage(align)}
+                className={`flex h-9 w-9 items-center justify-center border ${selectedImage.align === align ? 'border-[#f58537] bg-white text-[#8b4a2b]' : 'border-transparent text-stone-700 hover:bg-white'}`}
+              >
+                <Icon aria-hidden="true" className="h-4 w-4" />
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1" role="group" aria-label="Text wrapping">
+            {[
+              { flow: 'none', label: 'No text wrap', text: 'No wrap' },
+              { flow: 'left', label: 'Place image left and wrap text beside it', text: 'Wrap left' },
+              { flow: 'right', label: 'Place image right and wrap text beside it', text: 'Wrap right' },
+            ].map(({ flow, label, text }) => (
+              <button
+                key={flow}
+                type="button"
+                title={label}
+                aria-label={label}
+                aria-pressed={selectedImage.textFlow === flow}
+                onMouseDown={event => event.preventDefault()}
+                onClick={() => setImageTextFlow(flow)}
+                className={`flex h-9 items-center justify-center border px-2 text-[11px] font-medium ${selectedImage.textFlow === flow ? 'border-[#f58537] bg-white text-[#8b4a2b]' : 'border-transparent text-stone-700 hover:bg-white'}`}
+              >
+                {text}
+              </button>
+            ))}
+          </div>
           <label className="min-w-40 flex-1 text-xs font-semibold text-stone-600">
             Image description
             <input
@@ -435,37 +1351,98 @@ function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnl
               className="mt-1 block min-h-9 w-full border border-stone-300 px-2.5 text-sm font-normal text-stone-800 outline-none focus:border-[#c77a4b]"
             />
           </label>
-          <label className="min-w-36 flex-1 text-xs font-semibold text-stone-600">
-            Width · {selectedImage.width}%
-            <input
-              aria-label="Image width"
-              type="range"
-              min="10"
-              max="100"
-              value={selectedImage.width}
-              onChange={event => setImageWidth(Number(event.target.value))}
-              className="mt-2 block w-full accent-[#c77a4b]"
-            />
-          </label>
-          <div className="flex items-center gap-1" aria-label="Image position">
-            {['left', 'center', 'right'].map(alignment => (
-              <button key={alignment} type="button" onMouseDown={event => event.preventDefault()} onClick={() => setImageAlignment(alignment)} className="min-h-9 border border-stone-300 px-2 text-xs font-semibold capitalize text-stone-700 hover:bg-stone-50">{alignment}</button>
-            ))}
-          </div>
-          <div className="flex items-center gap-1">
-            <button type="button" onMouseDown={event => event.preventDefault()} onClick={() => moveSelectedImage('up')} className="min-h-9 border border-stone-300 px-2 text-xs font-semibold text-stone-700 hover:bg-stone-50">Move up</button>
-            <button type="button" onMouseDown={event => event.preventDefault()} onClick={() => moveSelectedImage('down')} className="min-h-9 border border-stone-300 px-2 text-xs font-semibold text-stone-700 hover:bg-stone-50">Move down</button>
-          </div>
-          <button type="button" onMouseDown={event => event.preventDefault()} onClick={() => { setImageError(''); setCropImage(selectedImage.src) }} className="min-h-9 bg-[#f58537] px-3 text-xs font-bold text-white hover:bg-[#d96b25]">Crop</button>
-          <button type="button" onMouseDown={event => event.preventDefault()} onClick={() => {
-            selectedImageRef.current?.remove()
-            selectedImageRef.current = null
-            setSelectedImage(null)
-            publishEditorHtml()
-          }} className="min-h-9 px-2 text-xs font-semibold text-red-700 hover:bg-red-50">Remove</button>
+          <button type="button" title="Open full image editor" aria-label="Open full image editor" onMouseDown={event => event.preventDefault()} onClick={() => { setImageError(''); setIsImageEditorOpen(true) }} className="flex h-9 items-center justify-center gap-1.5 bg-[#f58537] px-3 text-xs font-semibold text-white hover:bg-[#d96b25]">
+            <LuCrop aria-hidden="true" className="h-4 w-4" />
+            <span>More tools</span>
+          </button>
+          <button type="button" title="Remove image" aria-label="Remove image" onMouseDown={event => event.preventDefault()} onClick={() => {
+            deleteSelectedImage()
+          }} className="flex h-9 w-9 items-center justify-center text-red-700 hover:bg-red-50">
+            <LuTrash2 aria-hidden="true" className="h-4 w-4" />
+          </button>
         </div>
       )}
       {imageError && <p role="alert" className="border-b border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{imageError}</p>}
+      {linkModal && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-stone-950/35 p-4"
+          onMouseDown={event => {
+            if (event.target === event.currentTarget) setLinkModal(null)
+          }}
+          onKeyDown={event => {
+            if (event.key === 'Escape') setLinkModal(null)
+          }}
+        >
+          <form
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="newsletter-link-title"
+            onSubmit={applyNewsletterLink}
+            className="w-full max-w-md rounded-lg border border-stone-200 bg-white p-5 shadow-2xl"
+          >
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h2 id="newsletter-link-title" className="text-base font-semibold text-stone-900">
+                  {linkModal.url ? 'Edit link' : 'Add link'}
+                </h2>
+                <p className="mt-1 text-xs text-stone-500">Add a web address or an email link.</p>
+              </div>
+              <button
+                type="button"
+                aria-label="Close link dialog"
+                onClick={() => setLinkModal(null)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded text-lg text-stone-500 hover:bg-stone-100 hover:text-stone-900"
+              >
+                ×
+              </button>
+            </div>
+            <label className="block text-xs font-semibold text-stone-700">
+              Text to display
+              <input
+                autoFocus
+                value={linkModal.text}
+                onChange={event => setLinkModal(current => ({ ...current, text: event.target.value, error: '' }))}
+                placeholder="Link text"
+                maxLength={500}
+                className="mt-1.5 min-h-10 w-full rounded border border-stone-300 px-3 text-sm font-normal text-stone-800 outline-none transition focus:border-[#b86638] focus:ring-2 focus:ring-orange-100"
+              />
+            </label>
+            <label className="mt-3 block text-xs font-semibold text-stone-700">
+              Link address
+              <input
+                type="text"
+                inputMode="url"
+                value={linkModal.url}
+                onChange={event => setLinkModal(current => ({ ...current, url: event.target.value, error: '' }))}
+                placeholder="https://example.com"
+                aria-invalid={Boolean(linkModal.error)}
+                aria-describedby={linkModal.error ? 'newsletter-link-error' : undefined}
+                className="mt-1.5 min-h-10 w-full rounded border border-stone-300 px-3 text-sm font-normal text-stone-800 outline-none transition focus:border-[#b86638] focus:ring-2 focus:ring-orange-100"
+              />
+            </label>
+            {linkModal.error && (
+              <p id="newsletter-link-error" role="alert" className="mt-2 text-xs font-medium text-red-700">
+                {linkModal.error}
+              </p>
+            )}
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setLinkModal(null)}
+                className="min-h-9 rounded border border-stone-300 px-3 text-xs font-semibold text-stone-700 hover:bg-stone-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="min-h-9 rounded bg-[#8b4a2b] px-4 text-xs font-semibold text-white hover:bg-[#70432d]"
+              >
+                {linkModal.url ? 'Update link' : 'Insert link'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
       <div
         ref={editorRef}
         contentEditable={!readOnly}
@@ -473,27 +1450,25 @@ function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnl
         role="textbox"
         aria-label="Newsletter content"
         aria-multiline="true"
-        onClick={selectImage}
-        onKeyUp={selectImage}
-        onInput={event => onChange(event.currentTarget.innerHTML)}
+        onClick={handleEditorClick}
+        onPointerDown={beginImageDrag}
+        onDragStart={event => event.preventDefault()}
+        onMouseUp={captureEditorSelection}
+        onKeyUp={captureEditorSelection}
+        onInput={() => {
+          captureEditorSelection()
+          publishEditorHtml()
+        }}
         className={`newsletter-editor min-h-72 px-4 py-4 text-sm leading-7 text-stone-800 outline-none sm:min-h-96 sm:px-6 ${readOnly ? 'bg-stone-50' : 'focus:ring-2 focus:ring-inset focus:ring-orange-100'}`}
         data-placeholder="Write your newsletter here. Select text to format it, or add an image with the toolbar."
       />
-      <p className="border-t border-stone-100 px-4 py-2 text-[11px] text-stone-400">Formatting and uploaded images are included in the subscriber email.</p>
-      {cropImage && (
-        <NewsletterImageCropDialog
-          src={cropImage}
-          onClose={() => setCropImage(null)}
-          onApply={async file => {
-            try {
-              await applyCrop(file)
-              setCropImage(null)
-            } catch (error) {
-              setImageError(error.message)
-              throw error
-            }
-          }}
-          isUploading={isUploading}
+      {isImageEditorOpen && selectedImage && (
+        <NewsletterImageEditor
+          src={selectedImage.src}
+          onClose={() => setIsImageEditorOpen(false)}
+          onSave={saveImageEdits}
+          onDelete={deleteSelectedImage}
+          isSaving={isUploading}
         />
       )}
     </div>
@@ -529,16 +1504,29 @@ export default function AdminDashboard() {
   const [newsletterError, setNewsletterError] = useState('')
   const [newsletterNotice, setNewsletterNotice] = useState('')
   const [newsletterSubject, setNewsletterSubject] = useState('')
+  const newsletterSubjectInputRef = useRef(null)
+  const newsletterExitSubjectInputRef = useRef(null)
   const [newsletterHtml, setNewsletterHtml] = useState('')
   const [newsletterId, setNewsletterId] = useState(null)
   const [newsletterStatus, setNewsletterStatus] = useState('draft')
+  const [newsletterSavedSnapshot, setNewsletterSavedSnapshot] = useState({ subject: '', html: '' })
+  const [newsletterRecoveryCheckedKey, setNewsletterRecoveryCheckedKey] = useState('')
   const [isNewsletterEditorOpen, setIsNewsletterEditorOpen] = useState(false)
   const [newsletterLoadedToken, setNewsletterLoadedToken] = useState(null)
   const isNewsletterLoading = Boolean(token && activeTab === 'Newsletter' && newsletterLoadedToken !== token)
+  const newsletterLocalStorageKey = user?.id ? `legacycoffee:newsletter-draft:${user.id}` : ''
+  const hasUnsavedNewsletterChanges = isNewsletterEditorOpen
+    && newsletterStatus === 'draft'
+    && (
+      newsletterSubject !== newsletterSavedSnapshot.subject
+      || newsletterHtml !== newsletterSavedSnapshot.html
+    )
   const [isNewsletterSaving, setIsNewsletterSaving] = useState(false)
   const [isNewsletterSending, setIsNewsletterSending] = useState(false)
   const [isNewsletterImageUploading, setIsNewsletterImageUploading] = useState(false)
   const [showNewsletterSendConfirmation, setShowNewsletterSendConfirmation] = useState(false)
+  const [showNewsletterExitConfirmation, setShowNewsletterExitConfirmation] = useState(false)
+  const [pendingNewsletterExitSection, setPendingNewsletterExitSection] = useState(null)
   const [orderStatusUpdates, setOrderStatusUpdates] = useState({})
   const [orderCancellation, setOrderCancellation] = useState(null)
   const [paymentConfirmationOrder, setPaymentConfirmationOrder] = useState(null)
@@ -691,6 +1679,97 @@ export default function AdminDashboard() {
   }, [activeTab, token])
 
   useEffect(() => {
+    if (
+      !newsletterLocalStorageKey
+      || activeTab !== 'Newsletter'
+      || newsletterLoadedToken !== token
+      || newsletterRecoveryCheckedKey === newsletterLocalStorageKey
+    ) return
+
+    try {
+      const saved = localStorage.getItem(newsletterLocalStorageKey)
+      if (saved) {
+        const draft = JSON.parse(saved)
+        if (!draft || typeof draft !== 'object') {
+          throw new Error('The saved draft data is not valid.')
+        }
+        const linkedDraft = draft.newsletterId == null
+          ? null
+          : newsletters.find(item => String(item.id) === String(draft.newsletterId))
+        const isValidDraft = typeof draft.subject === 'string'
+          && typeof draft.html === 'string'
+          && (draft.newsletterId == null || linkedDraft?.status === 'draft')
+
+        if (isValidDraft) {
+          setNewsletterId(draft.newsletterId ?? null)
+          setNewsletterStatus('draft')
+          setNewsletterSubject(draft.subject)
+          setNewsletterHtml(draft.html)
+          setNewsletterSavedSnapshot({
+            subject: typeof draft.savedSubject === 'string' ? draft.savedSubject : linkedDraft?.subject || '',
+            html: typeof draft.savedHtml === 'string' ? draft.savedHtml : linkedDraft?.content_html || '',
+          })
+          setNewsletterError('')
+          setNewsletterNotice('Recovered your latest local newsletter changes.')
+          setIsNewsletterEditorOpen(true)
+        } else {
+          localStorage.removeItem(newsletterLocalStorageKey)
+          if (draft.newsletterId != null) {
+            setNewsletterError('A locally saved newsletter draft is no longer available on the server.')
+          }
+        }
+      }
+    } catch (error) {
+      setNewsletterError(`Could not restore the local newsletter draft: ${error.message}`)
+    } finally {
+      setNewsletterRecoveryCheckedKey(newsletterLocalStorageKey)
+    }
+  }, [
+    activeTab,
+    newsletterLoadedToken,
+    newsletterLocalStorageKey,
+    newsletterRecoveryCheckedKey,
+    newsletters,
+    token,
+  ])
+
+  useEffect(() => {
+    if (
+      !newsletterLocalStorageKey
+      || newsletterRecoveryCheckedKey !== newsletterLocalStorageKey
+      || !isNewsletterEditorOpen
+      || newsletterStatus !== 'draft'
+    ) return
+
+    try {
+      if (!hasUnsavedNewsletterChanges) {
+        localStorage.removeItem(newsletterLocalStorageKey)
+        return
+      }
+      localStorage.setItem(newsletterLocalStorageKey, JSON.stringify({
+        newsletterId,
+        subject: newsletterSubject,
+        html: newsletterHtml,
+        savedSubject: newsletterSavedSnapshot.subject,
+        savedHtml: newsletterSavedSnapshot.html,
+        updatedAt: Date.now(),
+      }))
+    } catch (error) {
+      setNewsletterError(`Could not save your local newsletter changes: ${error.message}`)
+    }
+  }, [
+    hasUnsavedNewsletterChanges,
+    isNewsletterEditorOpen,
+    newsletterHtml,
+    newsletterId,
+    newsletterLocalStorageKey,
+    newsletterRecoveryCheckedKey,
+    newsletterSavedSnapshot,
+    newsletterStatus,
+    newsletterSubject,
+  ])
+
+  useEffect(() => {
     if (!token || activeTab !== 'Products') return undefined
     let isCurrent = true
     const query = new URLSearchParams({ page: String(productPageNumber) })
@@ -745,6 +1824,7 @@ export default function AdminDashboard() {
     setNewsletterStatus('draft')
     setNewsletterSubject('')
     setNewsletterHtml('')
+    setNewsletterSavedSnapshot({ subject: '', html: '' })
     setNewsletterError('')
     setNewsletterNotice('')
     setIsNewsletterEditorOpen(true)
@@ -755,14 +1835,36 @@ export default function AdminDashboard() {
     setNewsletterStatus(newsletter.status)
     setNewsletterSubject(newsletter.subject)
     setNewsletterHtml(newsletter.content_html)
+    setNewsletterSavedSnapshot({
+      subject: newsletter.subject,
+      html: newsletter.content_html,
+    })
     setNewsletterError(newsletter.last_error || '')
     setNewsletterNotice('')
     setIsNewsletterEditorOpen(true)
   }
 
+  const clearLocalNewsletterDraft = () => {
+    if (!newsletterLocalStorageKey) return
+    try {
+      localStorage.removeItem(newsletterLocalStorageKey)
+    } catch (error) {
+      setNewsletterError(`The server action completed, but local recovery data could not be cleared: ${error.message}`)
+    }
+  }
+
   const saveNewsletter = async () => {
+    if (isNewsletterSaving || isNewsletterImageUploading) return false
     setNewsletterError('')
     setNewsletterNotice('')
+    if (!newsletterSubject.trim()) {
+      setNewsletterError('Add a subject before saving this newsletter.')
+      const subjectInputRef = showNewsletterExitConfirmation
+        ? newsletterExitSubjectInputRef
+        : newsletterSubjectInputRef
+      subjectInputRef.current?.focus()
+      return false
+    }
     setIsNewsletterSaving(true)
     try {
       const saved = await apiRequest(
@@ -775,10 +1877,14 @@ export default function AdminDashboard() {
       )
       setNewsletterId(saved.id)
       setNewsletterStatus(saved.status)
+      setNewsletterSavedSnapshot({ subject: newsletterSubject, html: newsletterHtml })
       setNewsletters(current => [saved, ...current.filter(newsletter => newsletter.id !== saved.id)])
       setNewsletterNotice('Draft saved. Review the email preview before sending.')
+      clearLocalNewsletterDraft()
+      return true
     } catch (error) {
       setNewsletterError(error.message)
+      return false
     } finally {
       setIsNewsletterSaving(false)
     }
@@ -788,8 +1894,9 @@ export default function AdminDashboard() {
     setNewsletterError('')
     setIsNewsletterImageUploading(true)
     try {
+      const preparedImage = await prepareNewsletterImage(file)
       const formData = new FormData()
-      formData.append('image', file)
+      formData.append('image', preparedImage)
       const result = await apiRequest('/dashboard/newsletter-images/', {
         method: 'POST',
         token,
@@ -824,6 +1931,8 @@ export default function AdminDashboard() {
       setNewsletterNotice(`Newsletter sent to ${sent.recipient_count} subscribers.`)
       setShowNewsletterSendConfirmation(false)
       setIsNewsletterEditorOpen(false)
+      setNewsletterSavedSnapshot({ subject: newsletterSubject, html: newsletterHtml })
+      clearLocalNewsletterDraft()
     } catch (error) {
       setNewsletterError(error.message)
     } finally {
@@ -844,6 +1953,7 @@ export default function AdminDashboard() {
       setNewsletterNotice('Draft deleted.')
       setIsNewsletterEditorOpen(false)
       setNewsletterId(null)
+      clearLocalNewsletterDraft()
     } catch (error) {
       setNewsletterError(error.message)
     }
@@ -1305,7 +2415,7 @@ export default function AdminDashboard() {
     { label: 'Product shares', value: summary.product_shares, note: 'Customer shares recorded' },
   ] : []
 
-  const changeSection = section => {
+  const navigateToSection = section => {
     setSearchParams(current => {
       const next = new URLSearchParams(current)
       if (section === 'Overview') {
@@ -1317,6 +2427,46 @@ export default function AdminDashboard() {
     })
     if (section === 'Products') setProductError('')
     if (section === 'Settings') setAccountError('')
+  }
+
+  const requestNewsletterExit = (section = null) => {
+    if (hasUnsavedNewsletterChanges || isNewsletterImageUploading) {
+      setPendingNewsletterExitSection(section)
+      setShowNewsletterExitConfirmation(true)
+      return
+    }
+    setIsNewsletterEditorOpen(false)
+    if (section === '__signout__') {
+      signOut()
+    } else if (section) {
+      navigateToSection(section)
+    }
+  }
+
+  const saveDraftAndExit = async () => {
+    const saved = await saveNewsletter()
+    if (!saved) return
+    setShowNewsletterExitConfirmation(false)
+    setIsNewsletterEditorOpen(false)
+    const exitTarget = pendingNewsletterExitSection
+    setPendingNewsletterExitSection(null)
+    if (exitTarget === '__signout__') {
+      await signOut()
+    } else if (exitTarget) {
+      navigateToSection(exitTarget)
+    }
+  }
+
+  const changeSection = section => {
+    if (
+      activeTab === 'Newsletter'
+      && isNewsletterEditorOpen
+      && section !== 'Newsletter'
+    ) {
+      requestNewsletterExit(section)
+      return
+    }
+    navigateToSection(section)
   }
 
   return (
@@ -1394,7 +2544,14 @@ export default function AdminDashboard() {
               <p className="truncate text-xs font-medium text-white">{user?.email}</p>
               <p className="mt-0.5 text-[10px] text-white/40">Staff account</p>
             </div>
-            <button type="button" onClick={signOut} className="rounded-md px-2 py-2 text-xs text-white/60 transition hover:bg-white/10 hover:text-white">
+            <button
+              type="button"
+              onClick={() => {
+                if (activeTab === 'Newsletter' && isNewsletterEditorOpen) requestNewsletterExit('__signout__')
+                else signOut()
+              }}
+              className="rounded-md px-2 py-2 text-xs text-white/60 transition hover:bg-white/10 hover:text-white"
+            >
               Sign out
             </button>
           </div>
@@ -1445,7 +2602,16 @@ export default function AdminDashboard() {
           {dataError && (
             <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
               <p>{dataError.toLowerCase().includes('permission') ? 'This account does not have staff access.' : dataError}</p>
-              <button type="button" onClick={signOut} className="font-semibold underline">Sign out</button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeTab === 'Newsletter' && isNewsletterEditorOpen) requestNewsletterExit('__signout__')
+                  else signOut()
+                }}
+                className="font-semibold underline"
+              >
+                Sign out
+              </button>
             </div>
           )}
           {isLoading && <p role="status" className="mb-5 rounded-lg border border-stone-200 bg-white p-4 text-sm text-stone-500">Loading workspace data…</p>}
@@ -1914,6 +3080,7 @@ export default function AdminDashboard() {
                   <label className="block text-xs font-medium text-stone-700">
                     Product name
                     <input
+                      ref={newsletterSubjectInputRef}
                       required
                       value={productForm.name}
                       onChange={event => {
@@ -2233,11 +3400,11 @@ export default function AdminDashboard() {
                     title={newsletterStatus === 'sent' ? 'Sent newsletter' : newsletterId ? 'Edit newsletter' : 'New newsletter'}
                     description={newsletterStatus === 'sent'
                       ? `Sent to ${newsletters.find(item => item.id === newsletterId)?.recipient_count ?? 0} subscribers`
-                      : 'Compose a message, save it as a draft, then confirm before emailing subscribers.'}
+                      : ''}
                   >
                     <button
                       type="button"
-                      onClick={() => setIsNewsletterEditorOpen(false)}
+                      onClick={() => requestNewsletterExit()}
                       className="min-h-10 border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-700 transition hover:bg-white"
                     >
                       Back to newsletters
@@ -2254,19 +3421,14 @@ export default function AdminDashboard() {
                       {newsletterNotice}
                     </p>
                   )}
-
-                  <div className="mb-5 border-l-4 border-[#f58537] bg-[#fff8f1] px-4 py-3 text-xs leading-5 text-[#70432d]">
-                    Email delivery requires the <code className="font-semibold">RESEND_API_KEY</code> and <code className="font-semibold">NEWSLETTER_FROM_EMAIL</code> variables in Railway. Drafts can be prepared before those are configured.
-                  </div>
-
-                  <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+                  <div>
                     <div className="min-w-0 space-y-4">
                       <label className="block text-sm font-semibold text-stone-700">
                         Email subject
                         <input
                           required
                           maxLength={180}
-                          disabled={newsletterStatus === 'sent' || newsletterStatus === 'sending'}
+                          disabled={newsletterStatus === 'sent' || newsletterStatus === 'sending' || isNewsletterSaving}
                           value={newsletterSubject}
                           onChange={event => setNewsletterSubject(event.target.value)}
                           placeholder="A fresh update from Legacy Coffee"
@@ -2279,7 +3441,7 @@ export default function AdminDashboard() {
                         onChange={setNewsletterHtml}
                         onImageUpload={uploadNewsletterImage}
                         isUploading={isNewsletterImageUploading}
-                        readOnly={newsletterStatus === 'sent' || newsletterStatus === 'sending'}
+                        readOnly={newsletterStatus === 'sent' || newsletterStatus === 'sending' || isNewsletterSaving}
                       />
 
                       <div className="flex flex-wrap items-center gap-2">
@@ -2287,8 +3449,8 @@ export default function AdminDashboard() {
                           <>
                             <SavingButton
                               type="button"
-                              isSaving={isNewsletterSaving}
-                              savingLabel="Saving draft…"
+                              isSaving={isNewsletterSaving || isNewsletterImageUploading}
+                              savingLabel={isNewsletterImageUploading && !isNewsletterSaving ? 'Wait for image upload…' : 'Saving draft…'}
                               onClick={saveNewsletter}
                               className="inline-flex min-h-11 items-center gap-2 bg-[#593a27] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#40291d]"
                             >
@@ -2324,18 +3486,6 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <section aria-labelledby="newsletter-preview-heading" className="overflow-hidden border border-stone-200 bg-white">
-                      <div className="border-b border-stone-200 px-4 py-3">
-                        <h2 id="newsletter-preview-heading" className="text-sm font-semibold text-stone-900">Email preview</h2>
-                        <p className="mt-1 truncate text-xs text-stone-500">{newsletterSubject || 'Your subject will appear here'}</p>
-                      </div>
-                      <iframe
-                        title="Newsletter email preview"
-                        sandbox=""
-                        srcDoc={`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:16px;background:#f4eee8;font:14px/1.7 Arial,sans-serif;color:#2b211b}main{max-width:680px;margin:auto;padding:24px;background:#fff}img{display:block;max-width:100%;height:auto;margin:16px 0}blockquote{margin:16px 0;padding:8px 16px;border-left:3px solid #f58537;color:#70432d}mark{background:#fff1a8}</style></head><body><main>${newsletterHtml || '<p style="color:#999">Your newsletter preview will appear here.</p>'}</main></body></html>`}
-                        className="h-[480px] w-full bg-[#f4eee8]"
-                      />
-                    </section>
                   </div>
                 </>
               ) : (
@@ -2651,6 +3801,68 @@ export default function AdminDashboard() {
                 </div>
               )}
             </section>
+          )}
+
+          {showNewsletterExitConfirmation && (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-stone-950/60 p-4">
+              <section
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="newsletter-exit-confirmation-heading"
+                className="w-full max-w-md border border-stone-200 bg-white p-5 shadow-2xl sm:p-6"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#a75a31]">Unsaved newsletter</p>
+                <h2 id="newsletter-exit-confirmation-heading" className="mt-2 text-xl font-bold text-stone-900">
+                  Save your changes as a draft?
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-stone-600">
+                  Your latest changes are stored in this browser. Saving as a draft also stores them with your newsletter account.
+                </p>
+                <label className="mt-4 block text-sm font-semibold text-stone-700">
+                  Email subject
+                  <input
+                    ref={newsletterExitSubjectInputRef}
+                    required
+                    maxLength={180}
+                    disabled={isNewsletterSaving || isNewsletterImageUploading}
+                    value={newsletterSubject}
+                    onChange={event => {
+                      setNewsletterSubject(event.target.value)
+                      setNewsletterError('')
+                    }}
+                    placeholder="A fresh update from Legacy Coffee"
+                    className="mt-1.5 min-h-11 w-full border border-stone-200 bg-white px-3 py-2.5 text-sm font-normal text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-[#c77a4b] focus:ring-2 focus:ring-orange-100 disabled:bg-stone-50"
+                  />
+                </label>
+                {newsletterError && (
+                  <p role="alert" className="mt-3 border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                    {newsletterError}
+                  </p>
+                )}
+                <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    disabled={isNewsletterSaving || isNewsletterImageUploading}
+                    onClick={() => {
+                      setShowNewsletterExitConfirmation(false)
+                      setPendingNewsletterExitSection(null)
+                    }}
+                    className="min-h-11 border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <SavingButton
+                    type="button"
+                    isSaving={isNewsletterSaving || isNewsletterImageUploading}
+                    savingLabel={isNewsletterImageUploading && !isNewsletterSaving ? 'Finishing image upload…' : 'Saving draft…'}
+                    onClick={saveDraftAndExit}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 bg-[#593a27] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#40291d]"
+                  >
+                    Save draft
+                  </SavingButton>
+                </div>
+              </section>
+            </div>
           )}
 
           {showNewsletterSendConfirmation && (
