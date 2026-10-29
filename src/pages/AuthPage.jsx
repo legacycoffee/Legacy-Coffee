@@ -7,16 +7,17 @@ const inputClass = 'mt-1.5 w-full border border-peach-mid px-3.5 py-3 text-sm te
 
 export default function AuthPage({ mode }) {
   const isSignUp = mode === 'signup'
-  const { isAuthenticated, user, signIn, signUp } = useAuth()
+  const { isAuthenticated, user, signIn, signUp, completeAdminPasswordSetup } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [form, setForm] = useState({
-    username: '', email: '', phone: '', password: '', confirm_password: '', first_name: '', last_name: '',
+    username: '', email: '', phone: '', password: '', new_password: '', confirm_password: '', first_name: '', last_name: '',
     delivery_city: '',
     location_latitude: '', location_longitude: '',
   })
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [passwordSetupRequired, setPasswordSetupRequired] = useState(false)
   const destination = location.state?.from || '/checkout'
   const authenticatedDestination = !isSignUp && user?.is_staff ? '/admin' : destination
 
@@ -49,6 +50,30 @@ export default function AuthPage({ mode }) {
         const signedInUser = await signIn({ email: form.email, password: form.password })
         navigate(signedInUser.is_staff ? '/admin' : destination, { replace: true })
       }
+    } catch (requestError) {
+      if (requestError.code === 'admin_password_setup_required') {
+        setPasswordSetupRequired(true)
+        setError('')
+      } else {
+        setError(requestError.message)
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleAdminPasswordSetup = async event => {
+    event.preventDefault()
+    setError('')
+    setIsSubmitting(true)
+    try {
+      await completeAdminPasswordSetup({
+        email: form.email,
+        temporary_password: form.password,
+        new_password: form.new_password,
+        confirm_password: form.confirm_password,
+      })
+      navigate('/admin', { replace: true })
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -92,13 +117,17 @@ export default function AuthPage({ mode }) {
               <LuLockKeyhole aria-hidden="true" className="h-5 w-5" />
             </div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Legacy Coffee account</p>
-            <h2 className="mt-2 text-2xl font-bold text-black">{isSignUp ? 'Sign up' : 'Sign in'}</h2>
+            <h2 className="mt-2 text-2xl font-bold text-black">
+              {passwordSetupRequired ? 'Create your admin password' : isSignUp ? 'Sign up' : 'Sign in'}
+            </h2>
             <p className="mt-1 text-sm text-black/65">
-              {isSignUp ? 'Create an account to continue to checkout.' : 'Sign in to continue to checkout.'}
+              {passwordSetupRequired
+                ? 'Your temporary password is verified. Choose a new password to finish setting up your administrator account.'
+                : isSignUp ? 'Create an account to continue to checkout.' : 'Sign in to continue to checkout.'}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <form onSubmit={passwordSetupRequired ? handleAdminPasswordSetup : handleSubmit} className="mt-6 space-y-4">
             {isSignUp && (
               <>
                 <label className="block text-sm font-medium text-black" htmlFor="signup-first-name">
@@ -133,24 +162,40 @@ export default function AuthPage({ mode }) {
                 <input id="signup-phone" required type="tel" autoComplete="tel" name="phone" value={form.phone} onChange={handleChange} className={inputClass} />
               </label>
             )}
-            <label className="block text-sm font-medium text-black" htmlFor="auth-email">
-              {isSignUp ? 'Email address (optional)' : 'Email address or phone number'}
-              <input
-                id="auth-email"
-                required={!isSignUp}
-                type={isSignUp ? 'email' : 'text'}
-                autoComplete={isSignUp ? 'email' : 'username'}
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                className={inputClass}
-              />
-            </label>
-            <label className="block text-sm font-medium text-black" htmlFor="auth-password">
-              Password
-              <input id="auth-password" required type="password" autoComplete={isSignUp ? 'new-password' : 'current-password'} name="password" value={form.password} onChange={handleChange} className={inputClass} />
-            </label>
-            {isSignUp && (
+            {!passwordSetupRequired && (
+              <>
+                <label className="block text-sm font-medium text-black" htmlFor="auth-email">
+                  {isSignUp ? 'Email address (optional)' : 'Email address or phone number'}
+                  <input
+                    id="auth-email"
+                    required={!isSignUp}
+                    type={isSignUp ? 'email' : 'text'}
+                    autoComplete={isSignUp ? 'email' : 'username'}
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block text-sm font-medium text-black" htmlFor="auth-password">
+                  Password
+                  <input id="auth-password" required type="password" autoComplete={isSignUp ? 'new-password' : 'current-password'} name="password" value={form.password} onChange={handleChange} className={inputClass} />
+                </label>
+              </>
+            )}
+            {passwordSetupRequired && (
+              <>
+                <label className="block text-sm font-medium text-black" htmlFor="admin-new-password">
+                  New password
+                  <input id="admin-new-password" required minLength="8" type="password" autoComplete="new-password" name="new_password" value={form.new_password} onChange={handleChange} className={inputClass} />
+                </label>
+                <label className="block text-sm font-medium text-black" htmlFor="admin-confirm-new-password">
+                  Confirm new password
+                  <input id="admin-confirm-new-password" required minLength="8" type="password" autoComplete="new-password" name="confirm_password" value={form.confirm_password} onChange={handleChange} className={inputClass} />
+                </label>
+              </>
+            )}
+            {isSignUp && !passwordSetupRequired && (
               <label className="block text-sm font-medium text-black" htmlFor="auth-confirm-password">
                 Confirm password
                 <input id="auth-confirm-password" required type="password" autoComplete="new-password" name="confirm_password" value={form.confirm_password} onChange={handleChange} className={inputClass} />
@@ -164,11 +209,24 @@ export default function AuthPage({ mode }) {
               disabled={isSubmitting}
               className="w-full bg-[#F58537] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"
             >
-              {isSubmitting ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}
+              {isSubmitting ? 'Please wait…' : passwordSetupRequired ? 'Save new password' : isSignUp ? 'Create account' : 'Sign in'}
             </button>
+            {passwordSetupRequired && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPasswordSetupRequired(false)
+                  setForm(current => ({ ...current, password: '', new_password: '', confirm_password: '' }))
+                  setError('')
+                }}
+                className="w-full px-5 py-2 text-sm font-semibold text-black/60 hover:text-primary"
+              >
+                Back to sign in
+              </button>
+            )}
           </form>
 
-          <p className="mt-5 text-center text-sm text-black/70">
+          {!passwordSetupRequired && <p className="mt-5 text-center text-sm text-black/70">
             {isSignUp ? 'Already have an account?' : 'New to Legacy Coffee?'}{' '}
             <Link
               to={isSignUp ? '/signin' : '/signup'}
@@ -177,7 +235,7 @@ export default function AuthPage({ mode }) {
             >
               {isSignUp ? 'Sign in' : 'Create an account'}
             </Link>
-          </p>
+          </p>}
         </div>
       </div>
     </section>

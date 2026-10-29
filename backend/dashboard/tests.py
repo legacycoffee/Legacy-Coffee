@@ -571,6 +571,7 @@ class DashboardApiTests(APITestCase):
         second_admin = get_user_model().objects.get(email='second-admin@example.com')
         self.assertTrue(second_admin.is_staff)
         self.assertFalse(second_admin.is_superuser)
+        self.assertTrue(second_admin.must_change_password)
 
         admins_response = self.client.get('/api/dashboard/admins/')
         self.assertEqual(admins_response.status_code, 200)

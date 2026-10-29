@@ -17,6 +17,7 @@ class User(AbstractUser):
     delivery_address = models.CharField(max_length=250, blank=True)
     delivery_city = models.CharField(max_length=120, blank=True)
     delivery_notes = models.TextField(blank=True)
+    must_change_password = models.BooleanField(default=False)
     location_latitude = models.DecimalField(
         max_digits=9, decimal_places=6, null=True, blank=True,
         validators=[MinValueValidator(-90), MaxValueValidator(90)],

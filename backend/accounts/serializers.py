@@ -118,3 +118,43 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('This account is inactive.')
         attrs['user'] = user
         return attrs
+
+
+class AdminPasswordSetupSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    temporary_password = serializers.CharField(write_only=True, trim_whitespace=False)
+    new_password = serializers.CharField(write_only=True, trim_whitespace=False)
+    confirm_password = serializers.CharField(write_only=True, trim_whitespace=False)
+
+    def validate(self, attrs):
+        user = User.objects.select_for_update().filter(
+            email__iexact=attrs['email'],
+            is_active=True,
+        ).first()
+        if (
+            user is None
+            or not user.is_staff
+            or not user.must_change_password
+            or not user.check_password(attrs['temporary_password'])
+        ):
+            raise serializers.ValidationError({
+                'temporary_password': 'The administrator email or temporary password is incorrect.',
+            })
+        if attrs['new_password'] != attrs['confirm_password']:
+            raise serializers.ValidationError({
+                'confirm_password': 'The new passwords do not match.',
+            })
+        if attrs['new_password'] == attrs['temporary_password']:
+            raise serializers.ValidationError({
+                'new_password': 'Choose a password different from your temporary password.',
+            })
+        validate_password(attrs['new_password'], user)
+        attrs['user'] = user
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.validated_data['user']
+        user.set_password(self.validated_data['new_password'])
+        user.must_change_password = False
+        user.save(update_fields=('password', 'must_change_password'))
+        return user

@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import generics, permissions, status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.authtoken.models import Token
@@ -11,6 +12,7 @@ from .serializers import (
     DeleteAccountSerializer,
     PasswordChangeSerializer,
     RegistrationSerializer,
+    AdminPasswordSetupSerializer,
     UserSerializer,
 )
 from .services import upload_profile_photo
@@ -44,12 +46,38 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
+        if user.must_change_password:
+            Token.objects.filter(user=user).delete()
+            return Response({
+                'code': 'admin_password_setup_required',
+                'detail': 'Set a new password to finish setting up your administrator account.',
+            }, status=status.HTTP_403_FORBIDDEN)
         token, _ = Token.objects.get_or_create(user=user)
         Notification.objects.create(
             user=user,
             kind=Notification.Kind.SIGN_IN,
             title='Welcome back',
             message='You have successfully signed in to your Legacy Coffee account.',
+        )
+        return Response({'token': token.key, 'user': UserSerializer(user).data})
+
+
+class AdminPasswordSetupView(generics.GenericAPIView):
+    serializer_class = AdminPasswordSetupSerializer
+    permission_classes = [permissions.AllowAny]
+
+    @transaction.atomic
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        Token.objects.filter(user=user).delete()
+        token = Token.objects.create(user=user)
+        Notification.objects.create(
+            user=user,
+            kind=Notification.Kind.SIGN_IN,
+            title='Welcome to the Legacy Coffee admin portal',
+            message='Your administrator account is ready.',
         )
         return Response({'token': token.key, 'user': UserSerializer(user).data})
 
