@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { apiRequest } from '../context/api.js'
 import { useCart } from '../context/useCart.js'
 import useProducts from '../hooks/useProducts.js'
@@ -379,6 +379,15 @@ export default function OurCoffeeFarm() {
               )}
             </div>
           </section>
+
+          <div className="mt-8 text-center">
+            <Link
+              to="/#coffee-shop-heading"
+              className="inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              Grab a Coffee at Our Cafe
+            </Link>
+          </div>
 
         </div>
       </section>

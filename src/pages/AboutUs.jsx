@@ -449,12 +449,14 @@ export default function AboutUs() {
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="mb-4 text-3xl font-black text-brown md:text-4xl">Partner With Us</h2>
           <p className="mx-auto max-w-3xl text-base leading-relaxed text-brown/75 md:text-lg">
-            We welcome collaborations with NGOs, restaurants, hotels, exporters, and institutions. Whether through bulk orders, corporate gifting, or joint community projects, together we can make a greater impact.
+            We welcome collaborations with NGOs, restaurants, hotels, exporters, and institutions. Whether through bulk orders, corporate gifting, or joint community projects, together we can make a difference
           </p>
         </div>
 
-        <div id="partnership-form" className="mx-auto mt-12 max-w-2xl scroll-mt-24">
-          <h3 className="mb-2 text-center text-3xl font-bold text-primary">Start a Partnership</h3>
+        <details id="partnership-form" className="mx-auto mt-12 max-w-2xl scroll-mt-24 text-center">
+          <summary className="mx-auto inline-flex min-h-12 cursor-pointer list-none items-center justify-center rounded-full bg-primary px-7 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            Start a Partnership
+          </summary>
           <p className="mb-8 text-center text-sm text-brown">Fill in the form and our team will reach out within 48 hours.</p>
 
           {partnershipSubmitted ? (
@@ -487,7 +489,7 @@ export default function AboutUs() {
               </button>
             </form>
           )}
-        </div>
+        </details>
       </section>
 
       <section id="partnerships" className="overflow-hidden bg-peach-light px-6 py-16 md:py-20">
