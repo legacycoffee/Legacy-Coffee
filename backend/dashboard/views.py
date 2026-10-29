@@ -378,6 +378,18 @@ class InquiryInboxView(generics.ListAPIView):
     queryset = Inquiry.objects.all()
 
 
+class InquiryOpenView(APIView):
+    permission_classes = [IsAdminUser]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        inquiry = get_object_or_404(Inquiry.objects.select_for_update(), pk=pk)
+        if inquiry.status == Inquiry.Status.NEW:
+            inquiry.status = Inquiry.Status.IN_PROGRESS
+            inquiry.save(update_fields=('status',))
+        return Response(InquiryInboxSerializer(inquiry).data, status=status.HTTP_200_OK)
+
+
 class UserInboxView(generics.ListAPIView):
     permission_classes = [IsAdminUser]
     serializer_class = UserInboxSerializer

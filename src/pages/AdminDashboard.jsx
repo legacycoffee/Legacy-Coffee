@@ -1488,6 +1488,7 @@ export default function AdminDashboard() {
   const [summary, setSummary] = useState(null)
   const [orders, setOrders] = useState([])
   const [inquiries, setInquiries] = useState([])
+  const [inquiryUpdates, setInquiryUpdates] = useState({})
   const [usersPage, setUsersPage] = useState(null)
   const [orderSearch, setOrderSearch] = useState('')
   const [requestSearch, setRequestSearch] = useState('')
@@ -2037,6 +2038,35 @@ export default function AdminDashboard() {
       setOrderStatusUpdates(current => ({
         ...current,
         [order.reference]: { isSaving: false, error: error.message, success: '' },
+      }))
+    }
+  }
+
+  const markInquiryOpened = async inquiry => {
+    setInquiryUpdates(current => ({
+      ...current,
+      [inquiry.id]: { isSaving: true, error: '' },
+    }))
+    try {
+      const updatedInquiry = await apiRequest(
+        `/dashboard/inquiries/${inquiry.id}/open/`,
+        { method: 'POST', token },
+      )
+      setInquiries(current => current.map(item => (
+        item.id === updatedInquiry.id ? { ...item, ...updatedInquiry } : item
+      )))
+      setSummary(current => {
+        if (!current || inquiry.status !== 'new' || updatedInquiry.status === 'new') return current
+        return { ...current, new_inquiries: Math.max(0, current.new_inquiries - 1) }
+      })
+      setInquiryUpdates(current => ({
+        ...current,
+        [inquiry.id]: { isSaving: false, error: '' },
+      }))
+    } catch (error) {
+      setInquiryUpdates(current => ({
+        ...current,
+        [inquiry.id]: { isSaving: false, error: error.message },
       }))
     }
   }
@@ -3911,6 +3941,21 @@ export default function AdminDashboard() {
                         </div>
                       )}
                       <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-stone-600">{inquiry.message}</p>
+                      {inquiry.status === 'new' && (
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 pt-4">
+                          {inquiryUpdates[inquiry.id]?.error && (
+                            <p role="alert" className="text-sm text-red-700">{inquiryUpdates[inquiry.id].error}</p>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => markInquiryOpened(inquiry)}
+                            disabled={inquiryUpdates[inquiry.id]?.isSaving}
+                            className="ml-auto rounded-lg border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-700 transition hover:border-[#a75a31] hover:text-[#8b4a2b] disabled:cursor-wait disabled:opacity-50"
+                          >
+                            {inquiryUpdates[inquiry.id]?.isSaving ? 'Opening…' : 'Mark as opened'}
+                          </button>
+                        </div>
+                      )}
                     </article>
                   ))}
                 </div>

@@ -38,6 +38,7 @@ class DashboardApiTests(APITestCase):
             403,
         )
         self.assertEqual(self.client.get('/api/dashboard/inquiries/').status_code, 403)
+        self.assertEqual(self.client.post('/api/dashboard/inquiries/1/open/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/subscribers/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/users/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/analytics/').status_code, 403)
@@ -328,6 +329,28 @@ class DashboardApiTests(APITestCase):
             requests_by_kind[Inquiry.Kind.SEEDLING_RESERVATION]['message'],
             'Type: Robusta',
         )
+
+    def test_staff_can_mark_new_inquiry_opened_and_clear_new_request_counter(self):
+        inquiry = Inquiry.objects.create(
+            kind=Inquiry.Kind.CONTACT,
+            name='Inquiry Customer',
+            email='inquiry@example.com',
+            subject='Coffee question',
+            message='Please share more details.',
+        )
+        self.client.force_authenticate(self.staff)
+
+        response = self.client.post(f'/api/dashboard/inquiries/{inquiry.pk}/open/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['status'], Inquiry.Status.IN_PROGRESS)
+        inquiry.refresh_from_db()
+        self.assertEqual(inquiry.status, Inquiry.Status.IN_PROGRESS)
+        summary_response = self.client.get('/api/dashboard/')
+        self.assertEqual(summary_response.data['new_inquiries'], 0)
+        inbox_response = self.client.get('/api/dashboard/inquiries/')
+        self.assertEqual(inbox_response.data['results'][0]['id'], inquiry.pk)
+        self.assertEqual(inbox_response.data['results'][0]['status'], Inquiry.Status.IN_PROGRESS)
 
     def test_staff_can_read_order_and_inquiry_inboxes(self):
         product = Product.objects.create(
