@@ -220,20 +220,17 @@ export default function OurCoffeeFarm() {
         />
         <div className="relative mx-auto w-full max-w-7xl">
           <div className="max-w-3xl">
-            <p className="mb-4 text-sm font-bold uppercase tracking-[0.25em] text-primary md:text-base">
-              A visit from plant to cup
-            </p>
             <h1 className="mb-6 text-4xl font-black leading-tight text-white sm:text-5xl md:text-7xl">
               Our Coffee Farm
             </h1>
             <p className="max-w-2xl text-base leading-relaxed text-white/85 md:text-xl">
-              Discover coffee growing and local processing in Uganda through a hands-on visit to our farm.
+              Discover coffee beyond the cup. Visit our farm to experience the entire journey of coffee, from growing and harvesting to pulping, drying, and finally, the cup.
             </p>
             <a
               href="#farm-visits"
               className="mt-8 inline-flex rounded-full bg-primary px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-white hover:text-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
-              Explore farm tours
+              Book A Visit
             </a>
           </div>
         </div>
