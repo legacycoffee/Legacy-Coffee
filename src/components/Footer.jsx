@@ -4,8 +4,9 @@ import { LuArrowUpRight } from 'react-icons/lu'
 
 const menuLinks = [
   { label: 'Home', to: '/' },
+  { label: 'Our Coffee Farm', to: '/coffee-farm' },
+  { label: 'Our Services', to: '/services' },
   { label: 'About Us', to: '/about' },
-  { label: 'Partner With Us', to: '/partner' },
   { label: 'Wholesale', to: '/wholesale' },
   { label: 'Contact Us', to: '/contact' },
   { label: 'Newsletter', to: '/newsletter' },

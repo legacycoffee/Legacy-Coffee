@@ -7,6 +7,7 @@ class Inquiry(models.Model):
         QUOTE = 'quote', 'Quote'
         PARTNER = 'partner', 'Partner'
         FARM_RESERVATION = 'farm_reservation', 'Farm reservation'
+        FARM_SETUP = 'farm_setup', 'Farm setup reservation'
         SEEDLING_RESERVATION = 'seedling_reservation', 'Seedling reservation'
 
     class Status(models.TextChoices):

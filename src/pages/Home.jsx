@@ -87,7 +87,7 @@ export default function Home() {
                 Shop Coffee →
               </Link>
               <Link
-                to="/partner"
+                to="/about#partnership"
                 className="inline-flex items-center justify-center rounded-full border-2 border-white/50 px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white backdrop-blur-sm transition-all duration-300 hover:border-primary hover:text-primary md:px-9 md:py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 Partner With Us
@@ -147,7 +147,7 @@ export default function Home() {
 
       <section aria-labelledby="coffee-shop-heading" className="relative isolate overflow-hidden bg-brown px-5 py-12 text-white sm:px-8 sm:py-16 lg:py-20">
         <img
-          src="https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=2000&q=85"
+          src="https://res.cloudinary.com/vgko5mna/image/upload/v1792764938/coffee_machine_1.png"
           alt=""
           aria-hidden="true"
           className="absolute inset-0 -z-20 h-full w-full object-cover object-center"

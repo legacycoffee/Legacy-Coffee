@@ -41,3 +41,20 @@ class InquiryApiTests(APITestCase):
         inquiry = Inquiry.objects.get()
         self.assertEqual(inquiry.kind, Inquiry.Kind.SEEDLING_RESERVATION)
         self.assertEqual(inquiry.quantity, '1200')
+
+    def test_farm_setup_reservation_is_saved_for_staff_tracking(self):
+        response = self.client.post('/api/inquiries/', {
+            'kind': 'farm_setup',
+            'name': 'Farm Customer',
+            'email': 'farmer@example.com',
+            'phone': '+256700000000',
+            'product': 'Coffee farm setup - Starter Package',
+            'quantity': '2 acre(s)',
+            'subject': 'Coffee farm setup reservation - Starter Package',
+            'message': 'Farm size: 2 acre(s)',
+        })
+
+        self.assertEqual(response.status_code, 201)
+        inquiry = Inquiry.objects.get()
+        self.assertEqual(inquiry.kind, Inquiry.Kind.FARM_SETUP)
+        self.assertEqual(inquiry.quantity, '2 acre(s)')

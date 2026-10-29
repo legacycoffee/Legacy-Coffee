@@ -14,8 +14,8 @@ import { apiRequest } from '../context/api.js'
 const navLinks = [
   { label: 'Home', to: '/' },
   { label: 'Our Coffee Farm', to: '/coffee-farm' },
+  { label: 'Our Services', to: '/services' },
   { label: 'About Us', to: '/about' },
-  { label: 'Partner With Us', to: '/partner' },
 ]
 
 export default function Navbar() {
