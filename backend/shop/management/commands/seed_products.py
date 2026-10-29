@@ -80,15 +80,22 @@ class Command(BaseCommand):
         parser.add_argument(
             '--skip-existing',
             action='store_true',
-            help='Create missing starter products without changing existing products.',
+            help='Create missing starter products without changing existing products; keep coffee seedlings active.',
         )
 
     def handle(self, *args, **options):
         for product_data in PRODUCTS:
             slug = product_data['slug']
             if options['skip_existing']:
-                _, created = Product.objects.get_or_create(slug=slug, defaults=product_data)
-                action = 'Created' if created else 'Skipped'
+                product, created = Product.objects.get_or_create(slug=slug, defaults=product_data)
+                if created:
+                    action = 'Created'
+                elif slug == 'coffee-seedlings' and not product.is_active:
+                    product.is_active = True
+                    product.save(update_fields=('is_active', 'updated_at'))
+                    action = 'Activated'
+                else:
+                    action = 'Skipped'
             else:
                 _, created = Product.objects.update_or_create(slug=slug, defaults=product_data)
                 action = 'Created' if created else 'Updated'

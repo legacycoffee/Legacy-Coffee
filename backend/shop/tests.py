@@ -2,14 +2,13 @@ from io import StringIO
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
-from django.test import TestCase
 from rest_framework.test import APITestCase
 
 from orders.models import Order, OrderItem
 from .models import Product, Review, ShareEvent, WishlistItem
 
 
-class SeedProductsCommandTests(TestCase):
+class SeedProductsCommandTests(APITestCase):
     def test_skip_existing_seeds_missing_products_without_overwriting_existing(self):
         existing_product = Product.objects.create(
             slug='robusta-blend',
@@ -32,6 +31,36 @@ class SeedProductsCommandTests(TestCase):
         self.assertTrue(Product.objects.filter(slug='single-origin-arabica').exists())
         self.assertEqual(Product.objects.count(), 5)
         self.assertIn('Skipped: robusta-blend', output.getvalue())
+
+    def test_skip_existing_reactivates_customized_coffee_seedlings(self):
+        seedlings = Product.objects.create(
+            slug='coffee-seedlings',
+            name='Legacy Coffee Seedlings',
+            weight='1 seedling',
+            price=2500,
+            description='Available coffee seedlings.',
+            details='Locally managed catalog entry.',
+            tasting_notes='N/A',
+            roast='N/A',
+            image='https://example.com/seedlings.jpg',
+            image_alt='Coffee seedlings',
+            is_active=False,
+        )
+        output = StringIO()
+
+        call_command('seed_products', skip_existing=True, stdout=output)
+
+        seedlings.refresh_from_db()
+        self.assertTrue(seedlings.is_active)
+        self.assertEqual(seedlings.name, 'Legacy Coffee Seedlings')
+        self.assertEqual(seedlings.price, 2500)
+        self.assertIn('Activated: coffee-seedlings', output.getvalue())
+        response = self.client.get('/api/shop/products/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            'coffee-seedlings',
+            [product['id'] for product in response.data['results']],
+        )
 
 
 class ShopApiTests(APITestCase):
