@@ -89,7 +89,7 @@ class NotificationListView(APIView):
         notifications = request.user.notifications.all()
         return Response({
             'results': [{
-                'id': notification.pk,
+                'public_id': notification.public_id,
                 'kind': notification.kind,
                 'title': notification.title,
                 'message': notification.message,
@@ -104,13 +104,16 @@ class NotificationListView(APIView):
 class NotificationReadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def patch(self, request, pk):
-        updated = request.user.notifications.filter(pk=pk, is_read=False).update(is_read=True)
-        if not updated and not request.user.notifications.filter(pk=pk).exists():
+    def patch(self, request, public_id):
+        updated = request.user.notifications.filter(
+            public_id=public_id,
+            is_read=False,
+        ).update(is_read=True)
+        if not updated and not request.user.notifications.filter(public_id=public_id).exists():
             return Response({'detail': 'Notification not found.'}, status=status.HTTP_404_NOT_FOUND)
-        notification = request.user.notifications.get(pk=pk)
+        notification = request.user.notifications.get(public_id=public_id)
         return Response({
-            'id': notification.pk,
+            'public_id': notification.public_id,
             'is_read': notification.is_read,
             'unread_count': request.user.notifications.filter(is_read=False).count(),
         })

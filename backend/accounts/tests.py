@@ -303,14 +303,25 @@ class AuthenticationApiTests(APITestCase):
         self.client.force_authenticate(other_user)
         self.assertEqual(self.client.get('/api/auth/notifications/').data['results'], [])
         self.assertEqual(
-            self.client.patch(f'/api/auth/notifications/{notification.pk}/read/').status_code,
+            self.client.patch(
+                f'/api/auth/notifications/{notification.public_id}/read/',
+            ).status_code,
             404,
         )
 
         self.client.force_authenticate(user)
-        response = self.client.patch(f'/api/auth/notifications/{notification.pk}/read/')
+        listed_notification = next(
+            item for item in self.client.get('/api/auth/notifications/').data['results']
+            if str(item['public_id']) == str(notification.public_id)
+        )
+        self.assertNotIn('id', listed_notification)
+        self.assertEqual(str(listed_notification['public_id']), str(notification.public_id))
+        response = self.client.patch(
+            f'/api/auth/notifications/{notification.public_id}/read/',
+        )
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(str(response.data['public_id']), str(notification.public_id))
         self.assertEqual(response.data['unread_count'], 1)
         notification.refresh_from_db()
         self.assertTrue(notification.is_read)

@@ -57,12 +57,12 @@ Create the first staff superuser from the backend environment with `py backend\m
 - `POST /api/auth/admin-password-setup/` (public setup endpoint; verifies a newly created admin's temporary password, then issues an auth token only after a validated new password is set)
 - `POST /api/auth/profile-photo/` (authenticated multipart upload; stores the image in Cloudinary)
 - `POST /api/auth/change-password/` (authenticated; verifies the current password before changing it)
-- `GET /api/auth/notifications/`, `PATCH /api/auth/notifications/{id}/read/` (authenticated customer notifications and unread count)
+- `GET /api/auth/notifications/`, `PATCH /api/auth/notifications/{public_uuid}/read/` (authenticated customer notifications and unread count; notification URLs use a random UUID and readable title)
 - `GET /api/shop/products/`, `GET /api/shop/products/{slug}/`, `GET /api/shop/products/{slug}/reviews/`
 - `GET|POST /api/shop/reviews/?product={slug}`, `GET /api/shop/reviews/eligibility/?product={slug}` (posting and eligibility require authentication; review submission additionally requires a fulfilled order containing the product)
 - `GET|POST /api/shop/wishlist/`, `DELETE /api/shop/wishlist/{slug}/` (token authentication)
 - `POST /api/shop/share-events/` (records a product share through `whatsapp` or `native`; does not store user identity)
-- `POST /api/orders/` (authenticated order creation), `GET /api/orders/mine/` (authenticated order history for the signed-in user)
+- `POST /api/orders/` (authenticated order creation), `GET /api/orders/mine/` (authenticated order history), `GET /api/orders/mine/{public_uuid}/` (one order for its signed-in owner). New order references contain a random 128-bit value; customer detail URLs pair an owner-only random UUID with a readable item-name slug.
 - `POST /api/inquiries/` with `kind` set to `contact`, `quote`, `partner`, `farm_reservation`, or `seedling_reservation`; reservation requests are saved for staff tracking and emailed to `info@legacycoffee.org`
 - `POST /api/newsletter/subscribe/` (public, email-only, idempotent signup), `POST /api/newsletter/unsubscribe/` (public)
 - `GET|POST /api/dashboard/newsletters/`, `GET|PATCH|DELETE /api/dashboard/newsletters/{id}/`, `POST /api/dashboard/newsletters/{id}/send/`, `POST /api/dashboard/newsletter-images/` (staff-only campaign management; image upload requires Cloudinary; sending requires Resend configuration and sends only to active subscribers)

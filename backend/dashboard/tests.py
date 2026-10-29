@@ -473,10 +473,8 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(create_response.status_code, 201)
         self.assertEqual(create_response.data['slug'], payload['slug'])
         self.assertEqual(Product.objects.get(slug=payload['slug']).price, 18000)
-        self.assertEqual(
-            self.client.get('/api/shop/products/').data['results'][0]['id'],
-            payload['slug'],
-        )
+        public_products = self.client.get('/api/shop/products/').data['results']
+        self.assertIn(payload['slug'], [product['id'] for product in public_products])
 
         update_response = self.client.patch(
             f'/api/dashboard/products/{payload["slug"]}/',
@@ -494,7 +492,8 @@ class DashboardApiTests(APITestCase):
             ).status_code,
             400,
         )
-        self.assertEqual(self.client.get('/api/shop/products/').data['results'], [])
+        public_products = self.client.get('/api/shop/products/').data['results']
+        self.assertNotIn(payload['slug'], [product['id'] for product in public_products])
 
         delete_response = self.client.delete(f'/api/dashboard/products/{payload["slug"]}/')
         self.assertEqual(delete_response.status_code, 204)

@@ -55,7 +55,7 @@ class OrderHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = (
-            'reference', 'customer_name', 'business_name', 'customer_email', 'customer_phone',
+            'public_id', 'reference', 'customer_name', 'business_name', 'customer_email', 'customer_phone',
             'status', 'status_label', 'total', 'created_at',
             'delivery_address', 'delivery_city', 'delivery_notes',
             'delivery_latitude', 'delivery_longitude', 'items',
@@ -69,7 +69,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = (
-            'reference', 'customer_name', 'business_name', 'customer_email', 'customer_phone',
+            'public_id', 'reference', 'customer_name', 'business_name', 'customer_email', 'customer_phone',
             'delivery_address', 'delivery_city', 'delivery_notes', 'status',
             'delivery_latitude', 'delivery_longitude',
             'total', 'order_items', 'items', 'created_at',

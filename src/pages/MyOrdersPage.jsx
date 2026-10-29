@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { LuArrowRight, LuPackage, LuPackageCheck, LuClock3, LuCircleX } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import { formatPrice } from '../data/products.js'
 import OrderInvoiceActions from '../components/OrderInvoiceActions.jsx'
+import { getOrderUrl } from '../utils/orderUrl.js'
 
 const statusStyles = {
   pending: 'bg-amber-50 text-amber-800 ring-amber-200',
@@ -40,9 +41,12 @@ function StatusBadge({ status, label }) {
 
 export default function MyOrdersPage() {
   const { isAuthenticated, token } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { orderKey, orderSlug } = useParams()
   const [orderPage, setOrderPage] = useState(null)
   const [pageNumber, setPageNumber] = useState(1)
-  const [selectedReference, setSelectedReference] = useState(null)
+  const [selectedPublicId, setSelectedPublicId] = useState(null)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
@@ -50,28 +54,56 @@ export default function MyOrdersPage() {
     if (!token) return undefined
 
     let isCurrent = true
-    apiRequest(`/orders/mine/?page=${pageNumber}`, { token })
-      .then(data => {
-        if (isCurrent) setOrderPage(data)
-      })
-      .catch(requestError => {
+    const loadOrders = async () => {
+      setError('')
+      try {
+        const data = await apiRequest(`/orders/mine/?page=${pageNumber}`, { token })
+        let results = data.results
+        if (orderKey && !results.some(order => order.public_id === orderKey)) {
+          const selectedOrder = await apiRequest(
+            `/orders/mine/${encodeURIComponent(orderKey)}/`,
+            { token },
+          )
+          results = [...results, selectedOrder]
+        }
+        if (!isCurrent) return
+
+        setOrderPage({ ...data, results })
+        if (orderKey) {
+          const selectedOrder = results.find(order => order.public_id === orderKey)
+          setSelectedPublicId(selectedOrder.public_id)
+          const canonicalUrl = getOrderUrl(selectedOrder)
+          if (location.pathname !== canonicalUrl) {
+            navigate(canonicalUrl, { replace: true })
+          }
+        } else {
+          setSelectedPublicId(current => (
+            results.some(order => order.public_id === current)
+              ? current
+              : results[0]?.public_id ?? null
+          ))
+        }
+      } catch (requestError) {
         if (isCurrent) setError(requestError.message)
-      })
-      .finally(() => {
+      } finally {
         if (isCurrent) setIsLoading(false)
-      })
+      }
+    }
+    loadOrders()
 
     return () => {
       isCurrent = false
     }
-  }, [pageNumber, token])
+  }, [location.pathname, navigate, orderKey, orderSlug, pageNumber, token])
 
   if (!isAuthenticated) {
-    return <Navigate to="/signin" replace state={{ from: '/my-orders' }} />
+    return <Navigate to="/signin" replace state={{ from: location.pathname }} />
   }
 
   const orders = orderPage?.results ?? []
-  const selectedOrder = orders.find(order => order.reference === selectedReference) ?? orders[0]
+  const selectedOrder = orderKey
+    ? orders.find(order => order.public_id === orderKey)
+    : orders.find(order => order.public_id === selectedPublicId) ?? orders[0]
 
   return (
     <section className="min-h-[55vh] bg-[#fffdfa] px-4 py-9 sm:px-6 sm:py-12">
@@ -116,7 +148,10 @@ export default function MyOrdersPage() {
                       key={order.reference}
                       type="button"
                       aria-pressed={isSelected}
-                      onClick={() => setSelectedReference(order.reference)}
+                      onClick={() => {
+                        setSelectedPublicId(order.public_id)
+                        navigate(getOrderUrl(order))
+                      }}
                       className={`w-full border p-4 text-left shadow-sm transition-colors ${
                         isSelected
                           ? 'border-primary bg-peach-light/30'

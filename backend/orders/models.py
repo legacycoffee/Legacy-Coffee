@@ -1,3 +1,4 @@
+import secrets
 import uuid
 
 from django.conf import settings
@@ -6,7 +7,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 def generate_order_reference():
-    return f'LC-{uuid.uuid4().hex[:10].upper()}'
+    return f'LC-{secrets.token_hex(16).upper()}'
 
 
 class Order(models.Model):
@@ -21,7 +22,8 @@ class Order(models.Model):
         BANK = 'bank', 'Bank'
         CASH = 'cash', 'Cash'
 
-    reference = models.CharField(max_length=16, unique=True, default=generate_order_reference)
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    reference = models.CharField(max_length=35, unique=True, default=generate_order_reference)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

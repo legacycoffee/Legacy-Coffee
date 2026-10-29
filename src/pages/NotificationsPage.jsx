@@ -3,6 +3,8 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import OrderInvoiceActions from '../components/OrderInvoiceActions.jsx'
+import { createReadableSlug } from '../utils/createReadableSlug.js'
+import { getOrderUrl } from '../utils/orderUrl.js'
 
 function formatNotificationDate(value) {
   return new Intl.DateTimeFormat(undefined, {
@@ -14,9 +16,9 @@ function formatNotificationDate(value) {
 export default function NotificationsPage() {
   const { isAuthenticated, token } = useAuth()
   const navigate = useNavigate()
-  const { notificationId } = useParams()
+  const { notificationKey, notificationSlug } = useParams()
   const [notifications, setNotifications] = useState([])
-  const [selectedId, setSelectedId] = useState(null)
+  const [selectedPublicId, setSelectedPublicId] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -25,11 +27,11 @@ export default function NotificationsPage() {
     try {
       const data = await apiRequest('/auth/notifications/', { token })
       setNotifications(data.results)
-      setSelectedId(currentId => (
-        data.results.some(notification => notification.id === currentId)
+      setSelectedPublicId(currentId => (
+        data.results.some(notification => notification.public_id === currentId)
           ? currentId
           : window.matchMedia('(min-width: 1024px)').matches
-            ? data.results[0]?.id ?? null
+            ? data.results[0]?.public_id ?? null
             : null
       ))
     } catch (requestError) {
@@ -44,22 +46,35 @@ export default function NotificationsPage() {
   }, [isAuthenticated, loadNotifications])
 
   useEffect(() => {
-    if (notificationId) {
-      setSelectedId(Number(notificationId))
-    } else if (!window.matchMedia('(min-width: 1024px)').matches) {
-      setSelectedId(null)
+    if (!notificationKey) {
+      if (!window.matchMedia('(min-width: 1024px)').matches) {
+        setSelectedPublicId(null)
+      }
+      return
     }
-  }, [notificationId])
 
-  const selectedNotification = notifications.find(item => item.id === selectedId)
+    const notification = notifications.find(item => item.public_id === notificationKey)
+    if (notification) {
+      setSelectedPublicId(notification.public_id)
+      const canonicalPath = `/notifications/${encodeURIComponent(notification.public_id)}/${createReadableSlug(notification.title)}`
+      if (notificationSlug !== createReadableSlug(notification.title)) {
+        navigate(canonicalPath, { replace: true })
+      }
+    } else if (!isLoading) {
+      setSelectedPublicId(null)
+      navigate('/notifications', { replace: true })
+    }
+  }, [isLoading, navigate, notificationKey, notificationSlug, notifications])
+
+  const selectedNotification = notifications.find(item => item.public_id === selectedPublicId)
 
   const openNotification = notification => {
-    setSelectedId(notification.id)
-    navigate(`/notifications/${notification.id}`)
+    setSelectedPublicId(notification.public_id)
+    navigate(`/notifications/${encodeURIComponent(notification.public_id)}/${createReadableSlug(notification.title)}`)
   }
 
   const closeNotification = () => {
-    setSelectedId(null)
+    setSelectedPublicId(null)
     navigate('/notifications')
   }
 
@@ -67,13 +82,13 @@ export default function NotificationsPage() {
     if (!selectedNotification || selectedNotification.is_read) return
     setError('')
     let isCurrent = true
-    apiRequest(`/auth/notifications/${selectedNotification.id}/read/`, {
+    apiRequest(`/auth/notifications/${encodeURIComponent(selectedNotification.public_id)}/read/`, {
       method: 'PATCH',
       token,
     }).then(response => {
       if (!isCurrent) return
       setNotifications(current => current.map(item => (
-        item.id === selectedNotification.id ? { ...item, is_read: true } : item
+        item.public_id === selectedNotification.public_id ? { ...item, is_read: true } : item
       )))
       window.dispatchEvent(new CustomEvent('legacy-notifications-updated', {
         detail: { unreadCount: response.unread_count },
@@ -101,7 +116,7 @@ export default function NotificationsPage() {
           <section
             aria-label="Notification list"
             className={`border border-peach-mid/50 bg-white shadow-sm ${
-              notificationId ? 'hidden lg:block' : ''
+              notificationKey ? 'hidden lg:block' : ''
             }`}
           >
             <h2 className="border-b border-peach-mid/40 px-5 py-4 font-bold text-black">All notifications</h2>
@@ -112,13 +127,13 @@ export default function NotificationsPage() {
             ) : (
               <ul className="max-h-[34rem] divide-y divide-peach-mid/30 overflow-y-auto">
                 {notifications.map(notification => (
-                  <li key={notification.id}>
+                  <li key={notification.public_id}>
                     <button
                       type="button"
-                      aria-current={selectedId === notification.id ? 'true' : undefined}
+                      aria-current={selectedPublicId === notification.public_id ? 'true' : undefined}
                       onClick={() => openNotification(notification)}
                       className={`flex w-full items-start gap-3 px-5 py-4 text-left transition-colors hover:bg-peach-light/40 ${
-                        selectedId === notification.id ? 'bg-peach-light/50' : ''
+                        selectedPublicId === notification.public_id ? 'bg-peach-light/50' : ''
                       }`}
                     >
                       <span
@@ -151,7 +166,7 @@ export default function NotificationsPage() {
           <section
             aria-label="Selected notification"
             className={`border border-peach-mid/50 bg-white p-5 shadow-sm sm:p-7 ${
-              notificationId ? '' : 'hidden lg:block'
+              notificationKey ? '' : 'hidden lg:block'
             }`}
           >
             {selectedNotification ? (
@@ -179,6 +194,17 @@ export default function NotificationsPage() {
                         token={token}
                       />
                     </div>
+                    {selectedNotification.details.public_id && (
+                      <Link
+                        to={getOrderUrl({
+                          public_id: selectedNotification.details.public_id,
+                          items: selectedNotification.details.items,
+                        })}
+                        className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+                      >
+                        View this order
+                      </Link>
+                    )}
                     <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
                       <div>
                         <dt className="text-xs font-semibold text-black/55">Order number</dt>

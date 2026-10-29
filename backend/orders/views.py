@@ -24,6 +24,17 @@ class MyOrdersView(generics.ListAPIView):
         )
 
 
+class MyOrderDetailView(generics.RetrieveAPIView):
+    serializer_class = OrderHistorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'public_id'
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user).prefetch_related(
+            Prefetch('items', queryset=OrderItem.objects.select_related('product')),
+        )
+
+
 class OrderInvoiceView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 

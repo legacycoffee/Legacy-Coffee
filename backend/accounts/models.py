@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import AbstractUser, UserManager as DjangoUserManager
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -47,6 +49,7 @@ class Notification(models.Model):
         on_delete=models.CASCADE,
         related_name='notifications',
     )
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     kind = models.CharField(max_length=32, choices=Kind.choices)
     title = models.CharField(max_length=160)
     message = models.TextField()
