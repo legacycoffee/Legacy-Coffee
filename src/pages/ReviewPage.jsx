@@ -52,11 +52,11 @@ export default function ReviewPage() {
     return <Navigate to="/signin" replace state={{ from: location.pathname }} />
   }
 
-  if (isProductsLoading || (product && isLoadingEligibility)) {
+  if ((isProductsLoading && !product) || (product && isLoadingEligibility)) {
     return <section role="status" className="px-6 py-20 text-center text-brown">Checking your order…</section>
   }
 
-  if (productsError || eligibilityError || error) {
+  if ((productsError && !product) || eligibilityError || error) {
     return (
       <section role="alert" className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
         <h1 className="text-2xl font-bold text-brown">Review unavailable</h1>

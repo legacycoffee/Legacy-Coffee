@@ -18,6 +18,20 @@ const navLinks = [
   { label: 'About Us', to: '/about' },
 ]
 
+const pagePreloaders = {
+  '/': () => import('../pages/Home'),
+  '/coffee-farm': () => import('../pages/OurCoffeeFarm'),
+  '/services': () => import('../pages/OurServices'),
+  '/about': () => import('../pages/AboutUs'),
+}
+
+function preloadPage(path) {
+  const preload = pagePreloaders[path]
+  if (preload) {
+    preload().catch(error => console.error(`Could not preload page "${path}":`, error))
+  }
+}
+
 export default function Navbar() {
   const { cartCount } = useCart()
   const { isAuthenticated, user, token, signOut } = useAuth()
@@ -126,10 +140,15 @@ export default function Navbar() {
                     )}
                   </div>
                 ) : (
-                  <NavLink to={link.to} end={link.to === '/'}
+                  <NavLink
+                    to={link.to}
+                    end={link.to === '/'}
+                    onMouseEnter={() => preloadPage(link.to)}
+                    onFocus={() => preloadPage(link.to)}
                     className={({ isActive }) =>
                       `block px-4 py-2 rounded-full font-medium text-sm transition-all ${isActive ? 'bg-primary text-white shadow-sm' : 'text-brown hover:bg-peach-light hover:text-primary'}`
-                    }>
+                    }
+                  >
                     {link.label}
                   </NavLink>
                 )}
@@ -312,7 +331,9 @@ export default function Navbar() {
                     )}
                   </>
                 ) : (
-                  <NavLink to={link.to}
+                  <NavLink
+                    to={link.to}
+                    onFocus={() => preloadPage(link.to)}
                     className={({ isActive }) =>
                       `block px-4 py-3.5 rounded-xl font-semibold text-base transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-brown hover:bg-peach-light'}`
                     }

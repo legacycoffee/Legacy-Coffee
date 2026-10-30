@@ -79,11 +79,11 @@ export default function ProductPage() {
     }
   }, [product, token])
 
-  if (isProductsLoading) {
+  if (isProductsLoading && !product) {
     return <section role="status" className="px-6 py-20 text-center text-brown">Loading product…</section>
   }
 
-  if (productsError) {
+  if (productsError && !product) {
     return (
       <section role="alert" className="px-6 py-20 text-center">
         <h1 className="mb-3 text-3xl font-bold text-primary">Products unavailable</h1>

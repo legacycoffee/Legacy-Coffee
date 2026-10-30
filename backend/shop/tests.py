@@ -30,6 +30,7 @@ class SeedProductsCommandTests(TestCase):
         existing_product.refresh_from_db()
         self.assertEqual(existing_product.name, 'Custom product name')
         self.assertTrue(Product.objects.filter(slug='single-origin-arabica').exists())
+        self.assertTrue(Product.objects.get(slug='coffee-seedlings').is_active)
         self.assertEqual(Product.objects.count(), 5)
         self.assertIn('Skipped: robusta-blend', output.getvalue())
 
@@ -57,9 +58,10 @@ class ShopApiTests(APITestCase):
     def test_products_are_public_and_use_frontend_id_field(self):
         response = self.client.get('/api/shop/products/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['results'][0]['id'], self.product.slug)
-        self.assertEqual(response.data['results'][0]['price'], '18')
-        self.assertIsNone(response.data['results'][0]['wholesale_price'])
+        products_by_id = {item['id']: item for item in response.data['results']}
+        self.assertEqual(products_by_id[self.product.slug]['price'], '18')
+        self.assertIsNone(products_by_id[self.product.slug]['wholesale_price'])
+        self.assertIn('coffee-seedlings', products_by_id)
 
     def test_product_api_exposes_admin_configured_wholesale_price(self):
         self.product.wholesale_price = 15
@@ -68,7 +70,8 @@ class ShopApiTests(APITestCase):
         response = self.client.get('/api/shop/products/')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['results'][0]['wholesale_price'], '15')
+        products_by_id = {item['id']: item for item in response.data['results']}
+        self.assertEqual(products_by_id[self.product.slug]['wholesale_price'], '15')
 
     def test_review_creation_requires_auth_and_includes_rating(self):
         payload = {'product': self.product.slug, 'rating': 5, 'text': 'Excellent coffee.'}
