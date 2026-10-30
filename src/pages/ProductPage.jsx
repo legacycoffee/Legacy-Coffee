@@ -7,11 +7,12 @@ import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import ProductImage from '../components/ProductImage.jsx'
 import useProducts from '../hooks/useProducts.js'
+import { getProductUrl } from '../utils/productUrl.js'
 
 export default function ProductPage() {
-  const { productId } = useParams()
+  const { productKey } = useParams()
   const { products, isLoading: isProductsLoading, error: productsError } = useProducts()
-  const product = products.find(item => item.id === productId)
+  const product = products.find(item => item.public_id === productKey || item.id === productKey)
   const { addToCart } = useCart()
   const { isAuthenticated, token } = useAuth()
   const location = useLocation()
@@ -26,10 +27,19 @@ export default function ProductPage() {
   const [reviewData, setReviewData] = useState(null)
   const [reviewError, setReviewError] = useState('')
   const [showAllReviews, setShowAllReviews] = useState(false)
-  const isWishlisted = Boolean(isAuthenticated && wishlistProductIds.includes(productId))
-  const currentReviewData = reviewData?.productId === productId ? reviewData : null
+  const isWishlisted = Boolean(isAuthenticated && wishlistProductIds.includes(product?.id))
+  const currentReviewData = reviewData?.productId === product?.id ? reviewData : null
   const reviews = currentReviewData?.reviews ?? []
   const reviewEligibility = currentReviewData?.eligibility ?? null
+
+  useEffect(() => {
+    if (!product?.public_id) return
+
+    const canonicalPath = getProductUrl(product)
+    if (location.pathname !== canonicalPath) {
+      navigate(canonicalPath, { replace: true })
+    }
+  }, [location.pathname, navigate, product])
 
   useEffect(() => {
     if (!token || !product) return undefined

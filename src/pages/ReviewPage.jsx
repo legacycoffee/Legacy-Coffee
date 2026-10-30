@@ -5,6 +5,7 @@ import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import ProductImage from '../components/ProductImage.jsx'
 import useProducts from '../hooks/useProducts.js'
+import { getProductUrl } from '../utils/productUrl.js'
 
 export default function ReviewPage() {
   const { productId } = useParams()
@@ -104,7 +105,7 @@ export default function ReviewPage() {
   return (
     <section className="min-h-[60vh] bg-[#fffdfa] px-4 py-9 sm:px-6 sm:py-12">
       <div className="mx-auto max-w-3xl">
-        <Link to={`/products/${encodeURIComponent(product.id)}`} className="text-sm font-semibold text-[#70432d] hover:underline">
+        <Link to={getProductUrl(product)} className="text-sm font-semibold text-[#70432d] hover:underline">
           ← Back to {product.name}
         </Link>
         <div className="mt-5 grid gap-6 border border-peach-mid/50 bg-white p-5 shadow-sm sm:grid-cols-[10rem_1fr] sm:p-7">
@@ -121,7 +122,7 @@ export default function ReviewPage() {
             {success ? (
               <div role="status" className="mt-6 border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
                 Thank you. Your rating and review have been submitted.
-                <Link to={`/products/${encodeURIComponent(product.id)}`} className="ml-1 font-semibold underline">View the coffee</Link>
+                <Link to={getProductUrl(product)} className="ml-1 font-semibold underline">View the coffee</Link>
               </div>
             ) : productEligibility?.can_review ? (
               <form onSubmit={handleSubmit} className="mt-6">

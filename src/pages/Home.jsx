@@ -4,6 +4,7 @@ import { formatPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
 import ProductImage from '../components/ProductImage.jsx'
 import useProducts from '../hooks/useProducts.js'
+import { getProductUrl } from '../utils/productUrl.js'
 
 const heroImages = [
   'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1600&auto=format&fit=crop&q=75',
@@ -121,7 +122,7 @@ export default function Home() {
               <div id="product-list" className="grid scroll-mt-24 grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
                 {products.map(product => (
                   <article key={product.id} className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-peach-mid/40 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
-                  <Link to={`/products/${product.id}`} aria-label={`View ${product.name}`} className="flex flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary">
+                  <Link to={getProductUrl(product)} aria-label={`View ${product.name}`} className="flex flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary">
                     <div className="relative block aspect-[4/3] w-full overflow-hidden bg-peach-light">
                       <ProductImage product={product} className="transition-transform duration-500 sm:group-hover:scale-105" />
                       <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-brown shadow-sm sm:left-3 sm:top-3 sm:text-xs">

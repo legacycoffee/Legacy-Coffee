@@ -117,6 +117,7 @@ class ShopApiTests(APITestCase):
         product = next(
             item for item in response.data['results'] if item['id'] == self.product.slug
         )
+        self.assertEqual(str(product['public_id']), str(self.product.public_id))
         self.assertEqual(product['price'], '18')
         self.assertIsNone(product['wholesale_price'])
         self.assertIn(

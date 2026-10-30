@@ -5,6 +5,7 @@ import { useCart } from '../context/useCart.js'
 import { getCartItemUnitPrice } from '../data/products.js'
 import { useAuth } from '../context/useAuth.js'
 import ProductImage from '../components/ProductImage.jsx'
+import { getProductUrl } from '../utils/productUrl.js'
 
 export default function CartPage() {
   const { items, cartTotal, updateQuantity, removeFromCart } = useCart()
@@ -48,12 +49,12 @@ export default function CartPage() {
           <div className="divide-y divide-peach-mid/60 overflow-hidden border border-peach-mid/50 bg-white shadow-sm">
             {items.map(item => (
               <article key={item.id} className="grid grid-cols-[68px_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-3 p-3 sm:grid-cols-[92px_minmax(0,1fr)_auto] sm:gap-x-4 sm:p-4 md:grid-cols-[112px_minmax(0,1fr)_auto] md:items-center md:gap-5">
-                <Link to={`/products/${item.id}`} className="col-start-1 row-start-1 aspect-square w-[68px] shrink-0 overflow-hidden rounded-lg bg-white p-1.5 sm:w-[92px] sm:p-2 md:w-28 md:p-3" aria-label={`View ${item.name}`}>
+                <Link to={getProductUrl(item)} className="col-start-1 row-start-1 aspect-square w-[68px] shrink-0 overflow-hidden rounded-lg bg-white p-1.5 sm:w-[92px] sm:p-2 md:w-28 md:p-3" aria-label={`View ${item.name}`}>
                   <ProductImage product={item} objectFit="contain" />
                 </Link>
                 <div className="col-start-2 row-start-1 min-w-0 md:col-start-2">
                   <p className="truncate text-[9px] font-bold uppercase tracking-[0.12em] text-brown/65 sm:text-[10px]">Legacy Coffee</p>
-                  <Link to={`/products/${item.id}`} title={item.name} className="mt-0.5 block truncate text-xs font-bold leading-snug text-brown transition-colors hover:text-primary sm:text-sm">{item.name}</Link>
+                  <Link to={getProductUrl(item)} title={item.name} className="mt-0.5 block truncate text-xs font-bold leading-snug text-brown transition-colors hover:text-primary sm:text-sm">{item.name}</Link>
                   <p className="mt-1 truncate text-sm font-bold leading-tight text-brown sm:text-base">{formatPrice(getCartItemUnitPrice(item) * item.quantity)}</p>
                   <p className="mt-0.5 truncate text-[10px] text-brown/65 sm:text-xs">{formatPrice(getCartItemUnitPrice(item))} each · {item.weight}</p>
                   <div className="mt-1.5 hidden md:block">

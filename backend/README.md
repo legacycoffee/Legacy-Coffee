@@ -58,7 +58,7 @@ Create the first staff superuser from the backend environment with `py backend\m
 - `POST /api/auth/profile-photo/` (authenticated multipart upload; stores the image in Cloudinary)
 - `POST /api/auth/change-password/` (authenticated; verifies the current password before changing it)
 - `GET /api/auth/notifications/`, `PATCH /api/auth/notifications/{public_uuid}/read/` (authenticated customer notifications and unread count; notification URLs use a random UUID and readable title)
-- `GET /api/shop/products/`, `GET /api/shop/products/{slug}/`, `GET /api/shop/products/{slug}/reviews/`
+- `GET /api/shop/products/`, `GET /api/shop/products/{slug}/`, `GET /api/shop/products/{slug}/reviews/` (catalog responses include the product's opaque `public_id`; storefront product detail URLs use it instead of the catalog slug)
 - `GET|POST /api/shop/reviews/?product={slug}`, `GET /api/shop/reviews/eligibility/?product={slug}` (posting and eligibility require authentication; review submission additionally requires a fulfilled order containing the product)
 - `GET|POST /api/shop/wishlist/`, `DELETE /api/shop/wishlist/{slug}/` (token authentication)
 - `POST /api/shop/share-events/` (records a product share through `whatsapp` or `native`; does not store user identity)

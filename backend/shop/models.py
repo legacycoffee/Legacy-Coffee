@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -12,6 +14,7 @@ class Product(models.Model):
         OTHER = 'other', 'Other'
 
     slug = models.SlugField(max_length=120, primary_key=True)
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     name = models.CharField(max_length=160)
     coffee_type = models.CharField(
         max_length=20,
