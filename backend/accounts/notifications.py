@@ -4,6 +4,7 @@ from accounts.models import Notification
 def order_notification_details(order):
     items = list(order.items.select_related('product').all())
     return {
+        'public_id': str(order.public_id),
         'reference': order.reference,
         'customer_name': order.customer_name,
         'business_name': order.business_name,

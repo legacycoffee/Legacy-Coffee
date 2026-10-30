@@ -82,6 +82,7 @@ export default function CheckoutPage() {
 
       const order = {
         id: result.reference,
+        public_id: result.public_id,
         status: result.status,
         customer: {
           name: result.customer_name,

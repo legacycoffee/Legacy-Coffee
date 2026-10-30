@@ -1,15 +1,17 @@
+from importlib import import_module
 from io import StringIO
+from types import SimpleNamespace
 
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
-from django.test import TestCase
 from rest_framework.test import APITestCase
 
 from orders.models import Order, OrderItem
 from .models import Product, Review, ShareEvent, WishlistItem
 
 
-class SeedProductsCommandTests(TestCase):
+class SeedProductsCommandTests(APITestCase):
     def test_skip_existing_seeds_missing_products_without_overwriting_existing(self):
         existing_product = Product.objects.create(
             slug='robusta-blend',
@@ -33,6 +35,60 @@ class SeedProductsCommandTests(TestCase):
         self.assertTrue(Product.objects.get(slug='coffee-seedlings').is_active)
         self.assertEqual(Product.objects.count(), 5)
         self.assertIn('Skipped: robusta-blend', output.getvalue())
+
+    def test_skip_existing_reactivates_customized_coffee_seedlings(self):
+        seedlings = Product.objects.get(slug='coffee-seedlings')
+        seedlings.name = 'Legacy Coffee Seedlings'
+        seedlings.price = 2500
+        seedlings.description = 'Available coffee seedlings.'
+        seedlings.details = 'Locally managed catalog entry.'
+        seedlings.image = 'https://example.com/seedlings.jpg'
+        seedlings.image_alt = 'Coffee seedlings'
+        seedlings.is_active = False
+        seedlings.save()
+        output = StringIO()
+
+        call_command('seed_products', skip_existing=True, stdout=output)
+
+        seedlings.refresh_from_db()
+        self.assertTrue(seedlings.is_active)
+        self.assertEqual(seedlings.name, 'Legacy Coffee Seedlings')
+        self.assertEqual(seedlings.price, 2500)
+        self.assertIn('Activated: coffee-seedlings', output.getvalue())
+        response = self.client.get('/api/shop/products/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            'coffee-seedlings',
+            [product['id'] for product in response.data['results']],
+        )
+
+    def test_seedlings_data_migration_adds_active_product_to_catalog(self):
+        seedlings = Product.objects.get(slug='coffee-seedlings')
+        self.assertTrue(seedlings.is_active)
+        response = self.client.get('/api/shop/products/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            'coffee-seedlings',
+            [product['id'] for product in response.data['results']],
+        )
+
+    def test_seedlings_data_migration_reactivates_without_overwriting_custom_product(self):
+        seedlings = Product.objects.get(slug='coffee-seedlings')
+        seedlings.name = 'Custom Seedlings'
+        seedlings.price = 2500
+        seedlings.is_active = False
+        seedlings.save()
+        migration = import_module('shop.migrations.0006_ensure_coffee_seedlings_product')
+
+        migration.ensure_seedlings_product(
+            apps,
+            SimpleNamespace(connection=SimpleNamespace(alias='default')),
+        )
+
+        seedlings.refresh_from_db()
+        self.assertTrue(seedlings.is_active)
+        self.assertEqual(seedlings.name, 'Custom Seedlings')
+        self.assertEqual(seedlings.price, 2500)
 
 
 class ShopApiTests(APITestCase):
@@ -58,10 +114,15 @@ class ShopApiTests(APITestCase):
     def test_products_are_public_and_use_frontend_id_field(self):
         response = self.client.get('/api/shop/products/')
         self.assertEqual(response.status_code, 200)
-        products_by_id = {item['id']: item for item in response.data['results']}
-        self.assertEqual(products_by_id[self.product.slug]['price'], '18')
-        self.assertIsNone(products_by_id[self.product.slug]['wholesale_price'])
-        self.assertIn('coffee-seedlings', products_by_id)
+        product = next(
+            item for item in response.data['results'] if item['id'] == self.product.slug
+        )
+        self.assertEqual(product['price'], '18')
+        self.assertIsNone(product['wholesale_price'])
+        self.assertIn(
+            'coffee-seedlings',
+            [item['id'] for item in response.data['results']],
+        )
 
     def test_product_api_exposes_admin_configured_wholesale_price(self):
         self.product.wholesale_price = 15
@@ -70,8 +131,10 @@ class ShopApiTests(APITestCase):
         response = self.client.get('/api/shop/products/')
 
         self.assertEqual(response.status_code, 200)
-        products_by_id = {item['id']: item for item in response.data['results']}
-        self.assertEqual(products_by_id[self.product.slug]['wholesale_price'], '15')
+        product = next(
+            item for item in response.data['results'] if item['id'] == self.product.slug
+        )
+        self.assertEqual(product['wholesale_price'], '15')
 
     def test_review_creation_requires_auth_and_includes_rating(self):
         payload = {'product': self.product.slug, 'rating': 5, 'text': 'Excellent coffee.'}

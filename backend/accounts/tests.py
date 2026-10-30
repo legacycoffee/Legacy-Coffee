@@ -9,6 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command, CommandError
 from django.test import SimpleTestCase, TestCase
 from django.test import override_settings
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
 from accounts.services import upload_profile_photo
@@ -212,6 +213,69 @@ class AuthenticationApiTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.data['user']['is_staff'])
 
+    def test_new_admin_must_set_a_new_password_before_receiving_an_auth_token(self):
+        admin = get_user_model().objects.create_user(
+            username='new-admin',
+            email='new-admin@example.com',
+            password='TemporaryAdmin!2026',
+            is_staff=True,
+            must_change_password=True,
+        )
+        previous_token = Token.objects.create(user=admin)
+        login_response = self.client.post('/api/auth/login/', {
+            'email': admin.email,
+            'password': 'TemporaryAdmin!2026',
+        })
+
+        self.assertEqual(login_response.status_code, 403)
+        self.assertEqual(login_response.data['code'], 'admin_password_setup_required')
+        self.assertNotIn('token', login_response.data)
+        self.assertFalse(Token.objects.filter(key=previous_token.key).exists())
+
+        invalid_temporary_password_response = self.client.post('/api/auth/admin-password-setup/', {
+            'email': admin.email,
+            'temporary_password': 'WrongTemporary!2026',
+            'new_password': 'NewSecureAdmin!2027',
+            'confirm_password': 'NewSecureAdmin!2027',
+        })
+        self.assertEqual(invalid_temporary_password_response.status_code, 400)
+        admin.refresh_from_db()
+        self.assertTrue(admin.must_change_password)
+
+        mismatch_response = self.client.post('/api/auth/admin-password-setup/', {
+            'email': admin.email,
+            'temporary_password': 'TemporaryAdmin!2026',
+            'new_password': 'DifferentAdmin!2027',
+            'confirm_password': 'OtherAdmin!2027',
+        })
+        self.assertEqual(mismatch_response.status_code, 400)
+        self.assertIn('confirm_password', mismatch_response.data)
+
+        setup_response = self.client.post('/api/auth/admin-password-setup/', {
+            'email': admin.email,
+            'temporary_password': 'TemporaryAdmin!2026',
+            'new_password': 'NewSecureAdmin!2027',
+            'confirm_password': 'NewSecureAdmin!2027',
+        })
+
+        self.assertEqual(setup_response.status_code, 200)
+        self.assertIn('token', setup_response.data)
+        admin.refresh_from_db()
+        self.assertFalse(admin.must_change_password)
+        self.assertTrue(admin.check_password('NewSecureAdmin!2027'))
+        self.assertFalse(admin.check_password('TemporaryAdmin!2026'))
+
+        old_password_login = self.client.post('/api/auth/login/', {
+            'email': admin.email,
+            'password': 'TemporaryAdmin!2026',
+        })
+        new_password_login = self.client.post('/api/auth/login/', {
+            'email': admin.email,
+            'password': 'NewSecureAdmin!2027',
+        })
+        self.assertEqual(old_password_login.status_code, 400)
+        self.assertEqual(new_password_login.status_code, 200)
+
     def test_notifications_are_private_and_opening_one_marks_it_read(self):
         user = get_user_model().objects.create_user(
             username='customer',
@@ -239,14 +303,25 @@ class AuthenticationApiTests(APITestCase):
         self.client.force_authenticate(other_user)
         self.assertEqual(self.client.get('/api/auth/notifications/').data['results'], [])
         self.assertEqual(
-            self.client.patch(f'/api/auth/notifications/{notification.pk}/read/').status_code,
+            self.client.patch(
+                f'/api/auth/notifications/{notification.public_id}/read/',
+            ).status_code,
             404,
         )
 
         self.client.force_authenticate(user)
-        response = self.client.patch(f'/api/auth/notifications/{notification.pk}/read/')
+        listed_notification = next(
+            item for item in self.client.get('/api/auth/notifications/').data['results']
+            if str(item['public_id']) == str(notification.public_id)
+        )
+        self.assertNotIn('id', listed_notification)
+        self.assertEqual(str(listed_notification['public_id']), str(notification.public_id))
+        response = self.client.patch(
+            f'/api/auth/notifications/{notification.public_id}/read/',
+        )
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(str(response.data['public_id']), str(notification.public_id))
         self.assertEqual(response.data['unread_count'], 1)
         notification.refresh_from_db()
         self.assertTrue(notification.is_read)

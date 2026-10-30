@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import AbstractUser, UserManager as DjangoUserManager
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -17,6 +19,7 @@ class User(AbstractUser):
     delivery_address = models.CharField(max_length=250, blank=True)
     delivery_city = models.CharField(max_length=120, blank=True)
     delivery_notes = models.TextField(blank=True)
+    must_change_password = models.BooleanField(default=False)
     location_latitude = models.DecimalField(
         max_digits=9, decimal_places=6, null=True, blank=True,
         validators=[MinValueValidator(-90), MaxValueValidator(90)],
@@ -46,6 +49,7 @@ class Notification(models.Model):
         on_delete=models.CASCADE,
         related_name='notifications',
     )
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     kind = models.CharField(max_length=32, choices=Kind.choices)
     title = models.CharField(max_length=160)
     message = models.TextField()

@@ -144,4 +144,5 @@ class AdminAccountCreateSerializer(serializers.Serializer):
             email=validated_data['email'],
             password=validated_data['password'],
             is_staff=True,
+            must_change_password=True,
         )

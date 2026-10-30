@@ -19,7 +19,9 @@ async function authRequest(path, payload, token) {
     const message = data?.detail
       || Object.values(data || {}).flat().join(' ')
       || 'Authentication request failed. Please try again.'
-    throw new Error(message)
+    const error = new Error(message)
+    error.code = data?.code
+    throw error
   }
   return data
 }
@@ -45,6 +47,12 @@ export function AuthProvider({ children }) {
 
   const signIn = useCallback(async credentials => {
     const data = await authRequest('/auth/login/', credentials)
+    saveAuth(data)
+    return data.user
+  }, [saveAuth])
+
+  const completeAdminPasswordSetup = useCallback(async details => {
+    const data = await authRequest('/auth/admin-password-setup/', details)
     saveAuth(data)
     return data.user
   }, [saveAuth])
@@ -81,11 +89,12 @@ export function AuthProvider({ children }) {
     user: auth?.user || null,
     isAuthenticated: Boolean(auth?.token),
     signIn,
+    completeAdminPasswordSetup,
     signUp,
     signOut,
     updateUser,
     clearAuth,
-  }), [auth, signIn, signUp, signOut, updateUser, clearAuth])
+  }), [auth, signIn, completeAdminPasswordSetup, signUp, signOut, updateUser, clearAuth])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

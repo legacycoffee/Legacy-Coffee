@@ -6,6 +6,7 @@ import { useCart } from '../context/useCart.js'
 import { useAuth } from '../context/useAuth.js'
 import ProductImage from '../components/ProductImage.jsx'
 import OrderInvoiceActions from '../components/OrderInvoiceActions.jsx'
+import { getOrderUrl } from '../utils/orderUrl.js'
 
 export default function ConfirmationPage() {
   const location = useLocation()
@@ -47,6 +48,15 @@ export default function ConfirmationPage() {
           <div className="mt-5 flex justify-center">
             <OrderInvoiceActions reference={order.id} token={token} />
           </div>
+          {order.public_id && (
+            <Link
+              to={getOrderUrl({ public_id: order.public_id, items: order.items })}
+              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+            >
+              View this order
+              <LuArrowRight aria-hidden="true" className="h-4 w-4" />
+            </Link>
+          )}
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[1fr_300px]">

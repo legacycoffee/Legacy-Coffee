@@ -44,7 +44,11 @@ class OrderApiTests(APITestCase):
         response = self.client.post('/api/orders/', self.payload, format='json')
         self.assertEqual(response.status_code, 201)
         order = Order.objects.get()
+        self.assertEqual(response.data['public_id'], str(order.public_id))
         self.assertTrue(order.reference.startswith('LC-'))
+        self.assertEqual(len(order.reference), 12)
+        self.assertRegex(order.reference, r'^LC-[A-Z0-9]{9}$')
+        self.assertEqual(response.data['reference'], order.reference)
         self.assertEqual(order.total, Decimal('36000'))
         self.assertEqual(order.user, self.user)
         self.assertEqual(order.customer_email, self.user.email)
@@ -58,6 +62,7 @@ class OrderApiTests(APITestCase):
         self.assertEqual(notification.kind, Notification.Kind.ORDER_SUBMITTED)
         self.assertIn(order.reference, notification.message)
         self.assertEqual(notification.details['reference'], order.reference)
+        self.assertEqual(notification.details['public_id'], str(order.public_id))
         self.assertEqual(notification.details['customer_name'], 'Coffee Customer')
         self.assertEqual(notification.details['customer_email'], self.user.email)
         self.assertEqual(notification.details['delivery_address'], '1 Coffee Road')
@@ -129,18 +134,10 @@ class OrderApiTests(APITestCase):
         self.assertTrue(response.data['order_items'][0]['is_wholesale'])
 
     def test_seedling_order_over_1000_receives_five_percent_discount(self):
-        seedlings = Product.objects.create(
-            slug='coffee-seedlings',
-            name='Coffee Seedlings',
-            weight='1 seedling',
-            price=2000,
-            description='Coffee seedlings.',
-            details='Approved varieties.',
-            tasting_notes='N/A',
-            roast='N/A',
-            image='https://example.com/seedlings.jpg',
-            image_alt='Coffee seedlings',
-        )
+        seedlings = Product.objects.get(slug='coffee-seedlings')
+        seedlings.price = 2000
+        seedlings.is_active = True
+        seedlings.save(update_fields=('price', 'is_active'))
         self.client.force_authenticate(self.user)
 
         response = self.client.post('/api/orders/', {
@@ -155,18 +152,10 @@ class OrderApiTests(APITestCase):
         self.assertEqual(response.data['total'], '1901900')
 
     def test_seedling_order_at_1000_has_no_bulk_discount(self):
-        seedlings = Product.objects.create(
-            slug='coffee-seedlings',
-            name='Coffee Seedlings',
-            weight='1 seedling',
-            price=2000,
-            description='Coffee seedlings.',
-            details='Approved varieties.',
-            tasting_notes='N/A',
-            roast='N/A',
-            image='https://example.com/seedlings.jpg',
-            image_alt='Coffee seedlings',
-        )
+        seedlings = Product.objects.get(slug='coffee-seedlings')
+        seedlings.price = 2000
+        seedlings.is_active = True
+        seedlings.save(update_fields=('price', 'is_active'))
         self.client.force_authenticate(self.user)
 
         response = self.client.post('/api/orders/', {
@@ -299,6 +288,7 @@ class OrderApiTests(APITestCase):
         self.assertEqual(response.data['count'], 1)
         order = response.data['results'][0]
         self.assertEqual(order['reference'], own_order_response.data['reference'])
+        self.assertEqual(order['public_id'], own_order_response.data['public_id'])
         self.assertEqual(order['status'], Order.Status.PENDING)
         self.assertEqual(order['status_label'], 'Pending')
         self.assertEqual(order['items'][0]['product_name'], 'Arabica')
@@ -313,3 +303,23 @@ class OrderApiTests(APITestCase):
         self.assertEqual(order['delivery_city'], 'Kampala')
         self.assertEqual(order['delivery_latitude'], '0.347600')
         self.assertEqual(order['delivery_longitude'], '32.582500')
+
+    def test_my_order_detail_is_private_and_uses_public_uuid(self):
+        self.client.force_authenticate(self.user)
+        self.client.post('/api/orders/', self.payload, format='json')
+        order = Order.objects.get(user=self.user)
+        detail_url = f'/api/orders/mine/{order.public_id}/'
+
+        response = self.client.get(detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['public_id'], str(order.public_id))
+        self.assertEqual(response.data['reference'], order.reference)
+
+        other_user = get_user_model().objects.create_user(
+            username='another-customer',
+            email='another@example.com',
+            password='StrongPassword!2026',
+        )
+        self.client.force_authenticate(other_user)
+        self.assertEqual(self.client.get(detail_url).status_code, 404)

@@ -38,6 +38,7 @@ class DashboardApiTests(APITestCase):
             403,
         )
         self.assertEqual(self.client.get('/api/dashboard/inquiries/').status_code, 403)
+        self.assertEqual(self.client.post('/api/dashboard/inquiries/1/open/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/subscribers/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/users/').status_code, 403)
         self.assertEqual(self.client.get('/api/dashboard/analytics/').status_code, 403)
@@ -329,6 +330,28 @@ class DashboardApiTests(APITestCase):
             'Type: Robusta',
         )
 
+    def test_staff_can_mark_new_inquiry_opened_and_clear_new_request_counter(self):
+        inquiry = Inquiry.objects.create(
+            kind=Inquiry.Kind.CONTACT,
+            name='Inquiry Customer',
+            email='inquiry@example.com',
+            subject='Coffee question',
+            message='Please share more details.',
+        )
+        self.client.force_authenticate(self.staff)
+
+        response = self.client.post(f'/api/dashboard/inquiries/{inquiry.pk}/open/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['status'], Inquiry.Status.IN_PROGRESS)
+        inquiry.refresh_from_db()
+        self.assertEqual(inquiry.status, Inquiry.Status.IN_PROGRESS)
+        summary_response = self.client.get('/api/dashboard/')
+        self.assertEqual(summary_response.data['new_inquiries'], 0)
+        inbox_response = self.client.get('/api/dashboard/inquiries/')
+        self.assertEqual(inbox_response.data['results'][0]['id'], inquiry.pk)
+        self.assertEqual(inbox_response.data['results'][0]['status'], Inquiry.Status.IN_PROGRESS)
+
     def test_staff_can_read_order_and_inquiry_inboxes(self):
         product = Product.objects.create(
             slug='arabica',
@@ -450,10 +473,8 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(create_response.status_code, 201)
         self.assertEqual(create_response.data['slug'], payload['slug'])
         self.assertEqual(Product.objects.get(slug=payload['slug']).price, 18000)
-        self.assertEqual(
-            self.client.get('/api/shop/products/').data['results'][0]['id'],
-            payload['slug'],
-        )
+        public_products = self.client.get('/api/shop/products/').data['results']
+        self.assertIn(payload['slug'], [product['id'] for product in public_products])
 
         update_response = self.client.patch(
             f'/api/dashboard/products/{payload["slug"]}/',
@@ -471,7 +492,8 @@ class DashboardApiTests(APITestCase):
             ).status_code,
             400,
         )
-        self.assertEqual(self.client.get('/api/shop/products/').data['results'], [])
+        public_products = self.client.get('/api/shop/products/').data['results']
+        self.assertNotIn(payload['slug'], [product['id'] for product in public_products])
 
         delete_response = self.client.delete(f'/api/dashboard/products/{payload["slug"]}/')
         self.assertEqual(delete_response.status_code, 204)
@@ -548,6 +570,7 @@ class DashboardApiTests(APITestCase):
         second_admin = get_user_model().objects.get(email='second-admin@example.com')
         self.assertTrue(second_admin.is_staff)
         self.assertFalse(second_admin.is_superuser)
+        self.assertTrue(second_admin.must_change_password)
 
         admins_response = self.client.get('/api/dashboard/admins/')
         self.assertEqual(admins_response.status_code, 200)

@@ -32,6 +32,15 @@ const CookiePolicy = lazy(() => import('./pages/CookiePolicy.jsx'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
 const PatrickStoryPage = lazy(() => import('./pages/PatrickStoryPage'))
 
+const githubPagesRedirect = sessionStorage.getItem('gh-pages-redirect')
+if (githubPagesRedirect) {
+  sessionStorage.removeItem('gh-pages-redirect')
+  const redirectUrl = new URL(githubPagesRedirect, window.location.origin)
+  if (redirectUrl.origin === window.location.origin) {
+    window.history.replaceState(null, '', redirectUrl)
+  }
+}
+
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
 
@@ -82,9 +91,10 @@ export default function App() {
               <Route path="/cart" element={<Layout><CartPage /></Layout>} />
               <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
               <Route path="/my-orders" element={<Layout><MyOrdersPage /></Layout>} />
+              <Route path="/my-orders/:orderKey/:orderSlug?" element={<Layout><MyOrdersPage /></Layout>} />
               <Route path="/my-account" element={<Layout><MyAccountPage /></Layout>} />
               <Route path="/notifications" element={<Layout><NotificationsPage /></Layout>} />
-              <Route path="/notifications/:notificationId" element={<Layout><NotificationsPage /></Layout>} />
+              <Route path="/notifications/:notificationKey/:notificationSlug?" element={<Layout><NotificationsPage /></Layout>} />
               <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
               <Route path="/signin" element={<Layout><AuthPage mode="signin" /></Layout>} />
               <Route path="/signup" element={<Layout><AuthPage mode="signup" /></Layout>} />

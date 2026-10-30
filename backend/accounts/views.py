@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import generics, permissions, status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.authtoken.models import Token
@@ -11,6 +12,7 @@ from .serializers import (
     DeleteAccountSerializer,
     PasswordChangeSerializer,
     RegistrationSerializer,
+    AdminPasswordSetupSerializer,
     UserSerializer,
 )
 from .services import upload_profile_photo
@@ -44,12 +46,38 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
+        if user.must_change_password:
+            Token.objects.filter(user=user).delete()
+            return Response({
+                'code': 'admin_password_setup_required',
+                'detail': 'Set a new password to finish setting up your administrator account.',
+            }, status=status.HTTP_403_FORBIDDEN)
         token, _ = Token.objects.get_or_create(user=user)
         Notification.objects.create(
             user=user,
             kind=Notification.Kind.SIGN_IN,
             title='Welcome back',
             message='You have successfully signed in to your Legacy Coffee account.',
+        )
+        return Response({'token': token.key, 'user': UserSerializer(user).data})
+
+
+class AdminPasswordSetupView(generics.GenericAPIView):
+    serializer_class = AdminPasswordSetupSerializer
+    permission_classes = [permissions.AllowAny]
+
+    @transaction.atomic
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        Token.objects.filter(user=user).delete()
+        token = Token.objects.create(user=user)
+        Notification.objects.create(
+            user=user,
+            kind=Notification.Kind.SIGN_IN,
+            title='Welcome to the Legacy Coffee admin portal',
+            message='Your administrator account is ready.',
         )
         return Response({'token': token.key, 'user': UserSerializer(user).data})
 
@@ -61,7 +89,7 @@ class NotificationListView(APIView):
         notifications = request.user.notifications.all()
         return Response({
             'results': [{
-                'id': notification.pk,
+                'public_id': notification.public_id,
                 'kind': notification.kind,
                 'title': notification.title,
                 'message': notification.message,
@@ -76,13 +104,16 @@ class NotificationListView(APIView):
 class NotificationReadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def patch(self, request, pk):
-        updated = request.user.notifications.filter(pk=pk, is_read=False).update(is_read=True)
-        if not updated and not request.user.notifications.filter(pk=pk).exists():
+    def patch(self, request, public_id):
+        updated = request.user.notifications.filter(
+            public_id=public_id,
+            is_read=False,
+        ).update(is_read=True)
+        if not updated and not request.user.notifications.filter(public_id=public_id).exists():
             return Response({'detail': 'Notification not found.'}, status=status.HTTP_404_NOT_FOUND)
-        notification = request.user.notifications.get(pk=pk)
+        notification = request.user.notifications.get(public_id=public_id)
         return Response({
-            'id': notification.pk,
+            'public_id': notification.public_id,
             'is_read': notification.is_read,
             'unread_count': request.user.notifications.filter(is_read=False).count(),
         })

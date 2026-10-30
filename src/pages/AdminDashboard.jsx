@@ -1476,18 +1476,32 @@ function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnl
 }
 
 export default function AdminDashboard() {
-  const { token, isAuthenticated, user, signIn, signOut, clearAuth, updateUser } = useAuth()
+  const {
+    token,
+    isAuthenticated,
+    user,
+    signIn,
+    completeAdminPasswordSetup,
+    signOut,
+    clearAuth,
+    updateUser,
+  } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const requestedSection = searchParams.get('tab')
   const activeTab = sections.some(section => section.id === requestedSection) ? requestedSection : 'Overview'
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [credentials, setCredentials] = useState({ email: '', password: '' })
   const [loginError, setLoginError] = useState('')
+  const [passwordSetupRequired, setPasswordSetupRequired] = useState(false)
+  const [passwordSetupForm, setPasswordSetupForm] = useState({ new_password: '', confirm_password: '' })
+  const [passwordSetupError, setPasswordSetupError] = useState('')
+  const [isPasswordSetupSaving, setIsPasswordSetupSaving] = useState(false)
   const [dataError, setDataError] = useState('')
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [summary, setSummary] = useState(null)
   const [orders, setOrders] = useState([])
   const [inquiries, setInquiries] = useState([])
+  const [inquiryUpdates, setInquiryUpdates] = useState({})
   const [usersPage, setUsersPage] = useState(null)
   const [orderSearch, setOrderSearch] = useState('')
   const [requestSearch, setRequestSearch] = useState('')
@@ -2002,9 +2016,34 @@ export default function AdminDashboard() {
         setLoginError('This account does not have administrator access.')
       }
     } catch (error) {
-      setLoginError(error.message)
+      if (error.code === 'admin_password_setup_required') {
+        setPasswordSetupRequired(true)
+        setLoginError('')
+      } else {
+        setLoginError(error.message)
+      }
     } finally {
       setIsSigningIn(false)
+    }
+  }
+
+  const handleAdminPasswordSetup = async event => {
+    event.preventDefault()
+    setPasswordSetupError('')
+    setIsPasswordSetupSaving(true)
+    try {
+      await completeAdminPasswordSetup({
+        email: credentials.email,
+        temporary_password: credentials.password,
+        ...passwordSetupForm,
+      })
+      setCredentials({ email: '', password: '' })
+      setPasswordSetupForm({ new_password: '', confirm_password: '' })
+      setPasswordSetupRequired(false)
+    } catch (error) {
+      setPasswordSetupError(error.message)
+    } finally {
+      setIsPasswordSetupSaving(false)
     }
   }
 
@@ -2037,6 +2076,35 @@ export default function AdminDashboard() {
       setOrderStatusUpdates(current => ({
         ...current,
         [order.reference]: { isSaving: false, error: error.message, success: '' },
+      }))
+    }
+  }
+
+  const markInquiryOpened = async inquiry => {
+    setInquiryUpdates(current => ({
+      ...current,
+      [inquiry.id]: { isSaving: true, error: '' },
+    }))
+    try {
+      const updatedInquiry = await apiRequest(
+        `/dashboard/inquiries/${inquiry.id}/open/`,
+        { method: 'POST', token },
+      )
+      setInquiries(current => current.map(item => (
+        item.id === updatedInquiry.id ? { ...item, ...updatedInquiry } : item
+      )))
+      setSummary(current => {
+        if (!current || inquiry.status !== 'new' || updatedInquiry.status === 'new') return current
+        return { ...current, new_inquiries: Math.max(0, current.new_inquiries - 1) }
+      })
+      setInquiryUpdates(current => ({
+        ...current,
+        [inquiry.id]: { isSaving: false, error: '' },
+      }))
+    } catch (error) {
+      setInquiryUpdates(current => ({
+        ...current,
+        [inquiry.id]: { isSaving: false, error: error.message },
       }))
     }
   }
@@ -2380,16 +2448,71 @@ export default function AdminDashboard() {
                 <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#f58537]" />
                 Admin portal
               </span>
-              <h2 className="mt-4 text-2xl font-bold tracking-tight text-stone-900 sm:text-3xl">Welcome back</h2>
+              <h2 className="mt-4 text-2xl font-bold tracking-tight text-stone-900 sm:text-3xl">
+                {passwordSetupRequired ? 'Create your password' : 'Welcome back'}
+              </h2>
               <p className="mt-2 max-w-sm text-sm leading-6 text-stone-500">
-                Sign in with your authorized staff account to open your workspace.
+                {passwordSetupRequired
+                  ? 'Your temporary password is verified. Set and confirm a new password to finish setting up your account.'
+                  : 'Sign in with your authorized staff account to open your workspace.'}
               </p>
             </div>
-            {loginError && (
+            {(passwordSetupError || loginError) && (
               <p role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-800">
-                {loginError}
+                {passwordSetupRequired ? passwordSetupError : loginError}
               </p>
             )}
+            {passwordSetupRequired ? (
+              <form onSubmit={handleAdminPasswordSetup} className="space-y-5">
+                <p className="text-sm font-semibold text-stone-700">{credentials.email}</p>
+                <label className="block text-sm font-semibold text-stone-700" htmlFor="admin-new-password">
+                  New password
+                  <input
+                    id="admin-new-password"
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                    value={passwordSetupForm.new_password}
+                    onChange={event => setPasswordSetupForm(current => ({ ...current, new_password: event.target.value }))}
+                    className="mt-2 min-h-12 w-full rounded-none border border-stone-200 bg-[#fcfbfa] px-4 py-3 text-base font-normal text-stone-900 outline-none transition placeholder:text-stone-400 hover:border-stone-300 focus:border-[#b86638] focus:bg-white focus:ring-4 focus:ring-orange-100"
+                    placeholder="Create a new password"
+                  />
+                </label>
+                <label className="block text-sm font-semibold text-stone-700" htmlFor="admin-confirm-new-password">
+                  Confirm new password
+                  <input
+                    id="admin-confirm-new-password"
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                    value={passwordSetupForm.confirm_password}
+                    onChange={event => setPasswordSetupForm(current => ({ ...current, confirm_password: event.target.value }))}
+                    className="mt-2 min-h-12 w-full rounded-none border border-stone-200 bg-[#fcfbfa] px-4 py-3 text-base font-normal text-stone-900 outline-none transition placeholder:text-stone-400 hover:border-stone-300 focus:border-[#b86638] focus:bg-white focus:ring-4 focus:ring-orange-100"
+                    placeholder="Confirm your new password"
+                  />
+                </label>
+                <button
+                  disabled={isPasswordSetupSaving}
+                  className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-none bg-[#593a27] px-4 py-3 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(89,58,39,0.18)] transition hover:bg-[#40291d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b86638] disabled:cursor-wait disabled:opacity-60"
+                >
+                  {isPasswordSetupSaving ? 'Saving password…' : 'Save new password'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPasswordSetupRequired(false)
+                    setCredentials({ email: '', password: '' })
+                    setPasswordSetupForm({ new_password: '', confirm_password: '' })
+                    setPasswordSetupError('')
+                  }}
+                  className="w-full px-4 py-2 text-sm font-semibold text-stone-500 transition hover:text-[#8b4a2b]"
+                >
+                  Back to sign in
+                </button>
+              </form>
+            ) : (
             <form onSubmit={handleLogin} className="space-y-5">
               <label className="block text-sm font-semibold text-stone-700" htmlFor="admin-email">
                 Email address
@@ -2425,6 +2548,7 @@ export default function AdminDashboard() {
                 {isSigningIn ? 'Signing in…' : 'Sign in to workspace'}
               </button>
             </form>
+            )}
             <div className="mt-7 flex items-center justify-center gap-2 border-t border-stone-100 pt-5 text-center text-[11px] text-stone-400">
               <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full bg-stone-100 text-[10px] text-stone-500">✓</span>
               Access is limited to authorized staff accounts.
@@ -3363,6 +3487,7 @@ export default function AdminDashboard() {
                   </label>
                   <label className="block text-xs font-medium text-stone-700 sm:col-span-2">
                     Temporary password
+                    <span className="mt-1 block font-normal text-stone-500">The new administrator will replace this password at first sign-in.</span>
                     <input
                       disabled={!isNewAdminEditing}
                       required
@@ -3911,6 +4036,21 @@ export default function AdminDashboard() {
                         </div>
                       )}
                       <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-stone-600">{inquiry.message}</p>
+                      {inquiry.status === 'new' && (
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 pt-4">
+                          {inquiryUpdates[inquiry.id]?.error && (
+                            <p role="alert" className="text-sm text-red-700">{inquiryUpdates[inquiry.id].error}</p>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => markInquiryOpened(inquiry)}
+                            disabled={inquiryUpdates[inquiry.id]?.isSaving}
+                            className="ml-auto rounded-lg border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-700 transition hover:border-[#a75a31] hover:text-[#8b4a2b] disabled:cursor-wait disabled:opacity-50"
+                          >
+                            {inquiryUpdates[inquiry.id]?.isSaving ? 'Opening…' : 'Mark as opened'}
+                          </button>
+                        </div>
+                      )}
                     </article>
                   ))}
                 </div>
