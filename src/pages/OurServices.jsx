@@ -133,7 +133,7 @@ export default function OurServices() {
         />
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-brown/65" />
         <div className="relative">
-          <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-peach">Legacy Coffee</p>
+          <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-peach"></p>
           <h1 className="text-4xl font-black text-white md:text-6xl">Our Services</h1>
         </div>
       </section>

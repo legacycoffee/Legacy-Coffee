@@ -80,7 +80,7 @@ export default function Home() {
               <span className="text-primary">of Every Bean</span>
             </h1>
             <p className="mb-8 max-w-lg text-base leading-relaxed text-white/80 sm:text-lg">
-              From cafés to busy restaurants and homes, we bring you fresh, rich coffee that makes every cup memorable.
+              From cafés to busy restaurants and homes, Legacy Coffee brings you quality Ugandan coffee, freshly roasted for rich flavour and memorable experiences.
             </p>
             <div className="mx-auto flex w-full max-w-xs flex-col items-center justify-center gap-3 sm:max-w-none sm:flex-row sm:gap-5 sm:justify-center md:mx-0 md:justify-start">
               <Link
