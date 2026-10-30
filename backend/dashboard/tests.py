@@ -443,13 +443,14 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(response.data['results'][0]['email'], customer_with_name.email)
         self.assertEqual(response.data['results'][0]['phone'], '+256700000010')
         self.assertEqual(response.data['results'][0]['order_count'], 1)
+        self.assertEqual(response.data['results'][0]['id'], str(customer_with_name.public_id))
         self.assertNotIn('password', response.data['results'][0])
         self.assertEqual(response.data['count'], 1)
 
         phone_search_response = self.client.get('/api/dashboard/users/?search=256700000010')
         self.assertEqual(phone_search_response.status_code, 200)
         self.assertEqual(phone_search_response.data['count'], 1)
-        self.assertEqual(phone_search_response.data['results'][0]['id'], customer_with_name.id)
+        self.assertEqual(phone_search_response.data['results'][0]['id'], str(customer_with_name.public_id))
 
     def test_staff_can_create_update_publish_and_delete_products(self):
         payload = {
@@ -568,6 +569,7 @@ class DashboardApiTests(APITestCase):
 
         self.assertEqual(create_response.status_code, 201)
         second_admin = get_user_model().objects.get(email='second-admin@example.com')
+        self.assertEqual(create_response.data['id'], str(second_admin.public_id))
         self.assertTrue(second_admin.is_staff)
         self.assertFalse(second_admin.is_superuser)
         self.assertTrue(second_admin.must_change_password)
@@ -576,12 +578,17 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(admins_response.status_code, 200)
         self.assertEqual(admins_response.data['count'], 2)
         self.assertNotIn('password', admins_response.data['results'][0])
+        second_admin_data = next(
+            item for item in admins_response.data['results']
+            if item['email'] == second_admin.email
+        )
+        self.assertEqual(second_admin_data['id'], str(second_admin.public_id))
 
-        delete_response = self.client.delete(f'/api/dashboard/admins/{second_admin.pk}/')
+        delete_response = self.client.delete(f'/api/dashboard/admins/{second_admin.public_id}/')
         self.assertEqual(delete_response.status_code, 204)
         self.assertFalse(get_user_model().objects.filter(pk=second_admin.pk).exists())
 
-        last_admin_response = self.client.delete(f'/api/dashboard/admins/{self.staff.pk}/')
+        last_admin_response = self.client.delete(f'/api/dashboard/admins/{self.staff.public_id}/')
         self.assertEqual(last_admin_response.status_code, 409)
         self.assertTrue(get_user_model().objects.filter(pk=self.staff.pk).exists())
 

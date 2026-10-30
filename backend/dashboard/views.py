@@ -447,13 +447,13 @@ class AdminAccountDeleteView(APIView):
     permission_classes = [IsAdminUser]
 
     @transaction.atomic
-    def delete(self, request, pk):
+    def delete(self, request, public_id):
         user_model = get_user_model()
         admins = user_model.objects.select_for_update().filter(
             is_staff=True,
             is_superuser=False,
         )
-        admin = get_object_or_404(admins, pk=pk)
+        admin = get_object_or_404(admins, public_id=public_id)
         active_admins = admins.filter(is_active=True)
         if admin.is_active and active_admins.count() <= 1:
             raise LastActiveAdminConflict()

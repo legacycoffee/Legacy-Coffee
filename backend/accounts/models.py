@@ -14,6 +14,7 @@ class UserManager(DjangoUserManager):
 
 
 class User(AbstractUser):
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     email = models.EmailField(unique=True, blank=True, null=True)
     phone = models.CharField(max_length=40, unique=True, blank=True, null=True)
     delivery_address = models.CharField(max_length=250, blank=True)

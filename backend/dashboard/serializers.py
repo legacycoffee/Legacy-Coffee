@@ -50,6 +50,7 @@ class InquiryInboxSerializer(serializers.ModelSerializer):
 
 
 class UserInboxSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(source='public_id', read_only=True)
     name = serializers.SerializerMethodField()
     order_count = serializers.IntegerField(read_only=True)
 
@@ -118,6 +119,8 @@ class ProductManagementSerializer(serializers.ModelSerializer):
 
 
 class AdminAccountSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(source='public_id', read_only=True)
+
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'is_active', 'date_joined', 'last_login')
@@ -125,6 +128,7 @@ class AdminAccountSerializer(serializers.ModelSerializer):
 
 
 class AdminAccountCreateSerializer(serializers.Serializer):
+    id = serializers.UUIDField(source='public_id', read_only=True)
     username = serializers.CharField(
         max_length=150,
         validators=[UniqueValidator(queryset=User.objects.all())],

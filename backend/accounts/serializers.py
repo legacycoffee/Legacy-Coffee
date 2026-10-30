@@ -8,6 +8,7 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(source='public_id', read_only=True)
     profile_photo = serializers.URLField(required=False, allow_blank=True, max_length=500)
 
     class Meta:

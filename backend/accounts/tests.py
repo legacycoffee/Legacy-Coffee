@@ -138,6 +138,8 @@ class AuthenticationApiTests(APITestCase):
         self.assertIn('token', response.data)
         self.assertEqual(response.data['user']['email'], 'customer@example.com')
         self.assertEqual(response.data['user']['phone'], '+256700000001')
+        self.assertEqual(response.data['user']['id'], str(get_user_model().objects.get(email='customer@example.com').public_id))
+        self.assertNotEqual(response.data['user']['id'], get_user_model().objects.get(email='customer@example.com').pk)
         self.assertEqual(response.data['user']['delivery_address'], '1 Coffee Road')
         self.assertEqual(response.data['user']['location_latitude'], '0.347600')
         self.assertTrue(get_user_model().objects.filter(email='customer@example.com').exists())
@@ -159,6 +161,7 @@ class AuthenticationApiTests(APITestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.data['user']['is_staff'])
+        self.assertEqual(response.data['user']['id'], str(user.public_id))
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {response.data['token']}")
         notifications = self.client.get('/api/auth/notifications/')
         self.assertEqual(notifications.status_code, 200)
@@ -212,6 +215,7 @@ class AuthenticationApiTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.data['user']['is_staff'])
+        self.assertEqual(response.data['user']['id'], str(staff_user.public_id))
 
     def test_new_admin_must_set_a_new_password_before_receiving_an_auth_token(self):
         admin = get_user_model().objects.create_user(
