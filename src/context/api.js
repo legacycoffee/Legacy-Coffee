@@ -26,7 +26,9 @@ export async function apiRequest(path, { method = 'GET', body, token } = {}) {
     const message = data?.detail
       || Object.values(data || {}).flat().join(' ')
       || 'The request failed. Please try again.'
-    throw new Error(message)
+    const error = new Error(message)
+    error.status = response.status
+    throw error
   }
   return data
 }

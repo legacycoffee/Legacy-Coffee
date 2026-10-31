@@ -134,14 +134,24 @@ export default function ProductPage() {
     try {
       if (isWishlisted) {
         await apiRequest(`/shop/wishlist/${product.id}/`, { method: 'DELETE', token })
-        setWishlistProductIds(current => current.filter(id => id !== product.id))
+        const nextIds = wishlistProductIds.filter(id => id !== product.id)
+        setWishlistProductIds(nextIds)
+        window.dispatchEvent(new CustomEvent('legacy-wishlist-updated', {
+          detail: { count: nextIds.length },
+        }))
       } else {
         await apiRequest('/shop/wishlist/', {
           method: 'POST',
           token,
           body: { product_id: product.id },
         })
-        setWishlistProductIds(current => current.includes(product.id) ? current : [...current, product.id])
+        const nextIds = wishlistProductIds.includes(product.id)
+          ? wishlistProductIds
+          : [...wishlistProductIds, product.id]
+        setWishlistProductIds(nextIds)
+        window.dispatchEvent(new CustomEvent('legacy-wishlist-updated', {
+          detail: { count: nextIds.length },
+        }))
       }
     } catch (error) {
       setWishlistMessage(`Could not update your wishlist: ${error.message}`)
@@ -200,6 +210,11 @@ export default function ProductPage() {
   return (
     <section className="bg-[#fffdfa] px-4 py-4 sm:px-6 sm:py-6">
       <div className="mx-auto max-w-7xl lg:max-w-5xl">
+        {productsError && (
+          <p role="status" className="mb-4 border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            The live catalog is unavailable. This saved or bundled product listing may have an outdated price or availability.
+          </p>
+        )}
         <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 text-sm text-brown/60 sm:mb-5">
           <Link to="/" className="font-medium transition-colors hover:text-primary">Home</Link>
           <span aria-hidden="true">/</span>

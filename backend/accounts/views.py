@@ -21,6 +21,7 @@ from .services import upload_profile_photo
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegistrationSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'registration'
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -41,6 +42,7 @@ class RegisterView(generics.CreateAPIView):
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'login'
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data, context={'request': request})
@@ -65,6 +67,7 @@ class LoginView(APIView):
 class AdminPasswordSetupView(generics.GenericAPIView):
     serializer_class = AdminPasswordSetupSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'admin_password_setup'
 
     @transaction.atomic
     def post(self, request):

@@ -6,6 +6,7 @@ import { useCart } from '../context/useCart.js'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import ProductImage from '../components/ProductImage.jsx'
+import { getWhatsAppOrderUrl } from '../utils/whatsappOrder.js'
 
 const inputClass = 'mt-1.5 w-full border border-peach-mid bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors placeholder:text-black/40 focus:border-primary focus:ring-2 focus:ring-primary/20'
 const labelClass = 'block text-sm font-medium text-black'
@@ -24,6 +25,7 @@ export default function CheckoutPage() {
     notes: user?.delivery_notes || '',
   }))
   const [submitError, setSubmitError] = useState('')
+  const [canUseWhatsAppFallback, setCanUseWhatsAppFallback] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const cartCount = items.reduce((total, item) => total + item.quantity, 0)
   const seedlingsCount = items.reduce(
@@ -44,6 +46,7 @@ export default function CheckoutPage() {
   const handleSubmit = async event => {
     event.preventDefault()
     setSubmitError('')
+    setCanUseWhatsAppFallback(false)
     if (includesSeedlings && !seedlingType.trim()) {
       setSubmitError('Enter the type of coffee seedlings you need.')
       return
@@ -104,7 +107,11 @@ export default function CheckoutPage() {
       saveOrder(order)
       navigate('/confirm', { state: { order } })
     } catch (error) {
-      setSubmitError(error.message)
+      const serverUnavailable = error instanceof TypeError || error.status >= 500
+      setSubmitError(serverUnavailable
+        ? 'The order server is unavailable, so we could not confirm whether your order was received.'
+        : error.message)
+      setCanUseWhatsAppFallback(serverUnavailable)
     } finally {
       setIsSubmitting(false)
     }
@@ -142,6 +149,23 @@ export default function CheckoutPage() {
               <Link to="/signup" state={{ from: '/checkout' }} className="border border-black px-4 py-3 text-sm font-bold text-black transition-colors hover:bg-peach-light">
                 Sign up
               </Link>
+            </div>
+            <div className="mt-6 border-t border-peach-mid/50 pt-5">
+              <p className="text-sm font-semibold text-black">Prefer to order without signing in?</p>
+              <p className="mt-1 text-sm leading-relaxed text-black/70">
+                Send your saved cart to WhatsApp and provide your delivery details there. Prices and availability will be confirmed by our team.
+              </p>
+              <a
+                href={getWhatsAppOrderUrl(items)}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex w-full items-center justify-center bg-[#25D366] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#1fb95a]"
+              >
+                Continue with WhatsApp
+              </a>
+              <p className="mt-2 text-xs leading-relaxed text-black/60">
+                WhatsApp opens a prepared message. Your order is sent only after you press Send.
+              </p>
             </div>
             <Link to="/cart" className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-black/70 underline underline-offset-2 hover:text-primary">
               <LuArrowLeft aria-hidden="true" className="h-4 w-4" />
@@ -213,10 +237,29 @@ export default function CheckoutPage() {
             {submitError && (
               <p role="alert" className="border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
                 {submitError}{' '}
-                {submitError.toLowerCase().includes('credentials') || submitError.toLowerCase().includes('token')
+                {!canUseWhatsAppFallback && (submitError.toLowerCase().includes('credentials') || submitError.toLowerCase().includes('token'))
                   ? <Link to="/signin" state={{ from: '/checkout' }} className="font-semibold underline">Sign in again</Link>
                   : null}
               </p>
+            )}
+            {canUseWhatsAppFallback && (
+              <div className="border border-amber-300 bg-amber-50 p-4 text-sm leading-relaxed text-amber-950">
+                <p>
+                  Your cart is still saved in this browser. You can send its products and checkout details through WhatsApp.
+                  If you already submitted the order, ask our team to check before processing it again.
+                </p>
+                <a
+                  href={getWhatsAppOrderUrl(items, customer, seedlingType)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex bg-[#25D366] px-4 py-3 font-bold text-white transition-colors hover:bg-[#1fb95a]"
+                >
+                  Continue with WhatsApp
+                </a>
+                <p className="mt-2 text-xs">
+                  WhatsApp opens a prepared message. Your order is sent only after you press Send.
+                </p>
+              </div>
             )}
             <div className="flex justify-end">
               <button type="submit" disabled={isSubmitting} className="w-full bg-[#F58537] px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60 sm:w-auto">

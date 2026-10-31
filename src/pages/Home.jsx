@@ -118,7 +118,11 @@ export default function Home() {
           ) : (
             <>
               {isProductsLoading && <p role="status" className="mb-4 text-xs text-brown/60">Loading the latest catalog…</p>}
-              {productsError && <p role="alert" className="mb-4 text-sm text-red-700">Could not refresh the catalog: {productsError}</p>}
+              {productsError && (
+                <p role="status" className="mb-4 text-sm text-amber-900">
+                  The live catalog is unavailable. Showing the saved or bundled catalog; prices and availability may need confirmation.
+                </p>
+              )}
               <div id="product-list" className="grid scroll-mt-24 grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
                 {products.map(product => (
                   <article key={product.id} className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-peach-mid/40 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">

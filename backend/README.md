@@ -17,6 +17,8 @@ The backend is a standalone repository, so create a Railway service from `gadget
 
 The GitHub Pages workflow builds the frontend with `VITE_API_URL=https://legacy-production-48e0.up.railway.app/api`. Railway's filesystem is ephemeral; use the PostgreSQL service rather than the local SQLite database for production data. Do not set `DATABASE_URL` to SQLite or commit real secrets.
 
+Authentication endpoints have additional throttling: login is limited to 5 requests per minute per client, registration to 3 per hour, and initial admin password setup to 5 per hour. For shared throttling across multiple backend workers or replicas, attach a Railway Redis service and set `REDIS_URL` to its private connection URL. Without `REDIS_URL`, Django uses its local in-process cache, so throttle counters are not shared across workers.
+
 Wholesale pricing is optional for each product and can be set in Django admin. The wholesale page uses a configured wholesale price when present; otherwise, it calculates an estimate using the retail price.
 
 ## Local setup (Windows PowerShell)

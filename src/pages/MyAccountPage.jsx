@@ -1,5 +1,5 @@
 import { Link, Navigate } from 'react-router-dom'
-import { LuTrash2, LuUserRound } from 'react-icons/lu'
+import { LuHeart, LuTrash2, LuUserRound } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 
 const accountLinks = [
@@ -7,6 +7,7 @@ const accountLinks = [
   { label: 'Change location', description: 'Edit your saved delivery address', to: '/profile#location-heading' },
   { label: 'Change details', description: 'Update your name or password', to: '/profile#change-details-heading' },
   { label: 'My orders', description: 'View order history and status', to: '/my-orders' },
+  { label: 'Wishlist', description: 'View products you saved', to: '/wishlist' },
   { label: 'Delete account', description: 'Account actions and deletion', to: '/profile#account-actions-heading' },
 ]
 
@@ -83,6 +84,9 @@ export default function MyAccountPage() {
                 <span className="flex min-w-0 items-center gap-3">
                   {label === 'Delete account' && (
                     <LuTrash2 aria-hidden="true" className="h-5 w-5 shrink-0 text-red-700" />
+                  )}
+                  {label === 'Wishlist' && (
+                    <LuHeart aria-hidden="true" className="h-5 w-5 shrink-0 text-red-600" />
                   )}
                   <span className="min-w-0">
                   <span className="block text-sm font-semibold">{label}</span>

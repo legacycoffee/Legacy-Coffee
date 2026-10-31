@@ -35,6 +35,18 @@ export const products = [
     image: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=900&auto=format&fit=crop&q=85',
     imageAlt: 'A cup of freshly brewed medium roast coffee',
   },
+  {
+    id: 'coffee-seedlings',
+    name: 'Coffee Seedlings',
+    weight: '1 seedling',
+    price: 2000,
+    description: 'High quality, nationally approved coffee seedlings to help you maximise your investment in coffee farming.',
+    details: 'These nationally approved varieties are drought and disease resistant. Orders above 1,000 seedlings receive a 5% discount.',
+    tastingNotes: 'N/A',
+    roast: 'N/A',
+    image: 'https://res.cloudinary.com/adfm8lvp/image/upload/v1792508243/coffee_farm.jpg',
+    imageAlt: 'Coffee farm in Uganda',
+  },
 ]
 
 export function getCartItemUnitPrice(item) {

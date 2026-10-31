@@ -4,6 +4,7 @@ import { FiChevronDown, FiX } from 'react-icons/fi'
 import {
   LuLayoutDashboard,
   LuBell,
+  LuHeart,
   LuShoppingCart,
   LuUserRound,
 } from 'react-icons/lu'
@@ -43,10 +44,13 @@ export default function Navbar() {
   const [openMobileDropdown, setOpenMobileDropdown] = useState(null)
   const [authMessage, setAuthMessage] = useState('')
   const [unreadCount, setUnreadCount] = useState(0)
+  const [wishlistCount, setWishlistCount] = useState(0)
   const accountMenuRef = useRef(null)
   const unreadCountRequestId = useRef(0)
+  const wishlistCountRequestId = useRef(0)
   const accountLinks = [
     { label: 'My account', to: '/my-account' },
+    { label: 'Wishlist', to: '/wishlist' },
     { label: 'Notifications', to: '/notifications' },
     { label: 'My orders', to: '/my-orders' },
   ]
@@ -88,6 +92,42 @@ export default function Navbar() {
     return () => {
       isCurrent = false
       window.removeEventListener('legacy-notifications-updated', refreshUnreadCount)
+    }
+  }, [isAuthenticated, token, location.pathname])
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      setWishlistCount(0)
+      return
+    }
+
+    let isCurrent = true
+    const requestId = ++wishlistCountRequestId.current
+    const loadWishlistCount = async () => {
+      try {
+        const items = await apiRequest('/shop/wishlist/', { token })
+        if (isCurrent && requestId === wishlistCountRequestId.current) {
+          setWishlistCount(items.length)
+        }
+      } catch (requestError) {
+        if (isCurrent) setAuthMessage(requestError.message)
+      }
+    }
+    const refreshWishlistCount = event => {
+      const nextCount = event instanceof CustomEvent ? event.detail?.count : undefined
+      if (Number.isInteger(nextCount) && nextCount >= 0) {
+        wishlistCountRequestId.current += 1
+        setWishlistCount(nextCount)
+      } else {
+        loadWishlistCount()
+      }
+    }
+
+    loadWishlistCount()
+    window.addEventListener('legacy-wishlist-updated', refreshWishlistCount)
+    return () => {
+      isCurrent = false
+      window.removeEventListener('legacy-wishlist-updated', refreshWishlistCount)
     }
   }, [isAuthenticated, token, location.pathname])
 
@@ -200,7 +240,12 @@ export default function Navbar() {
                                   <LuUserRound aria-hidden="true" className="h-5 w-5" />
                                 )
                               )}
-                              {label === 'Notifications' && unreadCount > 0 ? (
+                              {label === 'Wishlist' ? (
+                                <>
+                                  <LuHeart aria-hidden="true" className="h-5 w-5 text-red-600" />
+                                  Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}
+                                </>
+                              ) : label === 'Notifications' && unreadCount > 0 ? (
                                 <>
                                   Notifications <span className="text-red-600">({unreadCount})</span>
                                 </>
@@ -353,6 +398,21 @@ export default function Navbar() {
                   onClick={() => setMenuOpen(false)}
                 >
                   My account
+                </NavLink>
+                <NavLink
+                  to="/wishlist"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-brown hover:bg-peach-light'}`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <LuHeart aria-hidden="true" className="h-5 w-5 text-red-600" />
+                  Wishlist
+                  {wishlistCount > 0 && (
+                    <span className="ml-auto flex h-6 min-w-6 items-center justify-center rounded-full bg-red-600 px-1.5 text-xs font-bold text-white" aria-label={`${wishlistCount} saved ${wishlistCount === 1 ? 'product' : 'products'}`}>
+                      {wishlistCount > 99 ? '99+' : wishlistCount}
+                    </span>
+                  )}
                 </NavLink>
                 <NavLink
                   to="/my-orders"

@@ -24,6 +24,7 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage'))
 const ConfirmationPage = lazy(() => import('./pages/ConfirmationPage'))
 const MyOrdersPage = lazy(() => import('./pages/MyOrdersPage'))
 const MyAccountPage = lazy(() => import('./pages/MyAccountPage'))
+const WishlistPage = lazy(() => import('./pages/WishlistPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'))
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'))
@@ -93,6 +94,7 @@ export default function App() {
               <Route path="/my-orders" element={<Layout><MyOrdersPage /></Layout>} />
               <Route path="/my-orders/:orderKey/:orderSlug?" element={<Layout><MyOrdersPage /></Layout>} />
               <Route path="/my-account" element={<Layout><MyAccountPage /></Layout>} />
+              <Route path="/wishlist" element={<Layout><WishlistPage /></Layout>} />
               <Route path="/notifications" element={<Layout><NotificationsPage /></Layout>} />
               <Route path="/notifications/:notificationKey/:notificationSlug?" element={<Layout><NotificationsPage /></Layout>} />
               <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />

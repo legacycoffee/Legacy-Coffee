@@ -5,6 +5,7 @@ import re
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command, CommandError
 from django.test import SimpleTestCase, TestCase
@@ -120,6 +121,9 @@ class CloudinaryUploadTests(SimpleTestCase):
 
 
 class AuthenticationApiTests(APITestCase):
+    def setUp(self):
+        cache.clear()
+
     def test_registration_creates_token_and_user(self):
         response = self.client.post('/api/auth/register/', {
             'username': 'coffee-customer',
@@ -562,3 +566,28 @@ class AuthenticationApiTests(APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertTrue(get_user_model().objects.filter(pk=user.pk).exists())
+
+
+class AuthenticationThrottleTests(APITestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_authentication_endpoints_use_their_scoped_throttle_rates(self):
+        endpoints = (
+            ('/api/auth/login/', {'email': 'unknown@example.com', 'password': 'WrongPassword!2026'}, 5),
+            ('/api/auth/register/', {}, 3),
+            ('/api/auth/admin-password-setup/', {}, 5),
+        )
+
+        for url, payload, allowed_requests in endpoints:
+            with self.subTest(url=url):
+                cache.clear()
+                responses = [
+                    self.client.post(url, payload, format='json')
+                    for _ in range(allowed_requests + 1)
+                ]
+                self.assertTrue(all(
+                    response.status_code != 429
+                    for response in responses[:allowed_requests]
+                ))
+                self.assertEqual(responses[allowed_requests].status_code, 429)
