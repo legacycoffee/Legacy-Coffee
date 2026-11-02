@@ -57,11 +57,11 @@ export default function Footer() {
 
             {/* Social Icons */}
             <div className="flex gap-3 text-white text-xl mb-4">
-              <a href="#" aria-label="Facebook"><FaFacebook /></a>
-              <a href="#" aria-label="Instagram"><FaInstagram /></a>
-              <a href="#" aria-label="LinkedIn"><FaLinkedin /></a>
-              <a href="#" aria-label="YouTube"><FaYoutube /></a>
-              <a href="#" aria-label="X"><FaXTwitter /></a>
+              <a href="https://www.facebook.com/share/1dK291V2C2/" aria-label="Facebook"><FaFacebook /></a>
+              <a href="https://www.instagram.com/legacycoffee_uganda/?__pwa=1#" aria-label="Instagram"><FaInstagram /></a>
+              <a href="https://www.linkedin.com/company/legacy-coffee-butiiti/" aria-label="LinkedIn"><FaLinkedin /></a>
+              <a href="https://www.youtube.com/@LegacyCoffeeug" aria-label="YouTube"><FaYoutube /></a>
+              <a href="https://x.com/LegacyCoffeeLTD" aria-label="X"><FaXTwitter /></a>
             </div>
 
           </div>
