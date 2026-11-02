@@ -8,6 +8,8 @@ import VisitorAnalyticsTracker from './components/VisitorAnalyticsTracker.jsx'
 import { CookieConsentProvider } from './context/CookieConsentContext.jsx'
 import { CartProvider } from './context/CartContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
+import { getSeoMetadata } from './data/seoPages.js'
+import { updatePageMetadata } from './utils/updatePageMetadata.js'
 
 const Home = lazy(() => import('./pages/Home'))
 const OurCoffeeFarm = lazy(() => import('./pages/OurCoffeeFarm'))
@@ -57,6 +59,16 @@ function ScrollToTop() {
   return null
 }
 
+function RouteMetadata() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    updatePageMetadata(getSeoMetadata(pathname))
+  }, [pathname])
+
+  return null
+}
+
 function Layout({ children }) {
   return (
     <>
@@ -76,6 +88,7 @@ export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ScrollToTop />
+      <RouteMetadata />
       <CartProvider>
         <AuthProvider>
           <CookieConsentProvider>

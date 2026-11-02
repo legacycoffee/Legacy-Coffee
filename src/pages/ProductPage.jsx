@@ -8,6 +8,7 @@ import { apiRequest } from '../context/api.js'
 import ProductImage from '../components/ProductImage.jsx'
 import useProducts from '../hooks/useProducts.js'
 import { getProductUrl } from '../utils/productUrl.js'
+import { updatePageMetadata } from '../utils/updatePageMetadata.js'
 
 export default function ProductPage() {
   const { productKey } = useParams()
@@ -31,6 +32,18 @@ export default function ProductPage() {
   const currentReviewData = reviewData?.productId === product?.id ? reviewData : null
   const reviews = currentReviewData?.reviews ?? []
   const reviewEligibility = currentReviewData?.eligibility ?? null
+
+  useEffect(() => {
+    if (!product) return
+
+    updatePageMetadata({
+      title: `${product.name} | Ugandan Coffee | Legacy Coffee`,
+      description: product.description,
+      image: product.image,
+      imageAlt: product.imageAlt,
+      type: 'product',
+    })
+  }, [product])
 
   useEffect(() => {
     if (!product?.public_id) return
