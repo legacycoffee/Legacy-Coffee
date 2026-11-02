@@ -164,6 +164,18 @@ export default function OurServices() {
 
           <div className="mt-12">
             <h3 className="text-xl font-bold text-brown">See case studies</h3>
+            <div className="mt-5 grid max-w-4xl gap-4">
+              <article className="bg-peach/20 px-6 py-5">
+                <p className="text-base leading-relaxed text-brown/80">
+                  Coffee Farmer Mapping Activity by legacy coffee and yonderlife africa funderd under the slowfood negroni week fund in Kyenjojo District
+                </p>
+              </article>
+              <article className="bg-peach/20 px-6 py-5">
+                <p className="text-base leading-relaxed text-brown/80">
+                  A study to map coffee farmers of butiiti and nyabuharwa and establish baseline baseline factors that inhibit the journer to higher quality robusta coffee production
+                </p>
+              </article>
+            </div>
           </div>
 
           <div className="mt-12">

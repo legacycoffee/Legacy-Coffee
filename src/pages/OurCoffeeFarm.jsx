@@ -284,10 +284,23 @@ export default function OurCoffeeFarm() {
             <h2 className="text-3xl font-black text-brown md:text-4xl">Rooted in the farm</h2>
           </div>
           <div className="grid gap-5 md:grid-cols-3">
-            {['Why it started', 'How it started', 'Where we are going'].map(title => (
+            {[
+              {
+                title: 'Why we started?',
+                description: 'To deliver premium-quality roasted coffee through sustainable farming practices & fair trade to empower the community that grows the coffee.',
+              },
+              {
+                title: 'How we started?',
+                description: 'We started in 2018 as a family-owned coffee estate that focused on coffee cultivation; we later grew a pool of smallholder coffee farmers in our community that provides our coffee.',
+              },
+              {
+                title: 'Where are we going?',
+                description: 'To serve roasted fine robusta and speciality arabica coffee world wide.',
+              },
+            ].map(({ title, description }) => (
               <article key={title} className="min-h-40 rounded-2xl bg-white p-6 shadow-sm md:p-8">
                 <h3 className="mb-4 text-xl font-bold text-brown">{title}</h3>
-                <p className="text-sm italic text-brown/60">Farm story details coming soon.</p>
+                <p className="text-sm leading-relaxed text-brown/75">{description}</p>
               </article>
             ))}
           </div>
