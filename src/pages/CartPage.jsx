@@ -6,6 +6,7 @@ import { getCartItemUnitPrice } from '../data/products.js'
 import { useAuth } from '../context/useAuth.js'
 import ProductImage from '../components/ProductImage.jsx'
 import { getProductUrl } from '../utils/productUrl.js'
+import { formatSeedlingVarieties, getItemSeedlingVarieties } from '../utils/seedlings.js'
 
 export default function CartPage() {
   const { items, cartTotal, updateQuantity, removeFromCart } = useCart()
@@ -57,6 +58,18 @@ export default function CartPage() {
                   <Link to={getProductUrl(item)} title={item.name} className="mt-0.5 block truncate text-xs font-bold leading-snug text-brown transition-colors hover:text-primary sm:text-sm">{item.name}</Link>
                   <p className="mt-1 truncate text-sm font-bold leading-tight text-brown sm:text-base">{formatPrice(getCartItemUnitPrice(item) * item.quantity)}</p>
                   <p className="mt-0.5 truncate text-[10px] text-brown/65 sm:text-xs">{formatPrice(getCartItemUnitPrice(item))} each · {item.weight}</p>
+                  {item.id === 'coffee-seedlings' && (
+                    <>
+                      <p className="mt-1 text-[10px] leading-relaxed text-brown/70 sm:text-xs">
+                        {formatSeedlingVarieties(getItemSeedlingVarieties(item))}
+                      </p>
+                      {item.seedling_varieties && (
+                        <Link to="/coffee-farm#farm-visits" className="mt-1 inline-block text-[10px] font-semibold text-primary underline underline-offset-2 sm:text-xs">
+                          Update variety quantities on the farm page
+                        </Link>
+                      )}
+                    </>
+                  )}
                   <div className="mt-1.5 hidden md:block">
                     <p className="text-xs text-brown/65">Delivery fee confirmed by our team.</p>
                     {!isAuthenticated && (
@@ -72,7 +85,7 @@ export default function CartPage() {
                     <button
                       type="button"
                       aria-label={`Decrease quantity of ${item.name}`}
-                      disabled={item.quantity <= 1}
+                      disabled={item.quantity <= 1 || Boolean(item.seedling_varieties)}
                       onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
                       className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-brown transition-colors hover:bg-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
                     >
@@ -86,12 +99,13 @@ export default function CartPage() {
                       max={item.id === 'coffee-seedlings' ? 32767 : 99}
                       value={item.quantity}
                       onChange={event => updateQuantity(item.id, Math.max(1, Math.min(item.id === 'coffee-seedlings' ? 32767 : 99, Number(event.target.value) || 1)))}
+                      disabled={Boolean(item.seedling_varieties)}
                       className="h-7 w-8 appearance-none bg-transparent text-center text-sm font-bold tabular-nums text-brown outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                     />
                     <button
                       type="button"
                       aria-label={`Increase quantity of ${item.name}`}
-                      disabled={item.quantity >= (item.id === 'coffee-seedlings' ? 32767 : 99)}
+                      disabled={item.quantity >= (item.id === 'coffee-seedlings' ? 32767 : 99) || Boolean(item.seedling_varieties)}
                       onClick={() => updateQuantity(item.id, Math.min(item.id === 'coffee-seedlings' ? 32767 : 99, item.quantity + 1))}
                       className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-brown transition-colors hover:bg-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
                     >

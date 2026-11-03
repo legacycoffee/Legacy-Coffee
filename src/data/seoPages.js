@@ -5,7 +5,7 @@ const defaultImage = 'https://res.cloudinary.com/vgko5mna/image/upload/v17925146
 
 export const defaultSeo = {
   path: '/',
-  title: 'Legacy Coffee Uganda | Fresh Roasted Coffee & Wholesale',
+  title: 'Legacy Coffee Limited | Fresh Roasted Coffee & Wholesale',
   description: 'Discover quality Ugandan coffee from Legacy Coffee in Kyenjojo. Shop freshly roasted Arabica and Robusta coffee, coffee seedlings and wholesale coffee.',
   keywords: 'Legacy Coffee, Ugandan coffee, coffee Kyenjojo, roasted coffee Uganda, Arabica coffee Uganda, Robusta coffee Uganda, wholesale coffee Uganda, coffee seedlings Uganda',
   image: defaultImage,
@@ -50,7 +50,7 @@ const fixedSeoPages = [
     title: 'Ugandan Coffee Wholesale | Legacy Coffee',
     description: 'Buy Ugandan Robusta and Arabica coffee wholesale from Legacy Coffee. Explore our coffee and request wholesale pricing for your business.',
     image: defaultImage,
-    imageAlt: 'Coffee from Legacy Coffee Uganda',
+    imageAlt: 'Coffee from Legacy Coffee Limited',
   },
   {
     path: '/contact',

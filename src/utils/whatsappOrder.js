@@ -1,8 +1,10 @@
 import { formatPrice, getCartItemUnitPrice } from '../data/products.js'
+import { formatSeedlingVarieties, getSeedlingVarietyBreakdown } from './seedlings.js'
 
 const ORDER_WHATSAPP_NUMBER = '256789069263'
 
 export function getWhatsAppOrderUrl(items, customer = {}, seedlingType = '') {
+  const selectedSeedlings = formatSeedlingVarieties(getSeedlingVarietyBreakdown(items)) || seedlingType.trim()
   const lines = items.map(item => {
     const unitPrice = getCartItemUnitPrice(item)
     const wholesaleLabel = item.is_wholesale ? ' (wholesale)' : ''
@@ -18,7 +20,7 @@ export function getWhatsAppOrderUrl(items, customer = {}, seedlingType = '') {
     customer.phone && `Phone: ${customer.phone}`,
     customer.email && `Email: ${customer.email}`,
     customer.address && `Delivery address: ${customer.address}${customer.city ? `, ${customer.city}` : ''}`,
-    seedlingType.trim() && `Seedling type: ${seedlingType.trim()}`,
+    selectedSeedlings && `Coffee seedling varieties and quantities: ${selectedSeedlings}`,
     customer.notes && `Delivery notes: ${customer.notes}`,
   ].filter(Boolean)
 

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { LuChevronDown } from 'react-icons/lu'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiRequest } from '../context/api.js'
 import { useCart } from '../context/useCart.js'
 import useProducts from '../hooks/useProducts.js'
 import { formatPrice } from '../data/products.js'
+import { formatSeedlingVarieties, seedlingVarieties } from '../utils/seedlings.js'
 
 const farmEmail = 'info@legacycoffee.org'
 const farmWhatsApp = '256789069263'
@@ -21,7 +23,7 @@ const tourPackages = [
   {
     id: 'individual',
     title: 'Individual Package',
-    price: 'UGX 55,000',
+    price: 'Local visitors: UGX 55,000',
     detail: 'International visitors: USD 40',
     activities: [
       ...tourActivities,
@@ -115,11 +117,25 @@ function FarmImageSlider() {
 
 export default function OurCoffeeFarm() {
   const { products, isLoading: isProductsLoading, error: productsError } = useProducts()
-  const { addToCart } = useCart()
+  const { addToCart, items: cartItems } = useCart()
   const navigate = useNavigate()
   const seedlingsProduct = products.find(product => product.id === 'coffee-seedlings')
-  const [seedlingQuantity, setSeedlingQuantity] = useState(1)
-  const [seedlingType, setSeedlingType] = useState('')
+  const [seedlingQuantities, setSeedlingQuantities] = useState(() => Object.fromEntries(
+    seedlingVarieties.flatMap(group => group.varieties.map(variety => [`${group.type} - ${variety}`, ''])),
+  ))
+  const [selectedSeedlingTypes, setSelectedSeedlingTypes] = useState({})
+  const [expandedSeedlingGroups, setExpandedSeedlingGroups] = useState({})
+  const selectedSeedlingVarieties = Object.fromEntries(
+    Object.entries(selectedSeedlingTypes)
+      .filter(([key, isSelected]) => isSelected && Number.parseInt(seedlingQuantities[key], 10) > 0)
+      .map(([key]) => [key, Number.parseInt(seedlingQuantities[key], 10)]),
+  )
+  const seedlingQuantity = Object.values(selectedSeedlingVarieties).reduce((total, quantity) => total + quantity, 0)
+  const seedlingType = formatSeedlingVarieties(selectedSeedlingVarieties)
+  const seedlingsInCart = cartItems
+    .filter(item => item.id === 'coffee-seedlings')
+    .reduce((total, item) => total + item.quantity, 0)
+  const remainingSeedlingCapacity = Math.max(0, 32767 - seedlingsInCart)
   const [seedlingReservationOpen, setSeedlingReservationOpen] = useState(false)
   const [seedlingReservation, setSeedlingReservation] = useState({
     name: '',
@@ -201,16 +217,20 @@ export default function OurCoffeeFarm() {
   }
 
   const handleSeedlingBuy = () => {
-    if (!seedlingsProduct) return
-    addToCart({ ...seedlingsProduct, seedling_type: seedlingType.trim() }, seedlingQuantity)
+    if (!seedlingsProduct || !seedlingQuantity) return
+    addToCart({
+      ...seedlingsProduct,
+      seedling_type: seedlingType,
+      seedling_varieties: selectedSeedlingVarieties,
+    }, seedlingQuantity)
     navigate('/cart')
   }
 
   const handleSeedlingReservation = async event => {
     event.preventDefault()
     setSeedlingReservationError('')
-    if (!seedlingReservation.seedlingType.trim()) {
-      setSeedlingReservationError('Enter the type of coffee seedlings you need.')
+    if (!seedlingQuantity) {
+      setSeedlingReservationError('Choose a quantity for at least one seedling variety.')
       return
     }
     setSeedlingReservationSubmitting(true)
@@ -228,7 +248,7 @@ export default function OurCoffeeFarm() {
           subject: 'Coffee seedling reservation',
           message: [
             `Requested quantity: ${seedlingReservation.quantity} seedlings`,
-            `Type of coffee seedlings needed: ${seedlingReservation.seedlingType.trim()}`,
+            `Varieties and quantities: ${seedlingReservation.seedlingType}`,
             seedlingReservation.message ? `Additional details: ${seedlingReservation.message}` : '',
           ].filter(Boolean).join('\n'),
         },
@@ -281,7 +301,6 @@ export default function OurCoffeeFarm() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center">
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-primary">Our farm story</p>
-            <h2 className="text-3xl font-black text-brown md:text-4xl">Rooted in the farm</h2>
           </div>
           <div className="grid gap-5 md:grid-cols-3">
             {[
@@ -313,7 +332,7 @@ export default function OurCoffeeFarm() {
           <FarmImageSlider />
           <div className="mb-8 text-left lg:w-[calc(50%-0.75rem)]">
             <p className="mb-2 text-base leading-relaxed text-brown md:text-lg">
-              <strong className="font-bold">1. Educational Tours:</strong>
+              <strong className="font-bold">Educational Tours:</strong>
             </p>
             <p className="text-base leading-relaxed text-brown/75 md:text-lg">
               Have you ever imagined how coffee gets from the plant to the cup? We train individuals, schools and tourists on the process of regenerative coffee farming and local processing of coffee beans in Uganda.
@@ -327,7 +346,7 @@ export default function OurCoffeeFarm() {
                 <div className="mb-6 border-b border-peach-mid/60 pb-5">
                   <h3 className="text-2xl font-bold text-brown">{tour.title}</h3>
                   <p className="mt-3 text-2xl font-black text-primary">{tour.price}</p>
-                  <p className="mt-1 text-sm text-brown/70">{tour.detail}</p>
+                  <p className={tour.id === 'individual' ? 'mt-1 text-2xl font-black text-primary' : 'mt-1 text-sm text-brown/70'}>{tour.detail}</p>
                   <p className="mt-4 text-sm font-semibold text-brown">Includes:</p>
                 </div>
                 <ul className="mb-8 flex-1 space-y-3">
@@ -367,37 +386,101 @@ export default function OurCoffeeFarm() {
           <section className="mt-16 rounded-2xl bg-peach-light p-6 md:mt-20 md:p-10">
             <div className="mx-auto max-w-3xl">
               <p className="mb-3 text-base leading-relaxed text-brown md:text-lg">
-                <strong className="font-bold">2. Coffee Seedlings:</strong>
+                <strong className="font-bold">Coffee Seedlings:</strong>
               </p>
               <p className="text-base leading-relaxed text-brown/80 md:text-lg">
                 Are you looking to plant coffee? We sell high quality coffee seedlings that ensure you maximise your investment in coffee farming. Our seedlings are nationally approved to ensure you plant varieties that are drought and disease resistant. Get up to 5% off for all orders above 1000 seedlings.
               </p>
-              <div className="mt-6 grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block text-sm font-semibold text-brown">
-                    Type of coffee seedlings needed
-                    <input
-                      required
-                      value={seedlingType}
-                      onChange={event => setSeedlingType(event.target.value)}
-                      placeholder="Enter the variety you need"
-                      className="mt-2 block w-full rounded-lg border border-peach-mid bg-white px-4 py-3 font-normal outline-none focus:border-primary"
-                    />
-                  </label>
-                  <label className="block text-sm font-semibold text-brown">
-                    Number of seedlings
-                    <input
-                      type="number"
-                      min="1"
-                      max="32767"
-                      step="1"
-                      value={seedlingQuantity}
-                      onChange={event => setSeedlingQuantity(Math.max(1, Math.min(32767, Number.parseInt(event.target.value, 10) || 1)))}
-                      className="mt-2 block w-full rounded-lg border border-peach-mid bg-white px-4 py-3 font-normal outline-none focus:border-primary"
-                    />
-                  </label>
+              <div className="mt-6 grid gap-6">
+                <h4 className="text-sm font-bold text-brown">Select coffee seedlings</h4>
+                <div className="grid items-start gap-5 md:grid-cols-2">
+                  {seedlingVarieties.map(group => (
+                    <section key={group.type} className="overflow-hidden rounded-xl border border-peach-mid/70 bg-white">
+                      <button
+                        type="button"
+                        aria-expanded={Boolean(expandedSeedlingGroups[group.type])}
+                        aria-controls={`seedling-varieties-${group.type.toLowerCase()}`}
+                        onClick={() => setExpandedSeedlingGroups(current => ({
+                          ...current,
+                          [group.type]: !current[group.type],
+                        }))}
+                        className="flex min-h-16 w-full items-center justify-between gap-3 px-5 py-4 text-left text-sm font-bold text-brown transition-colors hover:bg-peach-light/60 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-primary"
+                      >
+                        <span>{group.type} varieties</span>
+                        <LuChevronDown
+                          aria-hidden="true"
+                          className={`h-5 w-5 shrink-0 transition-transform ${expandedSeedlingGroups[group.type] ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+                      {expandedSeedlingGroups[group.type] && (
+                      <div id={`seedling-varieties-${group.type.toLowerCase()}`} className="grid items-start gap-3 px-4 pb-4 sm:grid-cols-2">
+                        {group.varieties.map(variety => {
+                          const key = `${group.type} - ${variety}`
+                          const isSelected = Boolean(selectedSeedlingTypes[key])
+                          return (
+                            <div key={key} className="self-start rounded-lg border border-peach-mid/60 p-3">
+                              <label className="flex items-center gap-2 text-sm font-semibold text-brown">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={event => {
+                                    const checked = event.target.checked
+                                    setSelectedSeedlingTypes(current => ({ ...current, [key]: checked }))
+                                    if (!checked) {
+                                      setSeedlingQuantities(current => ({ ...current, [key]: '' }))
+                                    }
+                                  }}
+                                  className="h-4 w-4 accent-[#8b4e2d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                                />
+                                {variety}
+                              </label>
+                              {isSelected && (
+                                <label className="mt-3 block text-xs font-semibold text-brown/80" htmlFor={`seedling-quantity-${group.type}-${variety}`}>
+                                  Number of seedlings
+                                  <input
+                                    id={`seedling-quantity-${group.type}-${variety}`}
+                                    type="number"
+                                    min="1"
+                                    max={Math.max(
+                                      1,
+                                      Math.min(
+                                        32767,
+                                        remainingSeedlingCapacity - seedlingQuantity + (Number.parseInt(seedlingQuantities[key], 10) || 0),
+                                      ),
+                                    )}
+                                    step="1"
+                                    value={seedlingQuantities[key]}
+                                    onChange={event => {
+                                      const value = event.target.value
+                                      const parsedValue = Number.parseInt(value, 10)
+                                      const maxQuantity = Math.max(
+                                        1,
+                                        Math.min(
+                                          32767,
+                                          remainingSeedlingCapacity - seedlingQuantity + (Number.parseInt(seedlingQuantities[key], 10) || 0),
+                                        ),
+                                      )
+                                      setSeedlingQuantities(current => ({
+                                        ...current,
+                                        [key]: value === '' ? '' : String(Math.min(maxQuantity, parsedValue || 1)),
+                                      }))
+                                    }}
+                                    aria-label={`Number of ${key} seedlings`}
+                                    className="mt-1.5 block w-full rounded-lg border border-peach-mid bg-white px-3 py-2 font-normal outline-none focus:border-primary"
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                      )}
+                    </section>
+                  ))}
                 </div>
                 <p className="text-sm font-semibold text-brown md:text-right">
+                  Total selected: {seedlingQuantity.toLocaleString()} seedlings
+                  <br />
                   {formatPrice(seedlingsProduct?.price ?? 2000)} / seedling
                   {seedlingQuantity > 1000 && (
                     <span className="mt-1 block text-primary">5% bulk discount: {formatPrice(Math.round((seedlingsProduct?.price ?? 2000) * 0.95))} each</span>
@@ -407,21 +490,22 @@ export default function OurCoffeeFarm() {
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <button
                   type="button"
-                  disabled={isProductsLoading || !seedlingsProduct || !seedlingType.trim()}
+                  disabled={isProductsLoading || !seedlingsProduct || !seedlingQuantity || !remainingSeedlingCapacity}
                   onClick={handleSeedlingBuy}
                   className="min-h-12 rounded-full bg-primary px-6 py-3 font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isProductsLoading ? 'Loading product…' : !seedlingType.trim() ? 'Enter seedling type to buy' : `Buy · ${formatPrice((seedlingsProduct?.price ?? 2000) * seedlingQuantity * (seedlingQuantity > 1000 ? 0.95 : 1))}`}
+                  {isProductsLoading ? 'Loading product…' : !remainingSeedlingCapacity ? 'Maximum seedlings already in cart' : !seedlingQuantity ? 'Choose seedling quantities' : `Buy · ${formatPrice((seedlingsProduct?.price ?? 2000) * seedlingQuantity * (seedlingQuantity > 1000 ? 0.95 : 1))}`}
                 </button>
                 <button
                   type="button"
+                  disabled={!seedlingQuantity}
                   onClick={() => {
                     setSeedlingReservation({ name: '', email: '', phone: '', quantity: String(seedlingQuantity), seedlingType, message: '' })
                     setSeedlingReservationError('')
                     setSeedlingReservationSubmitted(false)
                     setSeedlingReservationOpen(true)
                   }}
-                  className="min-h-12 rounded-full border border-primary px-6 py-3 font-bold text-primary transition-colors hover:bg-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  className="min-h-12 rounded-full border border-primary px-6 py-3 font-bold text-primary transition-colors hover:bg-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Make a Reservation
                 </button>
@@ -668,19 +752,19 @@ export default function OurCoffeeFarm() {
                         min="1"
                         max="32767"
                         step="1"
+                        readOnly
                         value={seedlingReservation.quantity}
-                        onChange={event => setSeedlingReservation({ ...seedlingReservation, quantity: event.target.value })}
                         className="w-full rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
                       />
                     </label>
                     <label className="space-y-2 text-sm font-semibold text-brown sm:col-span-2">
-                      Type of coffee seedlings needed
-                      <input
+                      Varieties and quantities
+                      <textarea
                         required
+                        readOnly
+                        rows={3}
                         value={seedlingReservation.seedlingType}
-                        onChange={event => setSeedlingReservation({ ...seedlingReservation, seedlingType: event.target.value })}
-                        placeholder="Enter the variety you need"
-                        className="w-full rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
+                        className="w-full resize-y rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
                       />
                     </label>
                   </div>

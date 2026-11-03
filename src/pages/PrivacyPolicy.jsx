@@ -37,7 +37,7 @@ export default function PrivacyPolicy() {
   return (
     <LegalPageLayout
       title="Privacy Policy"
-      introduction="This notice explains how Legacy Coffee Uganda handles information when you use this website, place an order request, contact us, or subscribe to updates. It is a plain-language summary of our current site features, not legal advice."
+      introduction="This notice explains how Legacy Coffee Limited handles information when you use this website, place an order request, contact us, or subscribe to updates. It is a plain-language summary of our current site features, not legal advice."
       sections={sections}
     />
   )

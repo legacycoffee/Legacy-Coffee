@@ -4,7 +4,7 @@ export default function LegalPageLayout({ title, introduction, sections }) {
   return (
     <article className="min-h-[60vh] bg-[#fffdfa] px-4 py-10 sm:px-8 sm:py-14 lg:px-12">
       <div className="mx-auto w-full max-w-7xl">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Legacy Coffee Uganda</p>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Legacy Coffee Limited</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-brown sm:text-4xl">{title}</h1>
         {introduction && <p className="mt-4 max-w-3xl text-sm leading-7 text-brown/75">{introduction}</p>}
         <p className="mt-3 text-xs text-brown/55">Last updated: 28 October 2026</p>

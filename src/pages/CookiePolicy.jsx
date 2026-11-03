@@ -41,7 +41,7 @@ export default function CookiePolicy() {
     <>
       <LegalPageLayout
         title="Cookie Policy"
-        introduction="This policy explains the cookies and browser storage used by Legacy Coffee Uganda and how you can control optional features."
+        introduction="This policy explains the cookies and browser storage used by Legacy Coffee Limited and how you can control optional features."
         sections={sections}
       />
       <div className="bg-[#fffdfa] px-4 pb-10 sm:px-8 lg:px-12">

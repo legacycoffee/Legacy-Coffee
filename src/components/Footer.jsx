@@ -102,7 +102,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-6 border-t border-white/20 px-4 pt-4 text-center text-xs text-white/60">
-          <p>© {new Date().getFullYear()} Legacy Coffee Uganda. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Legacy Coffee Limited. All rights reserved.</p>
           <p className="mt-2">
             Developed by{' '}
             <a href="tel:+256794448439" className="font-semibold text-white/85 hover:text-white hover:underline">+256794448439</a>

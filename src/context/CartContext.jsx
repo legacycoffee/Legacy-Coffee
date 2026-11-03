@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { CartContext } from './cartContext.js'
 import { getCartItemUnitPrice } from '../data/products.js'
+import { formatSeedlingVarieties, getItemSeedlingVarieties, mergeSeedlingVarieties } from '../utils/seedlings.js'
 
 const CART_STORAGE_KEY = 'legacy-coffee-cart'
 const ORDER_STORAGE_KEY = 'legacy-coffee-latest-order'
@@ -23,9 +24,30 @@ export function CartProvider({ children }) {
 
   const addToCart = (product, quantity = 1) => {
     const existingItem = items.find(item => item.id === product.id)
+    const seedlingVarieties = product.id === 'coffee-seedlings'
+      ? mergeSeedlingVarieties(
+        existingItem ? getItemSeedlingVarieties(existingItem) : {},
+        getItemSeedlingVarieties({ ...product, quantity }),
+      )
+      : null
     const nextItems = existingItem
-      ? items.map(item => item.id === product.id ? { ...item, ...product, quantity: item.quantity + quantity } : item)
-      : [...items, { ...product, quantity }]
+      ? items.map(item => item.id === product.id ? {
+        ...item,
+        ...product,
+        ...(seedlingVarieties && {
+          seedling_varieties: seedlingVarieties,
+          seedling_type: formatSeedlingVarieties(seedlingVarieties),
+        }),
+        quantity: item.quantity + quantity,
+      } : item)
+      : [...items, {
+        ...product,
+        ...(seedlingVarieties && {
+          seedling_varieties: seedlingVarieties,
+          seedling_type: formatSeedlingVarieties(seedlingVarieties),
+        }),
+        quantity,
+      }]
     saveItems(nextItems)
   }
 

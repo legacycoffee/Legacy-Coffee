@@ -7,6 +7,7 @@ import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import ProductImage from '../components/ProductImage.jsx'
 import { getWhatsAppOrderUrl } from '../utils/whatsappOrder.js'
+import { formatSeedlingVarieties, getSeedlingVarietyBreakdown } from '../utils/seedlings.js'
 
 const inputClass = 'mt-1.5 w-full border border-peach-mid bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors placeholder:text-black/40 focus:border-primary focus:ring-2 focus:ring-primary/20'
 const labelClass = 'block text-sm font-medium text-black'
@@ -33,9 +34,7 @@ export default function CheckoutPage() {
     0,
   )
   const includesSeedlings = seedlingsCount > 0
-  const [seedlingType, setSeedlingType] = useState(
-    () => items.find(item => item.id === 'coffee-seedlings')?.seedling_type || '',
-  )
+  const seedlingType = formatSeedlingVarieties(getSeedlingVarietyBreakdown(items))
 
   if (items.length === 0) {
     return <Navigate to="/cart" replace />
@@ -47,10 +46,6 @@ export default function CheckoutPage() {
     event.preventDefault()
     setSubmitError('')
     setCanUseWhatsAppFallback(false)
-    if (includesSeedlings && !seedlingType.trim()) {
-      setSubmitError('Enter the type of coffee seedlings you need.')
-      return
-    }
     setIsSubmitting(true)
 
     try {
@@ -65,7 +60,7 @@ export default function CheckoutPage() {
           delivery_address: customer.address,
           delivery_city: customer.city,
           delivery_notes: [
-            includesSeedlings ? `Coffee seedling type needed: ${seedlingType.trim()}` : '',
+            includesSeedlings ? `Coffee seedling varieties and quantities: ${seedlingType}` : '',
             customer.notes,
           ].filter(Boolean).join('\n'),
           items: items.map(item => ({
@@ -211,17 +206,9 @@ export default function CheckoutPage() {
                   <input id="checkout-address" required autoComplete="street-address" name="address" value={customer.address} onChange={handleChange} placeholder="Street, building, or delivery location" className={inputClass} />
                 </label>
                 {includesSeedlings && (
-                  <label className={`${labelClass} sm:col-span-2`} htmlFor="checkout-seedling-type">
-                    Type of coffee seedlings needed
-                    <input
-                      id="checkout-seedling-type"
-                      required
-                      value={seedlingType}
-                      onChange={event => setSeedlingType(event.target.value)}
-                      placeholder="Enter the variety you need"
-                      className={inputClass}
-                    />
-                  </label>
+                  <p className={`${labelClass} sm:col-span-2`}>
+                    Coffee seedling varieties and quantities: {seedlingType}
+                  </p>
                 )}
                 <label className={`${labelClass} sm:col-span-2`} htmlFor="checkout-notes">
                   Delivery notes <span className="font-normal text-black">(optional)</span>
@@ -249,7 +236,7 @@ export default function CheckoutPage() {
                   If you already submitted the order, ask our team to check before processing it again.
                 </p>
                 <a
-                  href={getWhatsAppOrderUrl(items, customer, seedlingType)}
+                  href={getWhatsAppOrderUrl(items, customer)}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-3 inline-flex bg-[#25D366] px-4 py-3 font-bold text-white transition-colors hover:bg-[#1fb95a]"
@@ -285,6 +272,11 @@ export default function CheckoutPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{item.name}</p>
                     <p className="mt-0.5 text-xs text-black">{item.weight} · Qty {item.quantity}</p>
+                    {item.id === 'coffee-seedlings' && (
+                      <p className="mt-1 text-xs text-black/70">
+                        {formatSeedlingVarieties(getSeedlingVarietyBreakdown([item]))}
+                      </p>
+                    )}
                   </div>
                   <span className="shrink-0 text-right text-xs font-semibold sm:text-sm">{formatPrice(getCartItemUnitPrice(item) * item.quantity)}</span>
                 </li>
