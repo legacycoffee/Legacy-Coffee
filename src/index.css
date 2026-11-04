@@ -17,6 +17,10 @@ body {
   color: #5C3A1E;
 }
 
+main p[class*="leading-relaxed"]:not([class*="text-center"]):not([class*="text-right"]):not([class*="text-start"]) {
+  text-align: justify;
+}
+
 .farm-reservation-scroll {
   scrollbar-width: none;
   -ms-overflow-style: none;

@@ -302,24 +302,22 @@ export default function OurCoffeeFarm() {
           <div className="mb-10 text-center">
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-primary">Our farm story</p>
           </div>
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="mx-auto grid max-w-2xl gap-5">
             {[
-              {
-                title: 'Why we started?',
-                description: 'To deliver premium-quality roasted coffee through sustainable farming practices & fair trade to empower the community that grows the coffee.',
-              },
               {
                 title: 'How we started?',
                 description: 'We started in 2018 as a family-owned coffee estate that focused on coffee cultivation; we later grew a pool of smallholder coffee farmers in our community that provides our coffee.',
-              },
-              {
-                title: 'Where are we going?',
-                description: 'To serve roasted fine robusta and speciality arabica coffee world wide.',
               },
             ].map(({ title, description }) => (
               <article key={title} className="min-h-40 rounded-2xl bg-white p-6 shadow-sm md:p-8">
                 <h3 className="mb-4 text-xl font-bold text-brown">{title}</h3>
                 <p className="text-sm leading-relaxed text-brown/75">{description}</p>
+                <Link
+                  to="/about/patrick-muhereza"
+                  className="mt-4 inline-flex text-sm font-semibold text-primary underline decoration-2 underline-offset-4 transition-colors hover:text-brown focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                >
+                  Read How Patrick Muhereza is Elevating Uganda’s Robusta Coffee
+                </Link>
               </article>
             ))}
           </div>

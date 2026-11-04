@@ -30,6 +30,9 @@ export default function Footer() {
           {/* Logo */}
           <div className="flex flex-col items-start gap-2">
             <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-24 w-auto brightness-0 invert md:h-28" />
+            <p className="max-w-xs text-sm leading-relaxed text-white/80">
+              Delivering premium-quality roasted coffee through sustainable farming practices &amp; fair trade to empower the community that grows the coffee.
+            </p>
           </div>
 
           {/* Quick Links */}
@@ -105,11 +108,7 @@ export default function Footer() {
           <p>© {new Date().getFullYear()} Legacy Coffee Limited. All rights reserved.</p>
           <p className="mt-2">
             Developed by{' '}
-            <a href="tel:+256794448439" className="font-semibold text-white/85 hover:text-white hover:underline">+256794448439</a>
-            {', '}
-            <a href="tel:+25794448750" className="font-semibold text-white/85 hover:text-white hover:underline">+25794448750</a>
-            {' and '}
-            <a href="tel:+256785688921" className="font-semibold text-white/85 hover:text-white hover:underline">+256785688921</a>
+            <a href="tel:+25794448750" className="font-semibold text-white/85 hover:text-white hover:underline">IndEx Software Tech</a>
           </p>
         </div>
       </div>

@@ -155,7 +155,7 @@ export default function OurServices() {
         <div className="mx-auto max-w-6xl">
           <div className="max-w-3xl">
             <h2 className="text-base font-bold leading-relaxed text-brown md:text-lg">
-              1. Research &amp; Feasibility Studies
+              Research &amp; Feasibility Studies
             </h2>
             <p className="mt-6 text-base leading-relaxed text-brown/80">
               We help companies and NGOs to conduct research in coffee farming and the supply chain of coffee. We do the difficult work of scoping/mapping, farmer outreach, farmer relationship management and anything in between.
@@ -164,13 +164,13 @@ export default function OurServices() {
 
           <div className="mt-12">
             <h3 className="text-xl font-bold text-brown">See case studies</h3>
-            <div className="mt-5 grid max-w-4xl gap-4">
-              <article className="bg-peach/20 px-6 py-5">
+            <div className="mt-5 grid max-w-5xl gap-5 md:grid-cols-2">
+              <article className="h-full rounded-2xl border border-peach-mid/60 bg-white px-6 py-5 shadow-sm">
                 <p className="text-base leading-relaxed text-brown/80">
                   Coffee Farmer Mapping Activity by legacy coffee and yonderlife africa funderd under the slowfood negroni week fund in Kyenjojo District
                 </p>
               </article>
-              <article className="bg-peach/20 px-6 py-5">
+              <article className="h-full rounded-2xl border border-peach-mid/60 bg-white px-6 py-5 shadow-sm">
                 <p className="text-base leading-relaxed text-brown/80">
                   A study to map coffee farmers of butiiti and nyabuharwa and establish baseline baseline factors that inhibit the journer to higher quality robusta coffee production
                 </p>
@@ -209,7 +209,7 @@ export default function OurServices() {
 
           <div className="mt-12 max-w-3xl">
             <h2 className="text-base font-bold leading-relaxed text-brown md:text-lg">
-              2. Farmer Trainings &amp; Extension Services
+              Farmer Trainings &amp; Extension Services
             </h2>
             <p className="mt-4 text-base leading-relaxed text-brown/80">
               At Legacy Coffee, we believe that great coffee begins with empowered farmers. In a market that has long rewarded volume over value, we are driving a shift, supporting smallholders to produce premium Robusta that commands higher prices and competes globally. We partner with NGOs and companies to implement good coffee farming practices such as Agro-forestry, sustainable water management and organic farming.
@@ -218,7 +218,7 @@ export default function OurServices() {
 
           <div className="mt-12 max-w-3xl">
             <h2 className="text-base font-bold leading-relaxed text-brown md:text-lg">
-              3. Coffee Farm Setups
+              Coffee Farm Setups
             </h2>
             <p className="mt-4 text-base leading-relaxed text-brown/80">
               We provide individuals and institutions with expertise to set up standard coffee farms that maximise yields, and incomes while ensuring sustainable production. Are you an individual looking to set up a coffee farm? Explore our packages

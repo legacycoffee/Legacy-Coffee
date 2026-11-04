@@ -12,6 +12,72 @@ const heroImages = [
   'https://res.cloudinary.com/vgko5mna/image/upload/f_auto,q_auto,w_1600/v1792742178/coffee_cup.png',
 ]
 
+const coffeeBackgroundImages = [
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589717/coffee_3.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589718/coffee_1.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589718/coffee_5.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589718/coffee_4.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589717/coffee_2.jpg',
+  'https://res.cloudinary.com/vgko5mna/image/upload/v1792514667/coffee_1_farm.jpg',
+]
+
+function OurCoffeeSection() {
+  const [current, setCurrent] = useState(0)
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setCurrent(previous => (previous + 1) % coffeeBackgroundImages.length)
+    }, 5000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  return (
+    <section className="relative isolate overflow-hidden bg-white px-6 py-16 md:py-20">
+      {coffeeBackgroundImages.map((image, index) => (
+        <img
+          key={image}
+          src={image}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          className={`absolute inset-0 z-0 h-full w-full object-cover transition-opacity duration-1000 ${index === current ? 'opacity-100' : 'opacity-0'}`}
+          style={{ objectPosition: 'center 75%' }}
+        />
+      ))}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 z-10"
+        style={{ background: 'linear-gradient(135deg, rgba(92,58,30,0.72) 0%, rgba(245,166,35,0.18) 60%, rgba(92,58,30,0.55) 100%)' }}
+      />
+      <div className="relative z-20 mx-auto max-w-6xl text-white">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="mb-6 text-4xl font-black leading-tight text-primary md:text-5xl">
+            Our Coffee
+          </h2>
+          <p className="text-base font-bold leading-relaxed text-white md:text-lg">
+            Uganda’s rich soils and high-altitude climate create the perfect conditions for exceptional coffee. Legacy Coffee sources directly from smallholder farmers in Kyenjojo, Kabarole, Bunyangabu and surrounding areas, ensuring freshness, traceability, and quality.
+          </p>
+        </div>
+
+        <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-2 md:gap-14">
+          <div>
+            <h3 className="mb-3 text-xl font-bold text-primary md:text-2xl">Processing &amp; Roasting</h3>
+            <p className="text-sm font-bold leading-relaxed text-white md:text-base">
+              From hand-picking ripe cherries to careful washing, drying, and roasting, our process preserves natural flavors and guarantees consistency.
+            </p>
+          </div>
+          <div>
+            <h3 className="mb-3 text-xl font-bold uppercase tracking-wide text-primary md:text-2xl">Flavor Notes</h3>
+            <p className="text-sm font-bold leading-relaxed text-white md:text-base">
+              Rich, smooth body with hints of chocolate, nutty undertones, and a bright, clean finish
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export default function Home() {
   const { addToCart } = useCart()
   const { products, isLoading: isProductsLoading, error: productsError } = useProducts()
@@ -197,6 +263,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <OurCoffeeSection />
 
       <section id="quote" className="bg-[#f8eee3] px-4 py-10 sm:px-6 sm:py-12">
         <div className="mx-auto flex max-w-7xl justify-center">
