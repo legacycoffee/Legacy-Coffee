@@ -302,7 +302,7 @@ export default function OurCoffeeFarm() {
           <div className="mb-10 text-center">
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-primary">Our farm story</p>
           </div>
-          <div className="mx-auto grid max-w-2xl gap-5">
+          <div id="how-we-started" className="mx-auto grid max-w-2xl scroll-mt-24 gap-5">
             {[
               {
                 title: 'How we started?',

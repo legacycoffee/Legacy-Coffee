@@ -10,10 +10,10 @@ export default function PatrickStoryPage() {
     <div className="bg-[#fffdfa] px-6 py-12 md:px-10 md:py-16">
       <div className="mx-auto max-w-5xl">
         <Link
-          to="/about#patrick-story"
+          to="/coffee-farm#how-we-started"
           className="inline-flex items-center gap-2 rounded-full border border-peach-mid bg-white px-4 py-2 text-sm font-semibold text-brown transition-colors hover:border-primary hover:text-primary"
         >
-          ← Back to About Us
+          ← Back to Our Coffee Farm
         </Link>
 
         <article className="mt-8">
