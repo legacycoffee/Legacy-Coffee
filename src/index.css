@@ -41,6 +41,23 @@ main p:not([class*="text-xs"]):not([class*="text-sm"]):not([class*="text-base"])
   font-size: 1rem;
 }
 
+main article[class*="rounded-"],
+main article[class*="shadow-"],
+main [class*="rounded-"][class*="shadow-"],
+main li[class*="shadow-"] {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  main article[class*="rounded-"]:hover,
+  main article[class*="shadow-"]:hover,
+  main [class*="rounded-"][class*="shadow-"]:hover,
+  main li[class*="shadow-"]:hover {
+    transform: translateY(-0.25rem);
+    box-shadow: 0 12px 24px rgba(92, 58, 30, 0.14);
+  }
+}
+
 .farm-reservation-scroll {
   scrollbar-width: none;
   -ms-overflow-style: none;

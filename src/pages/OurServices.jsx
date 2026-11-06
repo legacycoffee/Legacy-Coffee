@@ -227,7 +227,7 @@ export default function OurServices() {
               const buyHref = `https://wa.me/${whatsapp}?text=${encodeURIComponent(buyMessage)}`
 
               return (
-                <article key={setupPackage.id} className="flex flex-col items-center rounded-3xl border border-peach-mid/60 bg-white p-6 text-center shadow-md transition-shadow duration-300 hover:shadow-lg md:p-8">
+                <article key={setupPackage.id} className="flex flex-col items-center rounded-3xl border border-peach-mid/60 bg-white p-6 text-center shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-lg md:p-8">
                   <div className="mb-6 w-full rounded-2xl bg-peach-light px-5 py-6">
                     <h3 className="text-xl font-bold text-brown sm:text-2xl">{setupPackage.title}</h3>
                     <p className="mt-3 text-lg font-black text-primary sm:text-xl">{setupPackage.price}</p>
