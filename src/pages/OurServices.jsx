@@ -159,7 +159,7 @@ export default function OurServices() {
           </div>
 
           <div className="mt-12 text-center">
-            <h3 className="text-xl font-bold text-brown sm:text-2xl">See case studies</h3>
+            <h3 className="text-xl font-bold text-brown sm:text-2xl">Our case studies</h3>
             <div className="mx-auto mt-5 grid max-w-3xl grid-cols-1 gap-4">
               <article className="flex flex-col rounded-2xl border border-peach-mid/50 bg-peach-light/55 p-6 text-left shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md sm:p-8">
                 <p className="text-left text-sm leading-relaxed text-brown/75 sm:text-base">
@@ -230,7 +230,7 @@ export default function OurServices() {
                 <article key={setupPackage.id} className="flex flex-col items-center rounded-3xl border border-peach-mid/60 bg-white p-6 text-center shadow-md transition-shadow duration-300 hover:shadow-lg md:p-8">
                   <div className="mb-6 w-full rounded-2xl bg-peach-light px-5 py-6">
                     <h3 className="text-xl font-bold text-brown sm:text-2xl">{setupPackage.title}</h3>
-                    <p className="mt-3 text-2xl font-black text-primary">{setupPackage.price}</p>
+                    <p className="mt-3 text-lg font-black text-primary sm:text-xl">{setupPackage.price}</p>
                     <p className="mt-1 text-sm text-brown/70">{setupPackage.detail}</p>
                     <p className="mt-4 text-sm font-semibold text-brown">Includes:</p>
                   </div>
