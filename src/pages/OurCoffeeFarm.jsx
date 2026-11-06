@@ -343,8 +343,17 @@ export default function OurCoffeeFarm() {
               <article key={tour.id} className="flex flex-col items-center rounded-2xl border border-peach-mid/70 bg-white p-6 text-center shadow-sm md:p-8">
                 <div className="mb-6 w-full border-b border-peach-mid/60 pb-5">
                   <h3 className="text-2xl font-bold text-brown">{tour.title}</h3>
-                  <p className="mt-3 text-2xl font-black text-primary">{tour.price}</p>
-                  <p className={tour.id === 'individual' ? 'mt-1 text-2xl font-black text-primary' : 'mt-1 text-sm text-brown/70'}>{tour.detail}</p>
+                  {tour.id === 'individual' ? (
+                    <div className="mx-auto mt-3 w-fit text-left">
+                      <p className="text-sm font-black text-primary">{tour.price}</p>
+                      <p className="mt-1 text-sm font-black text-primary">{tour.detail}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="mt-3 text-sm font-black text-primary">{tour.price}</p>
+                      <p className="mt-1 text-sm text-brown/70">{tour.detail}</p>
+                    </>
+                  )}
                   <p className="mt-4 text-sm font-semibold text-brown">Includes:</p>
                 </div>
                 <ul className="mb-8 w-full flex-1 space-y-3 text-left">
