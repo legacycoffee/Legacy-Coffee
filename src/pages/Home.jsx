@@ -12,66 +12,34 @@ const heroImages = [
   'https://res.cloudinary.com/vgko5mna/image/upload/f_auto,q_auto,w_1600/v1792742178/coffee_cup.png',
 ]
 
-const coffeeBackgroundImages = [
-  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589717/coffee_3.jpg',
-  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589718/coffee_1.jpg',
-  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589718/coffee_5.jpg',
-  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589718/coffee_4.jpg',
-  'https://res.cloudinary.com/vgko5mna/image/upload/v1792589717/coffee_2.jpg',
-  'https://res.cloudinary.com/vgko5mna/image/upload/v1792514667/coffee_1_farm.jpg',
-]
-
 function OurCoffeeSection() {
-  const [current, setCurrent] = useState(0)
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setCurrent(previous => (previous + 1) % coffeeBackgroundImages.length)
-    }, 5000)
-    return () => window.clearInterval(timer)
-  }, [])
-
   return (
-    <section className="relative isolate overflow-hidden bg-white px-6 py-16 md:py-20">
-      {coffeeBackgroundImages.map((image, index) => (
-        <img
-          key={image}
-          src={image}
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          className={`absolute inset-0 z-0 h-full w-full object-cover transition-opacity duration-1000 ${index === current ? 'opacity-100' : 'opacity-0'}`}
-          style={{ objectPosition: 'center 75%' }}
-        />
-      ))}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 z-10"
-        style={{ background: 'linear-gradient(135deg, rgba(92,58,30,0.72) 0%, rgba(245,166,35,0.18) 60%, rgba(92,58,30,0.55) 100%)' }}
-      />
-      <div className="relative z-20 mx-auto max-w-6xl text-white">
+    <section className="bg-[#f8eee3] px-6 py-16 md:py-20">
+      <div className="mx-auto max-w-6xl text-center text-brown">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="mb-6 text-4xl font-black leading-tight text-primary md:text-5xl">
             Our Coffee
           </h2>
-          <p className="text-base font-normal leading-relaxed text-white">
+          <p className="text-justify text-base font-normal leading-relaxed text-brown/80">
             Uganda’s rich soils and high-altitude climate create the perfect conditions for exceptional coffee. Legacy Coffee sources directly from smallholder farmers in Kyenjojo, Kabarole, Bunyangabu and surrounding areas, ensuring freshness, traceability, and quality.
           </p>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-2 md:gap-14">
-          <div>
-            <h3 className="mb-3 text-xl font-bold text-primary md:text-2xl">Processing &amp; Roasting</h3>
-            <p className="text-base font-normal leading-relaxed text-white">
-              From hand-picking ripe cherries to careful washing, drying, and roasting, our process preserves natural flavors and guarantees consistency.
-            </p>
-          </div>
-          <div>
-            <h3 className="mb-3 text-xl font-bold uppercase tracking-wide text-primary md:text-2xl">Flavor Notes</h3>
-            <p className="text-base font-normal leading-relaxed text-white">
-              Rich, smooth body with hints of chocolate, nutty undertones, and a bright, clean finish
-            </p>
-          </div>
+        <div className="mx-auto mt-10 max-w-5xl md:mt-14">
+          <article className="grid grid-cols-1 gap-8 rounded-2xl border border-peach-mid/60 bg-white p-7 text-center shadow-sm md:p-9">
+            <div className="flex w-full flex-col items-center">
+              <h3 className="mb-3 text-xl font-bold text-primary md:text-2xl">Processing &amp; Roasting</h3>
+              <p className="w-full max-w-2xl text-justify text-base font-normal leading-relaxed text-brown/80">
+                From hand-picking ripe cherries to careful washing, drying, and roasting, our process preserves natural flavors and guarantees consistency.
+              </p>
+            </div>
+            <div className="flex w-full flex-col items-center">
+              <h3 className="mb-3 text-xl font-bold text-primary md:text-2xl">Flavor Notes</h3>
+              <p className="w-full max-w-2xl text-center text-base font-normal leading-relaxed text-brown/80">
+                Rich, smooth body with hints of chocolate, nutty undertones, and a bright, clean finish
+              </p>
+            </div>
+          </article>
         </div>
       </div>
     </section>
@@ -134,31 +102,30 @@ export default function Home() {
           <path d="M0 10C112 63 242 71 355 144" stroke="currentColor" strokeWidth="2" />
         </svg>
 
-        <div className="relative z-10 mx-auto flex h-full min-h-[600px] max-w-7xl items-center px-6 pb-28 pt-28 md:px-10 md:pb-16 md:pt-28 lg:px-12">
-          <div className="max-w-3xl">
-            <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-primary sm:text-base md:mb-4 md:text-lg">
+        <div className="relative z-10 mx-auto flex h-full min-h-[600px] max-w-7xl items-center justify-center px-6 pb-28 pt-28 text-center md:px-10 md:pb-16 md:pt-28 lg:px-12">
+          <div className="mx-auto w-full max-w-3xl">
+            <p className="mb-3 text-center text-sm font-bold uppercase tracking-[0.25em] text-primary sm:text-base md:mb-4 md:text-lg">
               Legacy Coffee
             </p>
             <h1
-              className="mb-5 max-w-3xl text-5xl font-black leading-[0.98] text-white sm:text-6xl lg:text-7xl"
+              className="mx-auto mb-5 max-w-3xl text-balance text-center text-5xl font-black leading-[0.98] text-white sm:text-6xl lg:text-7xl"
             >
-              Bringing the Best Out
-              <br />
-              <span className="text-primary">of Every Bean</span>
+              Bringing the Best <span className="whitespace-nowrap">Out of</span>{' '}
+              <span className="text-primary">Every Bean</span>
             </h1>
-            <p className="mb-8 max-w-lg text-base leading-relaxed text-white/80 sm:text-lg">
+            <p className="mx-auto mb-8 max-w-lg text-balance text-center text-base leading-relaxed text-white/80 sm:text-lg">
               From cafés to busy restaurants and homes, Legacy Coffee brings you quality Ugandan coffee, freshly roasted for rich flavour and memorable experiences.
             </p>
-            <div className="mx-auto flex w-full max-w-xs flex-col items-center justify-center gap-3 sm:max-w-none sm:flex-row sm:gap-5 sm:justify-center md:mx-0 md:justify-start">
+            <div className="mx-auto flex w-full max-w-xs flex-col items-center justify-center gap-3 sm:max-w-none sm:flex-row sm:gap-5">
               <Link
                 to="/#product-list"
-                className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 transition-all duration-300 hover:bg-white hover:text-brown md:px-9 md:py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="inline-flex w-full items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 transition-all duration-300 hover:bg-white hover:text-brown sm:w-auto md:px-9 md:py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 Shop Coffee →
               </Link>
               <Link
                 to="/about#partnership"
-                className="inline-flex items-center justify-center rounded-full border-2 border-white/50 px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white backdrop-blur-sm transition-all duration-300 hover:border-primary hover:text-primary md:px-9 md:py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex w-full items-center justify-center rounded-full border-2 border-white/50 px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white backdrop-blur-sm transition-all duration-300 hover:border-primary hover:text-primary sm:w-auto md:px-9 md:py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 Partner With Us
               </Link>
@@ -170,22 +137,22 @@ export default function Home() {
 
       <section id="products" className="bg-[#fffdfa] px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-7 flex items-end justify-between gap-4 sm:mb-9">
+          <div className="mb-7 flex justify-center gap-4 text-center sm:mb-9">
             <div>
               <h2 className="text-2xl font-bold text-brown sm:text-3xl">Order your favorite coffee</h2>
             </div>
           </div>
           {isProductsLoading && products.length === 0 ? (
-            <p role="status" className="text-sm text-brown/70">Loading products…</p>
+            <p role="status" className="text-center text-sm text-brown/70">Loading products…</p>
           ) : productsError && products.length === 0 ? (
-            <p role="alert" className="mb-5 text-sm text-red-700">Could not load products: {productsError}</p>
+            <p role="alert" className="mb-5 text-center text-sm text-red-700">Could not load products: {productsError}</p>
           ) : products.length === 0 ? (
-            <p className="text-sm text-brown/70">No products are currently available.</p>
+            <p className="text-center text-sm text-brown/70">No products are currently available.</p>
           ) : (
             <>
-              {isProductsLoading && <p role="status" className="mb-4 text-xs text-brown/60">Loading the latest catalog…</p>}
+              {isProductsLoading && <p role="status" className="mb-4 text-center text-xs text-brown/60">Loading the latest catalog…</p>}
               {productsError && (
-                <p role="status" className="mb-4 text-sm text-amber-900">
+                <p role="status" className="mb-4 text-center text-sm text-amber-900">
                   The live catalog is unavailable. Showing the saved or bundled catalog; prices and availability may need confirmation.
                 </p>
               )}
@@ -195,14 +162,14 @@ export default function Home() {
                   <Link to={getProductUrl(product)} aria-label={`View ${product.name}`} className="flex flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary">
                     <div className="relative block aspect-[4/3] w-full overflow-hidden bg-peach-light">
                       <ProductImage product={product} className="transition-transform duration-500 sm:group-hover:scale-105" />
-                      <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-brown shadow-sm sm:left-3 sm:top-3 sm:text-xs">
+                      <span className="absolute right-2 top-2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-brown shadow-sm sm:right-3 sm:top-3 sm:text-xs">
                         {product.weight}
                       </span>
                     </div>
-                    <div className="flex flex-1 flex-col p-3 sm:p-4 lg:p-5">
+                    <div className="flex flex-1 flex-col items-center p-3 text-center sm:p-4 lg:p-5">
                       <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary sm:text-xs">{product.roast}</p>
                       <p className="mb-2 text-sm font-bold leading-snug text-brown group-hover:text-primary sm:text-base lg:text-lg">{product.name}</p>
-                      <p className="mb-4 flex-1 text-xs leading-relaxed text-brown/70 sm:text-sm">{product.description}</p>
+                      <p className="mb-4 w-full flex-1 text-balance text-center text-xs leading-relaxed text-brown/70 sm:text-sm">{product.description}</p>
                       <p className="mt-auto text-lg font-bold text-brown sm:text-xl">{formatPrice(product.price)}</p>
                     </div>
                   </Link>
@@ -233,29 +200,28 @@ export default function Home() {
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-[#21160e]/95 via-[#21160e]/80 to-[#21160e]/45" />
 
         <div className="mx-auto max-w-7xl">
-          <div className="max-w-2xl">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-primary sm:text-sm">Fresh from our café</p>
+          <div className="mx-auto max-w-2xl text-center">
             <h2 id="coffee-shop-heading" className="text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
-              Your next great cup is waiting.
+              Visit our café
             </h2>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
+            <p className="mx-auto mt-5 max-w-xl text-justify text-base leading-relaxed text-white/85 sm:text-lg">
               Visit the Legacy Coffee shop for freshly prepared coffee drinks, or place a pre-order and we’ll help arrange your pickup.
             </p>
-            <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/85 sm:text-base">
+            <p className="mx-auto mt-2 max-w-xl text-justify text-sm leading-relaxed text-white/85 sm:text-base">
               Tell us your favorite type of coffee and your preferred pickup time. We’ll confirm your pre-order directly with you.
             </p>
-            <div className="mx-auto mt-8 flex w-full max-w-xs flex-col items-center gap-3 sm:mx-0 sm:max-w-none sm:flex-row">
+            <div className="mx-auto mt-8 flex w-full max-w-xs flex-col items-center gap-3 sm:max-w-none sm:flex-row sm:justify-center">
               <a
                 href="https://wa.me/256789069263?text=Hi%20Legacy%20Coffee!%20I%E2%80%99d%20like%20to%20pre-order%20a%20coffee%20drink.%20Please%20share%20today%E2%80%99s%20menu%20and%20pickup%20times."
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white hover:text-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="inline-flex w-full items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 transition-all duration-300 hover:bg-white hover:text-brown sm:w-auto md:px-9 md:py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 Pre-order on WhatsApp
               </a>
               <Link
                 to="/#product-list"
-                className="inline-flex items-center justify-center rounded-full border border-white/60 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="inline-flex w-full items-center justify-center rounded-full border-2 border-white/50 px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white backdrop-blur-sm transition-all duration-300 hover:border-primary hover:text-primary sm:w-auto md:px-9 md:py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 Shop packaged coffee
               </Link>
@@ -266,7 +232,7 @@ export default function Home() {
 
       <OurCoffeeSection />
 
-      <section id="quote" className="bg-[#f8eee3] px-4 py-10 sm:px-6 sm:py-12">
+      <section id="quote" className="bg-[#f8eee3] px-4 py-0 sm:px-6 sm:py-0">
         <div className="mx-auto flex max-w-7xl justify-center">
           <Link
             to="/wholesale"

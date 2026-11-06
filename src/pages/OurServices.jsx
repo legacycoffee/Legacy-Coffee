@@ -123,72 +123,68 @@ export default function OurServices() {
   }
 
   return (
-    <div className="bg-white">
-      <section className="relative isolate flex min-h-[320px] items-center justify-center overflow-hidden px-6 py-20 text-center">
+    <div className="bg-[#fffdfa]">
+      <section className="relative isolate flex min-h-[380px] items-center justify-center overflow-hidden px-6 py-20 text-center md:min-h-[480px]">
         <img
           src="https://res.cloudinary.com/vgko5mna/image/upload/v1793259784/farm_4.jpg"
           alt=""
           aria-hidden="true"
           className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
         />
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-brown/65" />
-        <div className="relative">
-          <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-peach"></p>
-          <h1 className="text-4xl font-black text-white md:text-6xl">Our Services</h1>
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-b from-brown/45 via-brown/65 to-brown/85" />
+        <div className="relative mx-auto max-w-3xl">
+          <h1 className="text-5xl font-black leading-tight text-white sm:text-6xl md:text-7xl">Our Services</h1>
         </div>
       </section>
 
-      <section className="px-6 pt-12 pb-4 md:pt-16 md:pb-4">
-        <div className="mx-auto max-w-6xl text-left">
-          <div className="max-w-3xl">
-            <p className="text-base leading-relaxed text-brown/80">
-            At Legacy Coffee, we believe that great coffee begins with empowered farmers.
-            </p>
-            <p className="mt-4 text-base leading-relaxed text-brown/80">
-            In a market that has long rewarded volume over value, we are driving a shift, supporting smallholders to produce premium Robusta that commands higher prices and competes globally.
+      <section className="bg-peach-light px-6 py-12 md:py-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-3xl rounded-3xl border border-white/80 bg-white px-6 py-8 text-center shadow-sm sm:px-10 sm:py-10">
+            <p className="text-balance text-center text-base leading-relaxed text-brown sm:text-lg">
+              At Legacy Coffee, we believe that great coffee begins with empowered farmers. In a market that has long rewarded volume over value, we are driving a shift, supporting smallholders to produce premium Robusta that commands higher prices and competes globally.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="px-6 pt-4 pb-16 md:pt-4 md:pb-24">
+      <section className="bg-[#fffdfa] px-6 py-16 md:py-20">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-3xl">
-            <h2 className="text-base font-bold leading-relaxed text-brown md:text-lg">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-black leading-tight text-brown sm:text-4xl">
               Research &amp; Feasibility Studies
             </h2>
-            <p className="mt-6 text-base leading-relaxed text-brown/80">
+            <p className="mt-5 text-justify text-base leading-relaxed text-brown/75">
               We help companies and NGOs to conduct research in coffee farming and the supply chain of coffee. We do the difficult work of scoping/mapping, farmer outreach, farmer relationship management and anything in between.
             </p>
           </div>
 
-          <div className="mt-12">
-            <h3 className="text-xl font-bold text-brown">See case studies</h3>
-            <div className="mt-5 grid max-w-5xl gap-5 md:grid-cols-2">
-              <article className="h-full rounded-2xl border border-peach-mid/60 bg-white px-6 py-5 shadow-sm">
-                <p className="text-base leading-relaxed text-brown/80">
+          <div className="mt-12 text-center">
+            <h3 className="text-xl font-bold text-brown sm:text-2xl">See case studies</h3>
+            <div className="mx-auto mt-5 grid max-w-3xl grid-cols-1 gap-4">
+              <article className="flex flex-col rounded-2xl border border-peach-mid/50 bg-peach-light/55 p-6 text-left shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md sm:p-8">
+                <p className="text-left text-sm leading-relaxed text-brown/75 sm:text-base">
                   Coffee Farmer Mapping Activity by legacy coffee and yonderlife africa funderd under the slowfood negroni week fund in Kyenjojo District
                 </p>
               </article>
-              <article className="h-full rounded-2xl border border-peach-mid/60 bg-white px-6 py-5 shadow-sm">
-                <p className="text-base leading-relaxed text-brown/80">
+              <article className="flex flex-col rounded-2xl border border-peach-mid/50 bg-peach-light/55 p-6 text-left shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md sm:p-8">
+                <p className="text-left text-sm leading-relaxed text-brown/75 sm:text-base">
                   A study to map coffee farmers of butiiti and nyabuharwa and establish baseline baseline factors that inhibit the journer to higher quality robusta coffee production
                 </p>
               </article>
             </div>
           </div>
 
-          <div className="mt-12">
-            <h3 className="max-w-3xl text-lg font-bold leading-relaxed text-brown">
+          <div className="mx-auto mt-12 max-w-3xl rounded-3xl bg-brown px-6 py-8 text-center text-white shadow-lg sm:px-10 sm:py-9">
+            <h3 className="mx-auto max-w-3xl text-xl font-bold leading-relaxed sm:text-2xl">
               Do you have a coffee research study of interest in Uganda?
             </h3>
-            <p className="mt-2 max-w-2xl text-base leading-relaxed text-brown/80">
+            <p className="mx-auto mt-3 max-w-2xl text-center text-base leading-relaxed text-white/80">
               Rely on our expertise to get the most out of it. Contact us today for a custom quote.
             </p>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <div className="mx-auto mt-5 flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
               <a
                 href={emailHref}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 font-bold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 font-bold text-white shadow-lg shadow-black/15 transition-all duration-300 hover:bg-white hover:text-brown sm:w-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 <FiMail aria-hidden="true" />
                 Email Us
@@ -198,7 +194,7 @@ export default function OurServices() {
                 href={whatsappHref}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-primary px-6 py-3 font-bold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full border-2 border-white/60 px-6 py-3.5 font-bold text-white transition-all duration-300 hover:border-primary hover:bg-primary sm:w-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 <FiMessageCircle aria-hidden="true" />
                 WhatsApp Us
@@ -207,38 +203,38 @@ export default function OurServices() {
             </div>
           </div>
 
-          <div className="mt-12 max-w-3xl">
-            <h2 className="text-base font-bold leading-relaxed text-brown md:text-lg">
+          <div className="mx-auto mt-16 max-w-4xl rounded-3xl bg-peach-light px-6 py-8 text-center sm:px-10 sm:py-10">
+            <h2 className="text-3xl font-black leading-tight text-brown sm:text-4xl">
               Farmer Trainings &amp; Extension Services
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-brown/80">
+            <p className="mx-auto mt-4 max-w-3xl text-justify text-base leading-relaxed text-brown/75">
               At Legacy Coffee, we believe that great coffee begins with empowered farmers. In a market that has long rewarded volume over value, we are driving a shift, supporting smallholders to produce premium Robusta that commands higher prices and competes globally. We partner with NGOs and companies to implement good coffee farming practices such as Agro-forestry, sustainable water management and organic farming.
             </p>
           </div>
 
-          <div className="mt-12 max-w-3xl">
-            <h2 className="text-base font-bold leading-relaxed text-brown md:text-lg">
+          <div className="mx-auto mt-16 max-w-4xl text-center">
+            <h2 className="text-3xl font-black leading-tight text-brown sm:text-4xl">
               Coffee Farm Setups
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-brown/80">
+            <p className="mx-auto mt-4 max-w-3xl text-justify text-base leading-relaxed text-brown/75">
               We provide individuals and institutions with expertise to set up standard coffee farms that maximise yields, and incomes while ensuring sustainable production. Are you an individual looking to set up a coffee farm? Explore our packages
             </p>
           </div>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <div className="mx-auto mt-8 grid max-w-5xl gap-6 lg:grid-cols-2">
             {farmSetupPackages.map(setupPackage => {
               const buyMessage = `Hello Legacy Coffee, I would like to buy the ${setupPackage.title} for my coffee farm. Price: ${setupPackage.price}; ${setupPackage.detail}. Please get in touch with me.`
               const buyHref = `https://wa.me/${whatsapp}?text=${encodeURIComponent(buyMessage)}`
 
               return (
-                <article key={setupPackage.id} className="flex flex-col rounded-2xl border border-peach-mid/70 bg-white p-6 shadow-sm md:p-8">
-                  <div className="mb-6 border-b border-peach-mid/60 pb-5">
-                    <h3 className="text-2xl font-bold text-brown">{setupPackage.title}</h3>
+                <article key={setupPackage.id} className="flex flex-col items-center rounded-3xl border border-peach-mid/60 bg-white p-6 text-center shadow-md transition-shadow duration-300 hover:shadow-lg md:p-8">
+                  <div className="mb-6 w-full rounded-2xl bg-peach-light px-5 py-6">
+                    <h3 className="text-xl font-bold text-brown sm:text-2xl">{setupPackage.title}</h3>
                     <p className="mt-3 text-2xl font-black text-primary">{setupPackage.price}</p>
                     <p className="mt-1 text-sm text-brown/70">{setupPackage.detail}</p>
                     <p className="mt-4 text-sm font-semibold text-brown">Includes:</p>
                   </div>
-                  <ul className="mb-8 flex-1 space-y-3">
+                  <ul className="mb-8 w-full flex-1 space-y-3 rounded-2xl bg-[#fffdfa] p-5 text-left">
                     {setupPackage.features.map(feature => (
                       <li key={feature} className="flex items-start gap-3 text-sm leading-relaxed text-brown/80 md:text-base">
                         <span aria-hidden="true" className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" />
@@ -246,7 +242,7 @@ export default function OurServices() {
                       </li>
                     ))}
                   </ul>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="mt-auto grid w-full grid-cols-2 gap-3">
                     <a
                       href={buyHref}
                       target="_blank"

@@ -268,7 +268,7 @@ export default function OurCoffeeFarm() {
 
   return (
     <div className="home-page overflow-x-hidden bg-[#fffdfa]">
-      <section className="relative isolate flex min-h-[560px] items-center overflow-hidden bg-[#351a08] px-6 py-20 md:min-h-[680px] md:px-10">
+      <section className="relative isolate flex min-h-[560px] items-center justify-center overflow-hidden bg-[#351a08] px-6 py-20 text-center md:min-h-[680px] md:px-10">
         <img
           src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792508243/coffee_farm.jpg"
           alt=""
@@ -277,19 +277,19 @@ export default function OurCoffeeFarm() {
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-r from-[#241308]/85 via-[#241308]/55 to-[#241308]/15"
+          className="absolute inset-0 bg-gradient-to-b from-[#241308]/60 via-[#241308]/65 to-[#241308]/80"
         />
         <div className="relative mx-auto w-full max-w-7xl">
-          <div className="max-w-3xl">
+          <div className="mx-auto max-w-3xl">
             <h1 className="mb-6 text-4xl font-black leading-tight text-white sm:text-5xl md:text-7xl">
               Our Coffee Farm
             </h1>
-            <p className="max-w-2xl text-base leading-relaxed text-white/85 md:text-xl">
+            <p className="mx-auto max-w-2xl text-balance text-center text-base leading-relaxed text-white/85 md:text-xl">
               Discover coffee beyond the cup. Visit our farm to experience the entire journey of coffee, from growing and harvesting to pulping, drying, and finally, the cup.
             </p>
             <a
               href="#farm-visits"
-              className="mt-8 inline-flex rounded-full bg-primary px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-white hover:text-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="mt-8 inline-flex w-full max-w-xs items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 transition-all duration-300 hover:bg-white hover:text-brown sm:w-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               Book A Visit
             </a>
@@ -309,14 +309,14 @@ export default function OurCoffeeFarm() {
                 description: 'We started in 2018 as a family-owned coffee estate that focused on coffee cultivation; we later grew a pool of smallholder coffee farmers in our community that provides our coffee.',
               },
             ].map(({ title, description }) => (
-              <article key={title} className="min-h-40 rounded-2xl bg-white p-6 shadow-sm md:p-8">
+              <article key={title} className="min-h-40 rounded-2xl bg-white p-6 text-center shadow-sm md:p-8">
                 <h3 className="mb-4 text-xl font-bold text-brown">{title}</h3>
-                <p className="text-sm leading-relaxed text-brown/75">{description}</p>
+                <p className="text-justify text-sm leading-relaxed text-brown/75">{description}</p>
                 <Link
                   to="/about/patrick-muhereza"
-                  className="mt-4 inline-flex text-sm font-semibold text-primary underline decoration-2 underline-offset-4 transition-colors hover:text-brown focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                  className="mx-auto mt-4 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
-                  Read How Patrick Muhereza is Elevating Uganda’s Robusta Coffee
+                  Read More
                 </Link>
               </article>
             ))}
@@ -328,11 +328,11 @@ export default function OurCoffeeFarm() {
         <div className="mx-auto max-w-7xl">
           <h2 className="mb-10 text-center text-3xl font-black text-brown md:mb-12 md:text-5xl">Visit Our Coffee Farm</h2>
           <FarmImageSlider />
-          <div className="mb-8 text-left lg:w-[calc(50%-0.75rem)]">
-            <p className="mb-2 text-base leading-relaxed text-brown md:text-lg">
+          <div className="mx-auto mb-8 max-w-3xl text-center">
+            <p className="mb-2 text-center text-base leading-relaxed text-brown md:text-lg">
               <strong className="font-bold">Educational Tours:</strong>
             </p>
-            <p className="text-base leading-relaxed text-brown/75 md:text-lg">
+            <p className="text-justify text-base leading-relaxed text-brown/75 md:text-lg">
               Have you ever imagined how coffee gets from the plant to the cup? We train individuals, schools and tourists on the process of regenerative coffee farming and local processing of coffee beans in Uganda.
             </p>
             <p className="mt-4 font-semibold text-brown">Explore Educational Plans:</p>
@@ -340,14 +340,14 @@ export default function OurCoffeeFarm() {
 
           <div className="grid gap-6 lg:grid-cols-2">
             {tourPackages.map(tour => (
-              <article key={tour.id} className="flex flex-col rounded-2xl border border-peach-mid/70 bg-white p-6 shadow-sm md:p-8">
-                <div className="mb-6 border-b border-peach-mid/60 pb-5">
+              <article key={tour.id} className="flex flex-col items-center rounded-2xl border border-peach-mid/70 bg-white p-6 text-center shadow-sm md:p-8">
+                <div className="mb-6 w-full border-b border-peach-mid/60 pb-5">
                   <h3 className="text-2xl font-bold text-brown">{tour.title}</h3>
                   <p className="mt-3 text-2xl font-black text-primary">{tour.price}</p>
                   <p className={tour.id === 'individual' ? 'mt-1 text-2xl font-black text-primary' : 'mt-1 text-sm text-brown/70'}>{tour.detail}</p>
                   <p className="mt-4 text-sm font-semibold text-brown">Includes:</p>
                 </div>
-                <ul className="mb-8 flex-1 space-y-3">
+                <ul className="mb-8 w-full flex-1 space-y-3 text-left">
                   {tour.activities.map(activity => (
                     <li key={activity} className="flex items-start gap-3 text-sm leading-relaxed text-brown/80 md:text-base">
                       <span aria-hidden="true" className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" />
@@ -355,7 +355,7 @@ export default function OurCoffeeFarm() {
                     </li>
                   ))}
                 </ul>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="mt-auto grid w-full grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -382,11 +382,11 @@ export default function OurCoffeeFarm() {
           </div>
 
           <section className="mt-16 rounded-2xl bg-peach-light p-6 md:mt-20 md:p-10">
-            <div className="mx-auto max-w-3xl">
-              <p className="mb-3 text-base leading-relaxed text-brown md:text-lg">
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="mb-3 text-center text-base leading-relaxed text-brown md:text-lg">
                 <strong className="font-bold">Coffee Seedlings:</strong>
               </p>
-              <p className="text-base leading-relaxed text-brown/80 md:text-lg">
+              <p className="text-justify text-base leading-relaxed text-brown/80 md:text-lg">
                 Are you looking to plant coffee? We sell high quality coffee seedlings that ensure you maximise your investment in coffee farming. Our seedlings are nationally approved to ensure you plant varieties that are drought and disease resistant. Get up to 5% off for all orders above 1000 seedlings.
               </p>
               <div className="mt-6 grid gap-6">
@@ -476,7 +476,7 @@ export default function OurCoffeeFarm() {
                     </section>
                   ))}
                 </div>
-                <p className="text-sm font-semibold text-brown md:text-right">
+                <p className="text-center text-sm font-semibold text-brown">
                   Total selected: {seedlingQuantity.toLocaleString()} seedlings
                   <br />
                   {formatPrice(seedlingsProduct?.price ?? 2000)} / seedling
@@ -485,7 +485,7 @@ export default function OurCoffeeFarm() {
                   )}
                 </p>
               </div>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="mx-auto mt-6 grid w-full max-w-2xl gap-3 sm:grid-cols-2">
                 <button
                   type="button"
                   disabled={isProductsLoading || !seedlingsProduct || !seedlingQuantity || !remainingSeedlingCapacity}
@@ -518,7 +518,7 @@ export default function OurCoffeeFarm() {
           <div className="mt-8 text-center">
             <Link
               to="/#coffee-shop-heading"
-              className="inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="inline-flex min-h-12 w-full max-w-xs items-center justify-center rounded-full bg-primary px-7 py-3 text-center text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 transition-all duration-300 hover:bg-brown sm:w-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               Grab a Coffee at Our Cafe
             </Link>

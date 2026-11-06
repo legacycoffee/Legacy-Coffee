@@ -98,18 +98,18 @@ function HeroSlider() {
       />
 
       <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4 text-center md:px-6">
-        <p className="mb-3 text-lg font-bold uppercase tracking-[0.25em] text-primary sm:text-xl md:mb-4 md:text-2xl"
+        <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-primary sm:text-base md:mb-4 md:text-lg"
           style={{ animation: 'fadeUp 0.7s ease both' }}>
           Legacy Coffee
         </p>
 
-        <h1 className="mb-4 font-black leading-[1.1] text-white md:mb-5"
+        <h1 className="mb-4 text-4xl font-black leading-[1.1] text-white sm:text-5xl md:mb-5 md:text-7xl"
           style={{ animation: 'fadeUp 0.8s 0.1s ease both' }}>
           Empowering Farmers.<br />
           <span className="text-primary">Enriching Communities.</span>
         </h1>
 
-        <p className="mb-8 max-w-2xl px-2 text-sm leading-relaxed text-white/80 md:mb-10 md:text-lg"
+        <p className="mb-8 max-w-2xl px-2 text-balance text-base leading-relaxed text-white/80 md:mb-10 md:text-lg"
           style={{ animation: 'fadeUp 0.8s 0.2s ease both' }}>
           We specialize in producing high-quality, sustainably grown coffee while empowering smallholder farmers, youth, and women.
         </p>
@@ -117,11 +117,11 @@ function HeroSlider() {
         <div className="flex w-full max-w-xs flex-col justify-center gap-3 sm:max-w-none sm:flex-row md:gap-4"
           style={{ animation: 'fadeUp 0.8s 0.3s ease both' }}>
           <Link to="/#products"
-            className="rounded-full bg-primary px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 transition-all duration-300 hover:bg-white hover:text-brown md:px-9 md:py-4">
+            className="inline-flex min-h-14 w-full items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 transition-all duration-300 hover:bg-white hover:text-brown sm:w-auto md:px-9 md:py-4">
             Shop Coffee →
           </Link>
           <Link to="/about#story"
-            className="rounded-full border-2 border-white/50 px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white backdrop-blur-sm transition-all duration-300 hover:border-primary hover:text-primary md:px-9 md:py-4">
+            className="inline-flex min-h-14 w-full items-center justify-center rounded-full border-2 border-white/50 px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-white backdrop-blur-sm transition-all duration-300 hover:border-primary hover:text-primary sm:w-auto md:px-9 md:py-4">
             Our Story
           </Link>
         </div>
@@ -147,21 +147,21 @@ export default function AboutUs() {
   }
 
   return (
-    <div className="home-page overflow-x-hidden">
+    <div className="overflow-x-hidden bg-[#fffdfa]">
 
       {/* ── HERO ─────────────────────────────────────────────── */}
       <HeroSlider />
 
       {/* ── LEGACY COFFEE INTRO ─────────────────────────────── */}
-      <section className="bg-white px-6 py-14 md:py-16">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="mb-5 text-center text-3xl font-black leading-tight text-brown md:text-4xl">
+      <section className="bg-peach-light px-6 py-12 md:py-16">
+        <div className="mx-auto max-w-4xl rounded-3xl border border-white/80 bg-white px-6 py-8 shadow-sm sm:px-10 sm:py-10">
+          <h2 className="mb-5 text-center text-3xl font-black leading-tight text-brown sm:text-4xl">
             Legacy Coffee
           </h2>
-          <p className="mx-auto max-w-3xl text-justify text-base leading-relaxed text-brown/75 md:text-lg">
+          <p className="mx-auto max-w-3xl text-justify text-base leading-relaxed text-brown/75">
             Legacy Coffee was founded out of a passion for both great coffee and community transformation. Rooted in the fertile soils of Western Uganda, our journey began as a family effort to uplift farmers who struggled to earn fair returns from their harvests. Today, we combine tradition, innovation, and social impact to create coffee that not only delights but also empowers.
           </p>
-          <div className="mx-auto mt-5 max-w-3xl space-y-4 text-justify text-base leading-relaxed text-brown/75 md:text-lg">
+          <div className="mx-auto mt-5 max-w-3xl space-y-4 text-justify text-base leading-relaxed text-brown/75">
             <p className="w-full">
               At Legacy Coffee, our mission is to redefine the coffee value chain in Uganda, starting in the Rwenzori region. While Uganda produces premium coffee, its quality often suffers due to broken value chains and one-off transactions between buyers and farmers, leading to high price volatility and unreliable markets.
             </p>
@@ -172,26 +172,13 @@ export default function AboutUs() {
           <div className="mt-7 text-center">
             <Link
               to="/#products"
-              className="inline-flex items-center rounded-full bg-primary px-7 py-3 font-semibold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="inline-flex min-h-12 w-full max-w-xs items-center justify-center rounded-full bg-primary px-7 py-3 text-center text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/30 transition-all duration-300 hover:bg-brown sm:w-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               Explore Our Coffee
             </Link>
           </div>
         </div>
       </section>
-
-      {/* ── MARQUEE STRIP ────────────────────────────────────── */}
-      <div className="bg-brown py-4 overflow-hidden">
-        <div className="marquee-strip flex whitespace-nowrap">
-          {[...Array(4)].flatMap((_, i) =>
-            ['Sustainably Grown', 'Fair Trade', 'Western Uganda', 'Empowering Farmers', 'Premium Quality', 'Community First', 'Single Origin'].map((w, j) => (
-              <span key={`${i}-${j}`} className="text-peach-light font-bold text-sm uppercase tracking-widest mx-8 flex-shrink-0">
-                {w}
-              </span>
-            ))
-          )}
-        </div>
-      </div>
 
       {/* ── ABOUT ───────────────────────────────────────────── */}
       <section id="story" className="relative bg-peach-light py-16 md:py-14 px-5 md:px-8 overflow-hidden">
@@ -205,26 +192,26 @@ export default function AboutUs() {
 
           {/* section header */}
           <div className="text-center mb-8 md:mb-7">
-            <h2 className="text-brown font-black leading-tight mb-2">
+            <h2 className="mb-2 text-3xl font-black leading-tight text-brown sm:text-4xl">
               From Farm to Future
             </h2>
-            <p className="text-brown/80 text-base md:text-xl max-w-3xl mx-auto leading-relaxed">
+            <p className="mx-auto max-w-3xl text-center text-base leading-relaxed text-brown/80 md:text-lg">
               We work across the entire coffee value chain — supporting farmers, improving quality, and creating sustainable opportunities.
             </p>
           </div>
 
           {/* cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 items-start">
+          <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-3 md:gap-8">
 
             {/* MISSION */}
             <div className="group relative">
               <div className="relative overflow-hidden flex flex-col min-h-[280px] transition-transform duration-500 ease-out motion-safe:group-hover:-translate-y-2 motion-safe:group-hover:rotate-[1deg] motion-reduce:transition-none"
-                style={{ background: '#351a08', borderRadius: '38px 54px 48px 44px', boxShadow: '0 22px 48px rgba(75,42,16,0.25)' }}>
+                style={{ background: '#351a08', borderRadius: '1.5rem', boxShadow: '0 18px 40px rgba(75,42,16,0.18)' }}>
               <div className="relative z-10 p-7 md:p-7 xl:p-9 flex flex-col h-full">
-                <h3 className="text-white font-bold leading-[1.04] mb-4">
+                <h3 className="mb-4 text-center text-xl font-bold leading-tight text-white md:text-2xl">
                   Mission
                 </h3>
-                <p className="text-white/80 text-base font-light md:text-lg leading-[1.5] max-w-[290px]">
+                <p className="max-w-[290px] text-justify text-base leading-relaxed text-white/80">
                   To deliver premium-quality roasted coffee through sustainable farming practices &amp; fair trade to empower the community that grows the coffee.
                 </p>
               </div>
@@ -234,13 +221,13 @@ export default function AboutUs() {
             {/* CORE VALUES */}
             <div className="group relative">
               <div className="relative overflow-hidden flex flex-col min-h-[280px] transition-transform duration-500 ease-out motion-safe:group-hover:-translate-y-2 motion-safe:group-hover:-rotate-[1deg] motion-reduce:transition-none"
-                style={{ background: 'linear-gradient(135deg, #D94D08 0%, #F17816 100%)', borderRadius: '42px 100px 40px 44px', boxShadow: '0 22px 48px rgba(163,77,23,0.22)' }}>
+                style={{ background: 'linear-gradient(135deg, #D94D08 0%, #F17816 100%)', borderRadius: '1.5rem', boxShadow: '0 18px 40px rgba(163,77,23,0.18)' }}>
               <div className="relative z-10 p-7 md:p-7 xl:p-9 flex flex-col h-full">
-                <h3 className="text-white font-bold leading-[1.04] mb-4">
+                <h3 className="mb-4 text-center text-xl font-bold leading-tight text-white md:text-2xl">
                   Core Values
                 </h3>
-                <p className="text-white text-base md:text-lg leading-[1.5] max-w-[290px]">
-                  Quality | Fairness | Integrity | Sustainability | Empowerment
+                <p className="max-w-[290px] text-center text-base leading-relaxed text-white">
+                  Quality, Fairness, Integrity, Sustainability and Empowerment
                 </p>
               </div>
               </div>
@@ -249,12 +236,12 @@ export default function AboutUs() {
             {/* VISION */}
             <div className="group relative">
               <div className="relative overflow-hidden flex flex-col min-h-[280px] transition-transform duration-500 ease-out motion-safe:group-hover:-translate-y-2 motion-safe:group-hover:rotate-[1deg] motion-reduce:transition-none"
-                style={{ background: 'linear-gradient(135deg, #FFF9ED 0%, #FAF1E1 100%)', borderRadius: '44px 84px 46px 42px', boxShadow: '0 22px 48px rgba(92,58,30,0.14)' }}>
+                style={{ background: 'linear-gradient(135deg, #FFF9ED 0%, #FAF1E1 100%)', borderRadius: '1.5rem', boxShadow: '0 18px 40px rgba(92,58,30,0.12)' }}>
               <div className="relative z-10 p-7 md:p-7 xl:p-9 flex flex-col h-full">
-                <h3 className="text-[#A95720] font-bold leading-[1.04] mb-4">
+                <h3 className="mb-4 text-center text-xl font-bold leading-tight text-[#A95720] md:text-2xl">
                   Vision
                 </h3>
-                <p className="text-[#2C1A0E]/80 text-base md:text-lg leading-[1.5] max-w-[290px]">
+                <p className="max-w-[290px] text-justify text-base leading-relaxed text-[#2C1A0E]/80">
                   A thriving coffee industry in Uganda where farmers, youth, and women enjoy prosperity, dignity, opportunity, serve roasted fine robusta and speciality arabica coffee world wide.
                 </p>
               </div>
@@ -266,13 +253,13 @@ export default function AboutUs() {
       </section>
 
       {/* ── IMPACT ───────────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-peach-light">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="mb-12 text-center text-brown text-4xl md:text-5xl font-black leading-tight">
+      <section className="bg-[#fffdfa] px-6 py-16 md:py-20">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="mb-10 text-center text-3xl font-black leading-tight text-brown sm:text-4xl">
             Impact
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 divide-y divide-brown/15 md:divide-y-0 md:divide-x">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
             {[
               {
                 title: 'Farmer Empowerment',
@@ -286,14 +273,14 @@ export default function AboutUs() {
                 title: 'Environmental Restoration',
                 body: 'Our commitment to nature includes tree planting and wetland restoration projects to safeguard Uganda’s environment for future generations.',
               },
-            ].map((item, index) => (
+            ].map(item => (
               <article
                 key={item.title}
-                className={`group py-7 md:px-8 md:py-2 ${index === 0 ? 'md:pl-0' : ''} ${index === 2 ? 'md:pr-0' : ''}`}
+                className="group rounded-2xl border border-peach-mid/50 bg-peach-light/70 p-6 text-center shadow-sm md:p-8"
               >
-                <div>
+                <div className="mx-auto max-w-sm">
                   <h3 className="mb-2 text-xl font-bold text-brown md:text-2xl">{item.title}</h3>
-                  <p className="text-sm leading-relaxed text-brown/70 md:text-base">{item.body}</p>
+                  <p className="text-justify text-sm leading-relaxed text-brown/70 md:text-base">{item.body}</p>
                 </div>
               </article>
             ))}
@@ -323,16 +310,16 @@ export default function AboutUs() {
       </section>
 
       {/* ── PARTNERSHIP ─────────────────────────────────────── */}
-      <section id="partnership" className="bg-white px-6 pt-16 pb-8 md:pt-20 md:pb-10">
-        <div className="mx-auto max-w-4xl text-center">
-          <h2 className="mb-4 text-3xl font-black text-brown md:text-4xl">Partner With Us</h2>
-          <p className="mx-auto max-w-3xl text-base leading-relaxed text-brown/75 md:text-lg">
+      <section id="partnership" className="bg-peach-light px-6 py-12 md:py-16">
+        <div className="mx-auto max-w-4xl rounded-3xl border border-white/80 bg-white px-6 py-8 text-center shadow-sm sm:px-10 sm:py-10">
+          <h2 className="mb-4 text-3xl font-black text-brown sm:text-4xl">Partner With Us</h2>
+          <p className="mx-auto max-w-3xl text-justify text-base leading-relaxed text-brown/75">
             We welcome collaborations with NGOs, restaurants, hotels, exporters, and institutions. Whether through bulk orders, corporate gifting, or joint community projects, together we can make a difference
           </p>
         </div>
 
-        <details id="partnership-form" className="mx-auto mt-12 max-w-2xl scroll-mt-24 text-center">
-          <summary className="mx-auto inline-flex min-h-12 cursor-pointer list-none items-center justify-center rounded-full bg-primary px-7 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+        <details id="partnership-form" className="mx-auto mt-8 max-w-2xl scroll-mt-24 text-center">
+          <summary className="mx-auto inline-flex min-h-12 w-full max-w-xs cursor-pointer list-none items-center justify-center rounded-full bg-primary px-7 py-3 text-center text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/30 transition-all duration-300 hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
             Start a Partnership
           </summary>
           <p className="mb-8 text-center text-sm text-brown">Fill in the form and our team will reach out within 48 hours.</p>
@@ -344,25 +331,25 @@ export default function AboutUs() {
               <p className="text-sm text-brown">We've received your partnership request and will be in touch soon.</p>
             </div>
           ) : (
-            <form onSubmit={handlePartnershipSubmit} className="space-y-4">
+            <form onSubmit={handlePartnershipSubmit} className="space-y-4 rounded-2xl border border-peach-mid/50 bg-[#fffdfa] p-5 text-left shadow-sm sm:p-8">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <input required placeholder="Your Name" value={partnershipForm.name} onChange={event => setPartnershipForm({ ...partnershipForm, name: event.target.value })}
-                  className="rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
+                  className="rounded-lg border border-peach-mid px-4 py-3 text-sm text-brown outline-none focus:border-primary" />
                 <input required placeholder="Organisation Name" value={partnershipForm.org} onChange={event => setPartnershipForm({ ...partnershipForm, org: event.target.value })}
-                  className="rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
+                  className="rounded-lg border border-peach-mid px-4 py-3 text-sm text-brown outline-none focus:border-primary" />
                 <input required type="email" placeholder="Email Address" value={partnershipForm.email} onChange={event => setPartnershipForm({ ...partnershipForm, email: event.target.value })}
-                  className="rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
+                  className="rounded-lg border border-peach-mid px-4 py-3 text-sm text-brown outline-none focus:border-primary" />
                 <input placeholder="Phone Number" value={partnershipForm.phone} onChange={event => setPartnershipForm({ ...partnershipForm, phone: event.target.value })}
-                  className="rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
+                  className="rounded-lg border border-peach-mid px-4 py-3 text-sm text-brown outline-none focus:border-primary" />
               </div>
               <select required value={partnershipForm.type} onChange={event => setPartnershipForm({ ...partnershipForm, type: event.target.value })}
-                className="w-full rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary">
+                className="w-full rounded-lg border border-peach-mid bg-white px-4 py-3 text-sm text-brown outline-none focus:border-primary">
                 <option value="">Partnership Type</option>
                 {partnerTypes.map(type => <option key={type} value={type}>{type}</option>)}
               </select>
               <textarea rows={4} required placeholder="Tell us about your partnership idea..." value={partnershipForm.message} onChange={event => setPartnershipForm({ ...partnershipForm, message: event.target.value })}
-                className="w-full resize-none rounded border border-peach-mid px-4 py-2 text-sm text-brown outline-none focus:border-primary" />
-              <button type="submit" className="w-full rounded bg-primary py-3 font-semibold text-white transition-opacity hover:opacity-90">
+                className="w-full resize-none rounded-lg border border-peach-mid px-4 py-3 text-sm text-brown outline-none focus:border-primary" />
+              <button type="submit" className="min-h-12 w-full rounded-full bg-primary py-3 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-brown">
                 Submit Partnership Request
               </button>
             </form>
@@ -370,8 +357,8 @@ export default function AboutUs() {
         </details>
       </section>
 
-      <section className="bg-white px-6 pt-8 md:pt-10">
-        <h2 className="text-center text-3xl font-black text-brown md:text-4xl">Our Partners</h2>
+      <section className="bg-[#fffdfa] px-6 py-6 text-center sm:py-8">
+        <h2 className="text-3xl font-black text-brown sm:text-4xl">Our Partners</h2>
       </section>
 
       <section id="partnerships" className="overflow-hidden bg-peach-light px-6 py-12 md:py-16">
