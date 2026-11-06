@@ -161,9 +161,20 @@ export default function Home() {
                   <article key={product.id} className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-peach-mid/40 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
                   <Link to={getProductUrl(product)} aria-label={`View ${product.name}`} className="flex flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary">
                     <div className="relative block aspect-[4/3] w-full overflow-hidden bg-peach-light">
-                      <ProductImage product={product} className="transition-transform duration-500 sm:group-hover:scale-105" />
+                      <ProductImage
+                        product={product.id === 'coffee-seedlings'
+                          ? {
+                              ...product,
+                              image: 'https://res.cloudinary.com/vgko5mna/image/upload/v1793967783/coffee_seedling.jpg',
+                              imageAlt: 'Coffee seedlings growing at the farm',
+                            }
+                          : product}
+                        className={`transition-transform duration-500 sm:group-hover:scale-105 ${
+                          product.id === 'coffee-seedlings' ? 'object-[center_50%]' : ''
+                        }`}
+                      />
                       <span className="absolute right-2 top-2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-brown shadow-sm sm:right-3 sm:top-3 sm:text-xs">
-                        {product.weight}
+                        {product.id === 'coffee-seedlings' ? 'Seedling' : product.weight}
                       </span>
                     </div>
                     <div className="flex flex-1 flex-col items-center p-3 text-center sm:p-4 lg:p-5">
