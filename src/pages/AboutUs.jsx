@@ -313,14 +313,14 @@ export default function AboutUs() {
       <section id="partnership" className="bg-peach-light px-6 py-12 md:py-16">
         <div className="mx-auto max-w-4xl rounded-3xl border border-white/80 bg-white px-6 py-8 text-center shadow-sm sm:px-10 sm:py-10">
           <h2 className="mb-4 text-3xl font-black text-brown sm:text-4xl">Partner With Us</h2>
-          <p className="mx-auto max-w-3xl text-justify text-base leading-relaxed text-brown/75">
+          <p className="mx-auto max-w-3xl text-center text-base leading-relaxed text-brown/75">
             We welcome collaborations with NGOs, restaurants, hotels, exporters, and institutions. Whether through bulk orders, corporate gifting, or joint community projects, together we can make a difference
           </p>
         </div>
 
         <details id="partnership-form" className="mx-auto mt-8 max-w-2xl scroll-mt-24 text-center">
           <summary className="mx-auto inline-flex min-h-12 w-full max-w-xs cursor-pointer list-none items-center justify-center rounded-full bg-primary px-7 py-3 text-center text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/30 transition-all duration-300 hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-            Start a Partnership
+            Start a Partnership Conversation
           </summary>
           <p className="mb-8 text-center text-sm text-brown">Fill in the form and our team will reach out within 48 hours.</p>
 

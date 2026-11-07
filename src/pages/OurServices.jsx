@@ -153,7 +153,7 @@ export default function OurServices() {
             <h2 className="text-3xl font-black leading-tight text-brown sm:text-4xl">
               Research &amp; Feasibility Studies
             </h2>
-            <p className="mt-5 text-justify text-base leading-relaxed text-brown/75">
+            <p className="mt-5 text-center text-base leading-relaxed text-brown/75">
               We help companies and NGOs to conduct research in coffee farming and the supply chain of coffee. We do the difficult work of scoping/mapping, farmer outreach, farmer relationship management and anything in between.
             </p>
           </div>
@@ -161,14 +161,14 @@ export default function OurServices() {
           <div className="mt-12 text-center">
             <h3 className="text-xl font-bold text-brown sm:text-2xl">Our case studies</h3>
             <div className="mx-auto mt-5 grid max-w-3xl grid-cols-1 gap-4">
-              <article className="flex flex-col rounded-2xl border border-peach-mid/50 bg-peach-light/55 p-6 text-left shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md sm:p-8">
-                <p className="text-left text-sm leading-relaxed text-brown/75 sm:text-base">
-                  Coffee Farmer Mapping Activity by legacy coffee and yonderlife africa funderd under the slowfood negroni week fund in Kyenjojo District
+              <article className="flex flex-col rounded-2xl border border-peach-mid/50 bg-peach-light/55 p-6 text-center shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md sm:p-8">
+                <p className="text-center text-sm leading-relaxed text-brown/75 sm:text-base">
+                  Coffee Farmer Mapping Activity by Legacy Coffee and Yonderlife Africa, funded by the Slow Food Negroni Week Fund in Kyenjojo District
                 </p>
               </article>
-              <article className="flex flex-col rounded-2xl border border-peach-mid/50 bg-peach-light/55 p-6 text-left shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md sm:p-8">
-                <p className="text-left text-sm leading-relaxed text-brown/75 sm:text-base">
-                  A study to map coffee farmers of butiiti and nyabuharwa and establish baseline baseline factors that inhibit the journer to higher quality robusta coffee production
+              <article className="flex flex-col rounded-2xl border border-peach-mid/50 bg-peach-light/55 p-6 text-center shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md sm:p-8">
+                <p className="text-center text-sm leading-relaxed text-brown/75 sm:text-base">
+                  A study to map coffee farmers in Butiiti and Nyabuharwa and establish baseline factors that inhibit the journey to higher-quality Robusta coffee production
                 </p>
               </article>
             </div>
@@ -207,7 +207,7 @@ export default function OurServices() {
             <h2 className="text-3xl font-black leading-tight text-brown sm:text-4xl">
               Farmer Trainings &amp; Extension Services
             </h2>
-            <p className="mx-auto mt-4 max-w-3xl text-justify text-base leading-relaxed text-brown/75">
+            <p className="mx-auto mt-4 max-w-3xl text-center text-base leading-relaxed text-brown/75">
               At Legacy Coffee, we believe that great coffee begins with empowered farmers. In a market that has long rewarded volume over value, we are driving a shift, supporting smallholders to produce premium Robusta that commands higher prices and competes globally. We partner with NGOs and companies to implement good coffee farming practices such as Agro-forestry, sustainable water management and organic farming.
             </p>
           </div>
@@ -216,7 +216,7 @@ export default function OurServices() {
             <h2 className="text-3xl font-black leading-tight text-brown sm:text-4xl">
               Coffee Farm Setups
             </h2>
-            <p className="mx-auto mt-4 max-w-3xl text-justify text-base leading-relaxed text-brown/75">
+            <p className="mx-auto mt-4 max-w-3xl text-center text-base leading-relaxed text-brown/75">
               We provide individuals and institutions with expertise to set up standard coffee farms that maximise yields, and incomes while ensuring sustainable production. Are you an individual looking to set up a coffee farm? Explore our packages
             </p>
           </div>

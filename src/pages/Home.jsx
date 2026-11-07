@@ -15,32 +15,29 @@ const heroImages = [
 function OurCoffeeSection() {
   return (
     <section className="bg-[#f8eee3] px-6 py-16 md:py-20">
-      <div className="mx-auto max-w-6xl text-center text-brown">
-        <div className="mx-auto max-w-4xl text-center">
-          <h2 className="mb-6 text-4xl font-black leading-tight text-primary md:text-5xl">
-            Our Coffee
-          </h2>
-          <p className="text-justify text-base font-normal leading-relaxed text-brown/80">
-            Uganda’s rich soils and high-altitude climate create the perfect conditions for exceptional coffee. Legacy Coffee sources directly from smallholder farmers in Kyenjojo, Kabarole, Bunyangabu and surrounding areas, ensuring freshness, traceability, and quality.
-          </p>
-        </div>
-
-        <div className="mx-auto mt-10 max-w-5xl md:mt-14">
-          <article className="grid grid-cols-1 gap-8 rounded-2xl border border-peach-mid/60 bg-white p-7 text-center shadow-sm md:p-9">
-            <div className="flex w-full flex-col items-center">
-              <h3 className="mb-3 text-xl font-bold text-primary md:text-2xl">Processing &amp; Roasting</h3>
-              <p className="w-full max-w-2xl text-justify text-base font-normal leading-relaxed text-brown/80">
-                From hand-picking ripe cherries to careful washing, drying, and roasting, our process preserves natural flavors and guarantees consistency.
-              </p>
-            </div>
-            <div className="flex w-full flex-col items-center">
-              <h3 className="mb-3 text-xl font-bold text-primary md:text-2xl">Flavor Notes</h3>
-              <p className="w-full max-w-2xl text-center text-base font-normal leading-relaxed text-brown/80">
-                Rich, smooth body with hints of chocolate, nutty undertones, and a bright, clean finish
-              </p>
-            </div>
-          </article>
-        </div>
+      <div className="mx-auto max-w-6xl text-brown">
+        <article className="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-8 rounded-2xl border border-peach-mid/60 bg-white p-7 text-center shadow-sm md:mt-14 md:p-9">
+          <div className="flex w-full flex-col items-center">
+            <h2 className="mb-6 text-4xl font-black leading-tight text-primary md:text-5xl">
+              Our Coffee
+            </h2>
+            <p className="w-full max-w-4xl text-center text-sm font-normal leading-relaxed text-brown/80">
+              Uganda’s rich soils and high-altitude climate create the perfect conditions for exceptional coffee. Legacy Coffee sources directly from smallholder farmers in Kyenjojo, Kabarole, Bunyangabu and surrounding areas, ensuring freshness, traceability, and quality.
+            </p>
+          </div>
+          <div className="flex w-full flex-col items-center">
+            <h3 className="mb-3 text-xl font-bold text-primary md:text-2xl">Processing &amp; Roasting</h3>
+            <p className="w-full max-w-2xl text-center text-sm font-normal leading-relaxed text-brown/80">
+              From hand-picking ripe cherries to careful washing, drying, and roasting, our process preserves natural flavors and guarantees consistency.
+            </p>
+          </div>
+          <div className="flex w-full flex-col items-center">
+            <h3 className="mb-3 text-xl font-bold text-primary md:text-2xl">Flavor Notes</h3>
+            <p className="w-full max-w-2xl text-center text-sm font-normal leading-relaxed text-brown/80">
+              Rich, smooth body with hints of chocolate, nutty undertones, and a bright, clean finish
+            </p>
+          </div>
+        </article>
       </div>
     </section>
   )

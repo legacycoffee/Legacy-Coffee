@@ -329,34 +329,34 @@ export default function OurCoffeeFarm() {
           <h2 className="mb-10 text-center text-3xl font-black text-brown md:mb-12 md:text-5xl">Visit Our Coffee Farm</h2>
           <FarmImageSlider />
           <div className="mx-auto mb-8 max-w-3xl text-center">
-            <p className="mb-2 text-center text-base leading-relaxed text-brown md:text-lg">
+            <p className="mb-2 text-center text-xl leading-relaxed text-brown md:text-2xl">
               <strong className="font-bold">Educational Tours:</strong>
             </p>
             <p className="text-justify text-base leading-relaxed text-brown/75 md:text-lg">
               Have you ever imagined how coffee gets from the plant to the cup? We train individuals, schools and tourists on the process of regenerative coffee farming and local processing of coffee beans in Uganda.
             </p>
-            <p className="mt-4 font-semibold text-brown">Explore Educational Plans:</p>
+            <p className="mt-4 text-xl font-semibold text-brown md:text-2xl">Explore Educational Plans:</p>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="mx-auto mt-8 grid w-full max-w-6xl gap-6 lg:grid-cols-2">
             {tourPackages.map(tour => (
-              <article key={tour.id} className="flex flex-col items-center rounded-2xl border border-peach-mid/70 bg-white p-6 text-center shadow-sm md:p-8">
-                <div className="mb-6 w-full border-b border-peach-mid/60 pb-5">
-                  <h3 className="text-2xl font-bold text-brown">{tour.title}</h3>
+              <article key={tour.id} className="flex flex-col items-center rounded-3xl border border-peach-mid/60 bg-white p-6 text-center shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-lg md:p-8">
+                <div className="mb-6 w-full rounded-2xl bg-peach-light px-5 py-6">
+                  <h3 className="text-xl font-bold text-brown sm:text-2xl">{tour.title}</h3>
                   {tour.id === 'individual' ? (
-                    <div className="mx-auto mt-3 w-fit text-left">
-                      <p className="text-sm font-black text-primary">{tour.price}</p>
-                      <p className="mt-1 text-sm font-black text-primary">{tour.detail}</p>
+                    <div className="mt-3">
+                      <p className="text-lg font-black text-primary sm:text-xl">{tour.price}</p>
+                      <p className="mt-1 text-sm text-brown/70">{tour.detail}</p>
                     </div>
                   ) : (
                     <>
-                      <p className="mt-3 text-sm font-black text-primary">{tour.price}</p>
+                      <p className="mt-3 text-lg font-black text-primary sm:text-xl">{tour.price}</p>
                       <p className="mt-1 text-sm text-brown/70">{tour.detail}</p>
                     </>
                   )}
                   <p className="mt-4 text-sm font-semibold text-brown">Includes:</p>
                 </div>
-                <ul className="mb-8 w-full flex-1 space-y-3 text-left">
+                <ul className="mb-8 w-full flex-1 space-y-3 rounded-2xl bg-[#fffdfa] p-5 text-left">
                   {tour.activities.map(activity => (
                     <li key={activity} className="flex items-start gap-3 text-sm leading-relaxed text-brown/80 md:text-base">
                       <span aria-hidden="true" className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" />
