@@ -17,28 +17,30 @@ body {
   color: #5C3A1E;
 }
 
-main p[class*="leading-relaxed"]:not([class*="text-center"]):not([class*="text-left"]):not([class*="text-right"]):not([class*="text-start"]):not([class*="text-justify"]) {
-  text-align: justify;
-}
+@layer base {
+  main p[class*="leading-relaxed"]:not([class*="text-center"]):not([class*="text-left"]):not([class*="text-right"]):not([class*="text-start"]):not([class*="text-justify"]) {
+    text-align: justify;
+  }
 
-main h1 {
-  font-size: clamp(2.5rem, 5vw, 3.5rem);
-}
+  main h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+  }
 
-main h2 {
-  font-size: clamp(1.875rem, 3vw, 2.25rem);
-}
+  main h2 {
+    font-size: clamp(1.875rem, 3vw, 2.25rem);
+  }
 
-main h3 {
-  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
-}
+  main h3 {
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  }
 
-main h4:not([class*="text-xs"]):not([class*="text-sm"]) {
-  font-size: 1.125rem;
-}
+  main h4:not([class*="text-xs"]):not([class*="text-sm"]) {
+    font-size: 1.125rem;
+  }
 
-main p:not([class*="text-xs"]):not([class*="text-sm"]):not([class*="text-base"]):not([class*="text-lg"]):not([class*="text-xl"]):not([class*="text-2xl"]):not([class*="text-3xl"]):not([class*="text-4xl"]):not([class*="text-5xl"]):not([class*="text-6xl"]):not([class*="text-7xl"]):not([class*="text-8xl"]):not([class*="text-9xl"]):not([class*="text-["]) {
-  font-size: 1rem;
+  main p:not([class*="text-xs"]):not([class*="text-sm"]):not([class*="text-base"]):not([class*="text-lg"]):not([class*="text-xl"]):not([class*="text-2xl"]):not([class*="text-3xl"]):not([class*="text-4xl"]):not([class*="text-5xl"]):not([class*="text-6xl"]):not([class*="text-7xl"]):not([class*="text-8xl"]):not([class*="text-9xl"]):not([class*="text-["]) {
+    font-size: 1rem;
+  }
 }
 
 main article[class*="rounded-"],

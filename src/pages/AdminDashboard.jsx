@@ -1571,6 +1571,9 @@ export default function AdminDashboard() {
   const [deletingNewsletterId, setDeletingNewsletterId] = useState(null)
   const [pendingNewsletterDelete, setPendingNewsletterDelete] = useState(null)
   const [newsletterDeleteError, setNewsletterDeleteError] = useState('')
+  const [pendingDestructiveAction, setPendingDestructiveAction] = useState(null)
+  const [isDestructiveActionSaving, setIsDestructiveActionSaving] = useState(false)
+  const [destructiveActionError, setDestructiveActionError] = useState('')
   const [newsletterSubject, setNewsletterSubject] = useState('')
   const newsletterSubjectInputRef = useRef(null)
   const newsletterExitSubjectInputRef = useRef(null)
@@ -2030,9 +2033,19 @@ export default function AdminDashboard() {
     }
   }
 
-  const deleteNewsletterDraft = async () => {
+  const deleteNewsletterDraft = () => {
     if (!newsletterId || newsletterStatus !== 'draft') return
-    if (!window.confirm('Delete this newsletter draft? This cannot be undone.')) return
+    setDestructiveActionError('')
+    setPendingDestructiveAction({
+      title: 'Delete this newsletter draft?',
+      description: `The draft “${newsletterSubject || 'Untitled newsletter'}” will be permanently deleted.`,
+      warning: 'This action cannot be undone. The draft content and any unsaved local copy will be removed.',
+      confirmLabel: 'Delete draft permanently',
+      onConfirm: deleteNewsletterDraftConfirmed,
+    })
+  }
+
+  const deleteNewsletterDraftConfirmed = async () => {
     setNewsletterError('')
     try {
       await apiRequest(`/dashboard/newsletters/${newsletterId}/`, {
@@ -2044,8 +2057,10 @@ export default function AdminDashboard() {
       setIsNewsletterEditorOpen(false)
       setNewsletterId(null)
       clearLocalNewsletterDraft()
+      return true
     } catch (error) {
       setNewsletterError(error.message)
+      return error.message
     }
   }
 
@@ -2350,8 +2365,18 @@ export default function AdminDashboard() {
     }
   }
 
-  const deleteProduct = async product => {
-    if (!window.confirm(`Permanently delete “${product.name}”? This cannot be undone.`)) return
+  const deleteProduct = product => {
+    setDestructiveActionError('')
+    setPendingDestructiveAction({
+      title: 'Permanently delete this product?',
+      description: `“${product.name}” will be removed from the catalog.`,
+      warning: 'This action cannot be undone. Product reviews and wishlist entries will also be deleted. Existing order history is retained, but its product link will be removed.',
+      confirmLabel: 'Delete product permanently',
+      onConfirm: () => deleteProductConfirmed(product),
+    })
+  }
+
+  const deleteProductConfirmed = async product => {
     setProductError('')
     setProductSuccess('')
     try {
@@ -2371,8 +2396,10 @@ export default function AdminDashboard() {
       } : current)
       if (editingProduct === product.slug) startNewProduct()
       setProductSuccess(`“${product.name}” was deleted.`)
+      return true
     } catch (error) {
       setProductError(error.message)
+      return error.message
     }
   }
 
@@ -2398,8 +2425,18 @@ export default function AdminDashboard() {
     }
   }
 
-  const removeAdmin = async admin => {
-    if (!window.confirm(`Delete administrator ${admin.email}? They will lose admin access immediately.`)) return
+  const removeAdmin = admin => {
+    setDestructiveActionError('')
+    setPendingDestructiveAction({
+      title: 'Remove this administrator?',
+      description: `${admin.email} will immediately lose access to the admin portal.`,
+      warning: 'This permanently deletes the administrator account and cannot be undone. Their historical account-linked data may be removed; the final active administrator cannot be deleted.',
+      confirmLabel: 'Delete administrator',
+      onConfirm: () => removeAdminConfirmed(admin),
+    })
+  }
+
+  const removeAdminConfirmed = async admin => {
     setAdminsError('')
     setAdminSuccess('')
     setDeletingAdminId(admin.id)
@@ -2408,8 +2445,10 @@ export default function AdminDashboard() {
       setAdmins(current => current.filter(item => item.id !== admin.id))
       setAdminSuccess(`Administrator ${admin.email} was deleted.`)
       if (admin.id === user?.id) await signOut()
+      return true
     } catch (error) {
       setAdminsError(error.message)
+      return error.message
     } finally {
       setDeletingAdminId(null)
     }
@@ -2657,15 +2696,36 @@ export default function AdminDashboard() {
     { label: 'Product shares', value: summary.product_shares, note: 'Customer shares recorded' },
   ] : []
 
-  const clearDataCategory = async category => {
+  const clearDataCategory = category => {
     const categoryDetails = dataCategories.find(item => item.id === category)
     if (!categoryDetails) return
 
     const count = categoryDetails.count(dataManagementCounts)
-    if (!count || !window.confirm(
-      `Permanently clear ${count} record${count === 1 ? '' : 's'} from ${categoryDetails.title.toLowerCase()}? This cannot be undone.`,
-    )) return
+    if (!count) return
 
+    const additionalWarnings = {
+      products: 'Product reviews and wishlist entries will also be deleted. Historical order items remain without product links.',
+      orders: 'All order records, line items, payment records, and invoice data will be permanently removed.',
+      notifications: 'All customer notifications will be permanently removed.',
+      requests: 'All contact messages, quote requests, and reservation records will be permanently removed.',
+      newsletters: 'All newsletter drafts, sent-campaign records, and subscriber records will be permanently removed. Previously uploaded Cloudinary media will remain.',
+      users: 'Customer accounts and inactive staff accounts, including their notifications, reviews, and wishlists, will be permanently removed. Active staff and superuser accounts are protected.',
+      analytics: 'Anonymous visitor records and product-share events will be permanently removed.',
+    }
+
+    setDestructiveActionError('')
+    setPendingDestructiveAction({
+      title: `Clear ${categoryDetails.title.toLowerCase()}?`,
+      description: `This will permanently delete ${count} record${count === 1 ? '' : 's'} from ${categoryDetails.title.toLowerCase()}.`,
+      warning: `${additionalWarnings[category] || 'The selected data will be permanently removed.'} This cannot be undone.`,
+      confirmLabel: `Permanently delete ${categoryDetails.title.toLowerCase()}`,
+      onConfirm: () => clearDataCategoryConfirmed(category),
+    })
+  }
+
+  const clearDataCategoryConfirmed = async category => {
+    const categoryDetails = dataCategories.find(item => item.id === category)
+    if (!categoryDetails) return true
     setClearingDataCategory(category)
     setDataManagementError('')
     setDataManagementNotice('')
@@ -2679,7 +2739,7 @@ export default function AdminDashboard() {
       setDataManagementNotice(`${categoryDetails.title} cleared. ${result.deleted_count} record${result.deleted_count === 1 ? '' : 's'} deleted.`)
     } catch (error) {
       setDataManagementError(error.message)
-      return
+      return error.message
     } finally {
       setClearingDataCategory('')
     }
@@ -2688,6 +2748,25 @@ export default function AdminDashboard() {
       setSummary(nextSummary)
     } catch (error) {
       setDataManagementError(`Data was deleted, but dashboard totals could not refresh: ${error.message}`)
+    }
+    return true
+  }
+
+  const confirmDestructiveAction = async () => {
+    if (!pendingDestructiveAction || isDestructiveActionSaving) return
+
+    setIsDestructiveActionSaving(true)
+    setDestructiveActionError('')
+    try {
+      const result = await pendingDestructiveAction.onConfirm()
+      if (result === true) setPendingDestructiveAction(null)
+      else setDestructiveActionError(
+        typeof result === 'string' ? result : 'The action could not be completed. Review the error and try again.',
+      )
+    } catch (error) {
+      setDestructiveActionError(error.message)
+    } finally {
+      setIsDestructiveActionSaving(false)
     }
   }
 
@@ -3921,11 +4000,14 @@ export default function AdminDashboard() {
                             <h2 id="delete-newsletter-title" className="text-base font-semibold text-stone-900">
                               Delete newsletter draft?
                             </h2>
-                            <p id="delete-newsletter-description" className="mt-1 break-words text-sm leading-6 text-stone-600">
-                              {`Delete the draft “${pendingNewsletterDelete.subject}”? This cannot be undone.`}
+                            <p id="delete-newsletter-description" className="mt-1 break-words text-sm leading-6 text-stone-700">
+                              {`The draft “${pendingNewsletterDelete.subject}” will be permanently deleted.`}
                             </p>
                           </div>
                         </div>
+                        <p className="mt-4 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2.5 text-sm leading-5 text-rose-950">
+                          <strong>Warning:</strong> This action cannot be undone. The draft content and saved copy will be removed.
+                        </p>
                         {newsletterDeleteError && (
                           <p role="alert" className="mt-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
                             {newsletterDeleteError}
@@ -3952,7 +4034,7 @@ export default function AdminDashboard() {
                             {deletingNewsletterId !== null && (
                               <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-r-transparent" />
                             )}
-                            Delete draft
+                            Delete draft permanently
                           </button>
                         </div>
                       </section>
@@ -4569,6 +4651,88 @@ export default function AdminDashboard() {
                       className="min-h-11 min-w-0 flex-1 whitespace-nowrap rounded-lg bg-rose-700 px-2 text-xs font-semibold text-white transition hover:bg-rose-800 disabled:cursor-wait disabled:opacity-50 sm:flex-none sm:px-4 sm:text-sm"
                     >
                       {orderStatusUpdates[orderCancellation.reference]?.isSaving ? 'Cancelling…' : 'Cancel order'}
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {pendingDestructiveAction && (
+            <div
+              className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-stone-950/75 p-4 backdrop-blur-sm"
+              onMouseDown={event => {
+                if (event.target === event.currentTarget && !isDestructiveActionSaving) {
+                  setPendingDestructiveAction(null)
+                  setDestructiveActionError('')
+                }
+              }}
+              onKeyDown={event => {
+                if (event.key === 'Escape' && !isDestructiveActionSaving) {
+                  setPendingDestructiveAction(null)
+                  setDestructiveActionError('')
+                }
+              }}
+            >
+              <section
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="destructive-action-heading"
+                aria-describedby="destructive-action-description destructive-action-warning"
+                className="my-auto w-full max-w-lg overflow-hidden rounded-xl border border-rose-300 bg-white shadow-2xl"
+              >
+                <div className="border-b border-rose-100 bg-rose-50 px-5 py-4 sm:px-6">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-800">
+                      <LuTriangleAlert aria-hidden="true" className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 pt-0.5">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-rose-800">Permanent deletion</p>
+                      <h2 id="destructive-action-heading" className="mt-1 text-lg font-bold text-stone-950">
+                        {pendingDestructiveAction.title}
+                      </h2>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4 p-5 sm:p-6">
+                  <p id="destructive-action-description" className="text-sm font-semibold leading-6 text-stone-800">
+                    {pendingDestructiveAction.description}
+                  </p>
+                  <div id="destructive-action-warning" className="flex gap-2.5 rounded-lg border border-rose-300 bg-rose-50 p-3.5 text-sm leading-6 text-rose-950">
+                    <LuTriangleAlert aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p><strong>Warning:</strong> {pendingDestructiveAction.warning}</p>
+                  </div>
+                  {destructiveActionError && (
+                    <p role="alert" className="rounded-lg border border-red-300 bg-red-50 px-3 py-2.5 text-sm leading-5 text-red-900">
+                      {destructiveActionError}
+                    </p>
+                  )}
+                  <p className="text-xs font-medium text-stone-500">
+                    Please verify the item and its impact before confirming.
+                  </p>
+                  <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
+                    <button
+                      type="button"
+                      autoFocus
+                      disabled={isDestructiveActionSaving}
+                      onClick={() => {
+                        setPendingDestructiveAction(null)
+                        setDestructiveActionError('')
+                      }}
+                      className="min-h-11 rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
+                    >
+                      Cancel — keep data
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isDestructiveActionSaving}
+                      onClick={confirmDestructiveAction}
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-rose-800 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-rose-900 disabled:cursor-wait disabled:opacity-60"
+                    >
+                      {isDestructiveActionSaving && (
+                        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                      )}
+                      {isDestructiveActionSaving ? 'Deleting…' : pendingDestructiveAction.confirmLabel}
                     </button>
                   </div>
                 </div>
