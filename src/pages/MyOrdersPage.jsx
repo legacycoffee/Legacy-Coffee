@@ -217,7 +217,7 @@ export default function MyOrdersPage() {
                     <dl className="sm:col-span-2">
                       <dt className="text-xs font-bold text-black/70">Customer</dt>
                       <div className="mt-2 grid gap-3 sm:grid-cols-3">
-                        <dd className="text-sm font-normal text-black">{selectedOrder.customer_name}</dd>
+                        <dd className="text-xs font-normal text-black">{selectedOrder.customer_name}</dd>
                         <dd className="break-all text-sm font-normal text-black">{selectedOrder.customer_email}</dd>
                         <dd className="text-sm font-normal text-black">{selectedOrder.customer_phone}</dd>
                       </div>

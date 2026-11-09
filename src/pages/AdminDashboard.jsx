@@ -2840,7 +2840,7 @@ export default function AdminDashboard() {
                               <span className="h-9 w-9 shrink-0 rounded-lg bg-orange-50" aria-hidden="true" />
                             )}
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-semibold text-stone-800">{order.customer_name}</p>
+                              <p className="truncate text-[11px] font-semibold text-stone-800">{order.customer_name}</p>
                               <p className="mt-0.5 truncate text-xs text-stone-400">{order.reference} · {formatDate(order.created_at)}</p>
                             </div>
                           </div>
@@ -2919,7 +2919,7 @@ export default function AdminDashboard() {
                           )}
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                              <h2 className="truncate text-xs font-semibold text-stone-900">{order.customer_name}</h2>
+                              <h2 className="truncate text-[11px] font-semibold text-stone-900">{order.customer_name}</h2>
                               {order.business_name && <span className="truncate text-xs text-stone-500">{order.business_name}</span>}
                             </div>
                             <p className="mt-1 truncate text-xs text-stone-400">
