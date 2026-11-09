@@ -132,7 +132,8 @@ export function getSeoMetadata(pathname) {
   }
 
   const privatePage = privateSeoPages.find(item => (
-    normalizedPath === item.path || normalizedPath.startsWith(`${item.path}/`)
+    normalizedPath.toLowerCase() === item.path
+    || normalizedPath.toLowerCase().startsWith(`${item.path}/`)
   ))
   if (privatePage) {
     return { ...defaultSeo, ...privatePage, keywords: undefined, robots: 'noindex,nofollow' }
