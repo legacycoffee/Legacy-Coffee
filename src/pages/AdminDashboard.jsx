@@ -3320,8 +3320,8 @@ export default function AdminDashboard() {
                     <textarea required rows="3" value={productForm.details} onChange={event => setProductForm(current => ({ ...current, details: event.target.value }))} className="mt-1.5 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#c77a4b] focus:ring-2 focus:ring-orange-100" />
                   </label>
                   <label className="block text-xs font-medium text-stone-700">
-                    Tasting notes
-                    <input required value={productForm.tasting_notes} onChange={event => setProductForm(current => ({ ...current, tasting_notes: event.target.value }))} className="mt-1.5 min-h-10 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#c77a4b] focus:ring-2 focus:ring-orange-100" />
+                    Tasting notes <span className="font-normal text-stone-500">(optional)</span>
+                    <input value={productForm.tasting_notes} onChange={event => setProductForm(current => ({ ...current, tasting_notes: event.target.value }))} placeholder="Optional flavor notes" className="mt-1.5 min-h-10 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#c77a4b] focus:ring-2 focus:ring-orange-100" />
                   </label>
                   <label className="block text-xs font-medium text-stone-700">
                     Image description

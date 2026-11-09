@@ -365,7 +365,7 @@ export default function ProductPage() {
           {showDetails && (
             <div id="product-details" className="space-y-2 pb-3 text-sm leading-5 text-black lg:absolute lg:right-0 lg:top-full lg:z-20 lg:w-full lg:border lg:border-peach-mid/60 lg:bg-white lg:p-4 lg:shadow-lg">
               <p>{product.details}</p>
-              <p><span className="font-semibold">Tasting notes:</span> {product.tastingNotes}</p>
+              {product.tastingNotes && <p><span className="font-semibold">Tasting notes:</span> {product.tastingNotes}</p>}
             </div>
           )}
         </div>

@@ -32,7 +32,7 @@ class Product(models.Model):
     )
     description = models.TextField()
     details = models.TextField()
-    tasting_notes = models.CharField(max_length=300)
+    tasting_notes = models.CharField(max_length=300, blank=True)
     roast = models.CharField(max_length=60)
     image = models.URLField(max_length=500)
     image_alt = models.CharField(max_length=250)

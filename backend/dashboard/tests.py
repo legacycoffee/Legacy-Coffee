@@ -500,7 +500,7 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(delete_response.status_code, 204)
         self.assertFalse(Product.objects.filter(slug=payload['slug']).exists())
 
-    def test_staff_can_create_product_without_a_price_and_clear_an_existing_price(self):
+    def test_staff_can_create_product_without_price_or_tasting_notes(self):
         payload = {
             'slug': 'unpriced-coffee',
             'name': 'Unpriced Coffee',
@@ -509,7 +509,7 @@ class DashboardApiTests(APITestCase):
             'price': '',
             'description': 'Available on request.',
             'details': 'Contact us for current availability.',
-            'tasting_notes': 'Citrus and honey',
+            'tasting_notes': '',
             'roast': 'Light roast',
             'image': 'https://example.com/arabica.jpg',
             'image_alt': 'Arabica coffee beans',
@@ -521,8 +521,10 @@ class DashboardApiTests(APITestCase):
 
         self.assertEqual(create_response.status_code, 201)
         self.assertIsNone(create_response.data['price'])
+        self.assertEqual(create_response.data['tasting_notes'], '')
         product = Product.objects.get(slug=payload['slug'])
         self.assertIsNone(product.price)
+        self.assertEqual(product.tasting_notes, '')
 
         update_response = self.client.patch(
             f'/api/dashboard/products/{payload["slug"]}/',
