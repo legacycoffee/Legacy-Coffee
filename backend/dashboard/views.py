@@ -15,8 +15,9 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.models import Notification
 from inquiries.models import Inquiry
-from newsletter.models import Subscriber
+from newsletter.models import Newsletter, Subscriber
 from orders.models import Order, OrderItem
 from shop.models import Product, ShareEvent
 from .serializers import (
@@ -409,6 +410,91 @@ class SubscriberInboxView(generics.ListAPIView):
     queryset = Subscriber.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['email']
+
+
+def get_clearable_data_counts(request):
+    return {
+        'products': Product.objects.count(),
+        'orders': Order.objects.count(),
+        'notifications': Notification.objects.count(),
+        'requests': Inquiry.objects.count(),
+        'newsletters': Newsletter.objects.count(),
+        'subscribers': Subscriber.objects.count(),
+        'users': get_clearable_users(request).count(),
+        'visitors': AnonymousVisitor.objects.count(),
+        'product_shares': ShareEvent.objects.count(),
+    }
+
+
+def get_clearable_users(request):
+    user_model = get_user_model()
+    return user_model.objects.exclude(
+        is_superuser=True,
+    ).exclude(
+        is_staff=True,
+        is_active=True,
+    ).exclude(pk=request.user.pk)
+
+
+class DataManagementView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        return Response(get_clearable_data_counts(request))
+
+
+class DataClearSerializer(serializers.Serializer):
+    category = serializers.ChoiceField(choices=(
+        'products',
+        'orders',
+        'notifications',
+        'requests',
+        'newsletters',
+        'users',
+        'analytics',
+    ))
+
+
+class DataClearView(APIView):
+    permission_classes = [IsAdminUser]
+
+    @transaction.atomic
+    def delete(self, request):
+        serializer = DataClearSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        category = serializer.validated_data['category']
+        counts = get_clearable_data_counts(request)
+
+        if category == 'products':
+            deleted_count = counts['products']
+            Product.objects.all().delete()
+        elif category == 'orders':
+            deleted_count = counts['orders']
+            Order.objects.all().delete()
+        elif category == 'notifications':
+            deleted_count = counts['notifications']
+            Notification.objects.all().delete()
+        elif category == 'requests':
+            deleted_count = counts['requests']
+            Inquiry.objects.all().delete()
+        elif category == 'newsletters':
+            deleted_count = counts['newsletters'] + counts['subscribers']
+            Newsletter.objects.all().delete()
+            Subscriber.objects.all().delete()
+        elif category == 'users':
+            clearable_users = get_clearable_users(request)
+            deleted_count = clearable_users.count()
+            clearable_users.delete()
+        else:
+            deleted_count = counts['visitors'] + counts['product_shares']
+            AnonymousVisitor.objects.all().delete()
+            ShareEvent.objects.all().delete()
+
+        return Response({
+            'category': category,
+            'deleted_count': deleted_count,
+            'counts': get_clearable_data_counts(request),
+        }, status=status.HTTP_200_OK)
 
 
 class ProductManagementListView(generics.ListCreateAPIView):

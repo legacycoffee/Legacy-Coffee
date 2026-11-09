@@ -9,9 +9,9 @@ from rest_framework.test import APITestCase
 from accounts.models import Notification
 from dashboard.models import AnonymousVisitor
 from inquiries.models import Inquiry
-from newsletter.models import Subscriber
+from newsletter.models import Newsletter, Subscriber
 from orders.models import Order, OrderItem
-from shop.models import Product, Review
+from shop.models import Product, Review, ShareEvent, WishlistItem
 
 
 class DashboardApiTests(APITestCase):
@@ -46,6 +46,162 @@ class DashboardApiTests(APITestCase):
             self.client.patch('/api/dashboard/orders/LC-TEST/status/', {'status': 'confirmed'}).status_code,
             403,
         )
+        self.assertEqual(self.client.get('/api/dashboard/data/').status_code, 403)
+        self.assertEqual(
+            self.client.delete('/api/dashboard/data/clear/', {'category': 'orders'}).status_code,
+            403,
+        )
+
+    def test_staff_can_read_and_clear_admin_data_categories(self):
+        product = Product.objects.create(
+            slug='data-coffee',
+            name='Data Coffee',
+            weight='250g',
+            price=18000,
+            description='Coffee',
+            details='Details',
+            tasting_notes='Citrus',
+            roast='Light roast',
+            image='',
+            image_alt='',
+        )
+        order = Order.objects.create(
+            user=self.customer,
+            customer_name='Coffee Customer',
+            customer_email=self.customer.email,
+            customer_phone='+256700000000',
+            delivery_address='1 Coffee Road',
+            delivery_city='Kampala',
+        )
+        OrderItem.objects.create(
+            order=order,
+            product=product,
+            product_name=product.name,
+            weight=product.weight,
+            unit_price=product.price,
+            quantity=1,
+        )
+        Review.objects.create(product=product, user=self.customer, rating=5, text='Great coffee.')
+        WishlistItem.objects.create(user=self.customer, product=product)
+        Notification.objects.create(
+            user=self.customer,
+            kind=Notification.Kind.ORDER_SUBMITTED,
+            title='Order received',
+            message='Your order was received.',
+        )
+        Inquiry.objects.create(
+            kind=Inquiry.Kind.CONTACT,
+            name='Coffee Customer',
+            email=self.customer.email,
+            message='A question',
+        )
+        Newsletter.objects.create(subject='Update', content_html='<p>News</p>')
+        Subscriber.objects.create(email='subscriber@example.com')
+        AnonymousVisitor.objects.create()
+        ShareEvent.objects.create(
+            product=product,
+            product_slug=product.slug,
+            product_name=product.name,
+            channel=ShareEvent.Channel.WHATSAPP,
+        )
+
+        self.client.force_authenticate(self.staff)
+        counts_response = self.client.get('/api/dashboard/data/')
+
+        self.assertEqual(counts_response.status_code, 200)
+        self.assertEqual(counts_response.data['products'], 1)
+        self.assertEqual(counts_response.data['orders'], 1)
+        self.assertEqual(counts_response.data['notifications'], 1)
+        self.assertEqual(counts_response.data['requests'], 1)
+        self.assertEqual(counts_response.data['newsletters'], 1)
+        self.assertEqual(counts_response.data['subscribers'], 1)
+        self.assertEqual(counts_response.data['users'], 1)
+        self.assertEqual(counts_response.data['visitors'], 1)
+        self.assertEqual(counts_response.data['product_shares'], 1)
+
+        for category in ('products', 'orders', 'notifications', 'requests', 'newsletters', 'analytics'):
+            response = self.client.delete(
+                '/api/dashboard/data/clear/',
+                {'category': category},
+                format='json',
+            )
+            self.assertEqual(response.status_code, 200, category)
+            self.assertEqual(response.data['category'], category)
+            expected_deleted = 2 if category in ('newsletters', 'analytics') else 1
+            self.assertEqual(response.data['deleted_count'], expected_deleted)
+            if category == 'products':
+                self.assertIsNone(OrderItem.objects.get(order=order).product_id)
+
+        self.assertFalse(Product.objects.filter(pk=product.slug).exists())
+        self.assertFalse(Review.objects.filter(product_id=product.slug).exists())
+        self.assertFalse(WishlistItem.objects.filter(product_id=product.slug).exists())
+        self.assertFalse(Order.objects.filter(pk=order.pk).exists())
+        self.assertFalse(OrderItem.objects.filter(order=order).exists())
+        self.assertFalse(Notification.objects.exists())
+        self.assertFalse(Inquiry.objects.exists())
+        self.assertFalse(Newsletter.objects.exists())
+        self.assertFalse(Subscriber.objects.exists())
+        self.assertFalse(AnonymousVisitor.objects.exists())
+        self.assertFalse(ShareEvent.objects.exists())
+
+    def test_clearing_users_preserves_active_admins_and_superusers(self):
+        another_customer = get_user_model().objects.create_user(
+            username='another-customer',
+            email='another-customer@example.com',
+            password='StrongPassword!2026',
+        )
+        inactive_admin = get_user_model().objects.create_user(
+            username='inactive-admin',
+            email='inactive-admin@example.com',
+            password='StrongPassword!2026',
+            is_staff=True,
+            is_active=False,
+        )
+        Notification.objects.create(
+            user=self.customer,
+            kind=Notification.Kind.WELCOME,
+            title='Welcome',
+            message='Welcome to Legacy Coffee.',
+        )
+        active_admin = get_user_model().objects.create_user(
+            username='active-admin',
+            email='active-admin@example.com',
+            password='StrongPassword!2026',
+            is_staff=True,
+        )
+        superuser = get_user_model().objects.create_superuser(
+            username='superuser',
+            email='superuser@example.com',
+            password='StrongPassword!2026',
+        )
+        self.client.force_authenticate(self.staff)
+
+        response = self.client.delete(
+            '/api/dashboard/data/clear/',
+            {'category': 'users'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['deleted_count'], 3)
+        self.assertFalse(get_user_model().objects.filter(pk=self.customer.pk).exists())
+        self.assertFalse(Notification.objects.exists())
+        self.assertFalse(get_user_model().objects.filter(pk=another_customer.pk).exists())
+        self.assertFalse(get_user_model().objects.filter(pk=inactive_admin.pk).exists())
+        self.assertTrue(get_user_model().objects.filter(pk=self.staff.pk, is_active=True).exists())
+        self.assertTrue(get_user_model().objects.filter(pk=active_admin.pk, is_active=True).exists())
+        self.assertTrue(get_user_model().objects.filter(pk=superuser.pk).exists())
+
+    def test_data_clear_rejects_unknown_categories(self):
+        self.client.force_authenticate(self.staff)
+
+        response = self.client.delete(
+            '/api/dashboard/data/clear/',
+            {'category': 'everything'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
 
     def test_staff_can_read_date_filtered_analytics(self):
         today = timezone.localdate()

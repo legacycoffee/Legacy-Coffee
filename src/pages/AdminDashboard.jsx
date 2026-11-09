@@ -40,7 +40,53 @@ const sections = [
   { id: 'Users', label: 'Users' },
   { id: 'Subscribers', label: 'Subscribers' },
   { id: 'Newsletter', label: 'Newsletter' },
+  { id: 'Data', label: 'Data' },
   { id: 'Settings', label: 'Settings' },
+]
+
+const dataCategories = [
+  {
+    id: 'products',
+    title: 'Products',
+    description: 'Removes all products, their reviews, and wishlist entries. Historical order items remain.',
+    count: counts => counts?.products ?? 0,
+  },
+  {
+    id: 'orders',
+    title: 'Orders',
+    description: 'Removes all orders and their line items.',
+    count: counts => counts?.orders ?? 0,
+  },
+  {
+    id: 'notifications',
+    title: 'Notifications',
+    description: 'Removes all notifications belonging to user accounts.',
+    count: counts => counts?.notifications ?? 0,
+  },
+  {
+    id: 'requests',
+    title: 'Requests and inquiries',
+    description: 'Removes all contact requests, quotes, and reservations.',
+    count: counts => counts?.requests ?? 0,
+  },
+  {
+    id: 'newsletters',
+    title: 'Newsletters and subscribers',
+    description: 'Removes all newsletter drafts, sent newsletter records, and subscriber records.',
+    count: counts => (counts?.newsletters ?? 0) + (counts?.subscribers ?? 0),
+  },
+  {
+    id: 'users',
+    title: 'User accounts',
+    description: 'Removes customer accounts and inactive staff accounts, including their notifications, reviews, and wishlists. Active staff and superuser accounts are protected.',
+    count: counts => counts?.users ?? 0,
+  },
+  {
+    id: 'analytics',
+    title: 'Analytics and visitor data',
+    description: 'Removes anonymous visitor records and product-share events.',
+    count: counts => (counts?.visitors ?? 0) + (counts?.product_shares ?? 0),
+  },
 ]
 
 const newsletterCommonColors = [
@@ -1497,6 +1543,11 @@ export default function AdminDashboard() {
   const [passwordSetupError, setPasswordSetupError] = useState('')
   const [isPasswordSetupSaving, setIsPasswordSetupSaving] = useState(false)
   const [dataError, setDataError] = useState('')
+  const [dataManagementCounts, setDataManagementCounts] = useState(null)
+  const [dataManagementError, setDataManagementError] = useState('')
+  const [dataManagementNotice, setDataManagementNotice] = useState('')
+  const [isDataManagementLoading, setIsDataManagementLoading] = useState(false)
+  const [clearingDataCategory, setClearingDataCategory] = useState('')
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [summary, setSummary] = useState(null)
   const [orders, setOrders] = useState([])
@@ -1620,6 +1671,28 @@ export default function AdminDashboard() {
       isCurrent = false
     }
   }, [token])
+
+  useEffect(() => {
+    if (!token || activeTab !== 'Data') return undefined
+
+    let isCurrent = true
+    setIsDataManagementLoading(true)
+    setDataManagementError('')
+    apiRequest('/dashboard/data/', { token })
+      .then(counts => {
+        if (isCurrent) setDataManagementCounts(counts)
+      })
+      .catch(error => {
+        if (isCurrent) setDataManagementError(error.message)
+      })
+      .finally(() => {
+        if (isCurrent) setIsDataManagementLoading(false)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [activeTab, token])
 
   useEffect(() => {
     if (!token || activeTab !== 'Users') return undefined
@@ -2584,6 +2657,40 @@ export default function AdminDashboard() {
     { label: 'Product shares', value: summary.product_shares, note: 'Customer shares recorded' },
   ] : []
 
+  const clearDataCategory = async category => {
+    const categoryDetails = dataCategories.find(item => item.id === category)
+    if (!categoryDetails) return
+
+    const count = categoryDetails.count(dataManagementCounts)
+    if (!count || !window.confirm(
+      `Permanently clear ${count} record${count === 1 ? '' : 's'} from ${categoryDetails.title.toLowerCase()}? This cannot be undone.`,
+    )) return
+
+    setClearingDataCategory(category)
+    setDataManagementError('')
+    setDataManagementNotice('')
+    try {
+      const result = await apiRequest('/dashboard/data/clear/', {
+        method: 'DELETE',
+        body: { category },
+        token,
+      })
+      setDataManagementCounts(result.counts)
+      setDataManagementNotice(`${categoryDetails.title} cleared. ${result.deleted_count} record${result.deleted_count === 1 ? '' : 's'} deleted.`)
+    } catch (error) {
+      setDataManagementError(error.message)
+      return
+    } finally {
+      setClearingDataCategory('')
+    }
+    try {
+      const nextSummary = await apiRequest('/dashboard/', { token })
+      setSummary(nextSummary)
+    } catch (error) {
+      setDataManagementError(`Data was deleted, but dashboard totals could not refresh: ${error.message}`)
+    }
+  }
+
   const navigateToSection = section => {
     setSearchParams(current => {
       const next = new URLSearchParams(current)
@@ -2784,6 +2891,57 @@ export default function AdminDashboard() {
             </div>
           )}
           {isLoading && <p role="status" className="mb-5 rounded-lg border border-stone-200 bg-white p-4 text-sm text-stone-500">Loading workspace data…</p>}
+
+          {activeTab === 'Data' && (
+            <section aria-label="Data management">
+              <SectionHeading
+                eyebrow="Data management"
+                title="Data"
+                description="Review stored records and clear one category at a time."
+              />
+              {dataManagementError && (
+                <p role="alert" className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  {dataManagementError}
+                </p>
+              )}
+              {dataManagementNotice && (
+                <p role="status" className="mb-4 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  {dataManagementNotice}
+                </p>
+              )}
+              <p className="mb-5 border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+                Deletions are permanent and require confirmation. Categories are cleared separately. Active staff accounts and superuser accounts are protected. Previously uploaded Cloudinary media is not deleted.
+              </p>
+              {isDataManagementLoading && !dataManagementCounts ? (
+                <p role="status" className="border-y border-stone-200 bg-white p-5 text-sm text-stone-500">Loading data counts…</p>
+              ) : (
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {dataCategories.map(category => {
+                    const count = category.count(dataManagementCounts)
+                    return (
+                      <article key={category.id} className="flex min-w-0 flex-col border border-stone-200 bg-white p-4 sm:p-5">
+                        <div className="flex items-start justify-between gap-3">
+                          <h2 className="text-sm font-semibold text-stone-900">{category.title}</h2>
+                          <span className="shrink-0 rounded-full bg-stone-100 px-2.5 py-1 text-xs font-semibold text-stone-600">
+                            {isDataManagementLoading ? '…' : count}
+                          </span>
+                        </div>
+                        <p className="mt-2 flex-1 text-xs leading-5 text-stone-500">{category.description}</p>
+                        <button
+                          type="button"
+                          disabled={isDataManagementLoading || Boolean(clearingDataCategory) || count === 0}
+                          onClick={() => clearDataCategory(category.id)}
+                          className="mt-4 min-h-10 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                          {clearingDataCategory === category.id ? 'Deleting…' : `Delete ${category.title}`}
+                        </button>
+                      </article>
+                    )
+                  })}
+                </div>
+              )}
+            </section>
+          )}
 
           {activeTab === 'Analytics' && <AnalyticsDashboard token={token} />}
 

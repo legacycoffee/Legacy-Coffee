@@ -2,6 +2,8 @@ from django.urls import path
 
 from .views import (
     DashboardSummaryView,
+    DataClearView,
+    DataManagementView,
     AdminAccountDeleteView,
     AdminAccountListCreateView,
     DashboardAnalyticsView,
@@ -27,6 +29,8 @@ urlpatterns = [
     path('', DashboardSummaryView.as_view(), name='dashboard-summary'),
     path('analytics/', DashboardAnalyticsView.as_view(), name='dashboard-analytics'),
     path('visitor/', VisitorTrackingView.as_view(), name='dashboard-visitor-tracking'),
+    path('data/', DataManagementView.as_view(), name='dashboard-data'),
+    path('data/clear/', DataClearView.as_view(), name='dashboard-data-clear'),
     path('orders/', OrderInboxView.as_view(), name='dashboard-orders'),
     path('orders/<str:reference>/status/', OrderStatusUpdateView.as_view(), name='dashboard-order-status'),
     path('orders/<str:reference>/payment/', OrderPaymentUpdateView.as_view(), name='dashboard-order-payment'),
