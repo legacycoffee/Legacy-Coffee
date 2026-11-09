@@ -464,8 +464,6 @@ class DashboardApiTests(APITestCase):
             'details': 'Grown in Uganda.',
             'tasting_notes': 'Citrus and honey',
             'roast': 'Light roast',
-            'image': 'https://example.com/arabica.jpg',
-            'image_alt': 'Arabica coffee beans',
             'is_active': True,
         }
         self.client.force_authenticate(self.staff)
@@ -474,6 +472,8 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(create_response.status_code, 201)
         self.assertEqual(create_response.data['slug'], payload['slug'])
         self.assertEqual(Product.objects.get(slug=payload['slug']).price, 18000)
+        self.assertEqual(create_response.data['image'], '')
+        self.assertEqual(Product.objects.get(slug=payload['slug']).image, '')
         public_products = self.client.get('/api/shop/products/').data['results']
         self.assertIn(payload['slug'], [product['id'] for product in public_products])
 
@@ -511,8 +511,6 @@ class DashboardApiTests(APITestCase):
             'details': 'Contact us for current availability.',
             'tasting_notes': '',
             'roast': 'Light roast',
-            'image': 'https://example.com/arabica.jpg',
-            'image_alt': 'Arabica coffee beans',
             'is_active': True,
         }
         self.client.force_authenticate(self.staff)
@@ -534,6 +532,24 @@ class DashboardApiTests(APITestCase):
 
         self.assertEqual(update_response.status_code, 200)
         self.assertIsNone(update_response.data['price'])
+
+    def test_staff_cannot_set_product_image_with_a_url(self):
+        self.client.force_authenticate(self.staff)
+        response = self.client.post('/api/dashboard/products/', {
+            'slug': 'url-image-coffee',
+            'name': 'URL Image Coffee',
+            'coffee_type': 'arabica',
+            'weight': '250g',
+            'price': '18000',
+            'description': 'Bright and sweet coffee.',
+            'details': 'Grown in Uganda.',
+            'tasting_notes': 'Citrus and honey',
+            'roast': 'Light roast',
+            'image': 'https://example.com/arabica.jpg',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('image', response.data)
 
     def test_non_staff_cannot_manage_products_and_reviewed_products_cannot_be_deleted(self):
         product = Product.objects.create(

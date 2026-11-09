@@ -2178,7 +2178,9 @@ export default function AdminDashboard() {
       ...productForm,
       slug: productForm.slug.trim(),
       name: productForm.name.trim(),
+      image_alt: productForm.image_alt.trim() || productForm.name.trim(),
     }
+    delete payload.image
     if (payload.price === '') {
       payload.price = null
     }
@@ -3217,7 +3219,7 @@ export default function AdminDashboard() {
                     {productImagePreview ? (
                       <img
                         src={productImagePreview}
-                        alt={productForm.image_alt || 'Product preview'}
+                        alt={productForm.image_alt || productForm.name || 'Product preview'}
                         className="max-h-56 w-full rounded-lg object-contain"
                       />
                     ) : (
@@ -3231,7 +3233,6 @@ export default function AdminDashboard() {
                     <span className="mt-2 text-xs text-stone-500">JPEG, PNG, or WebP · maximum 5 MB</span>
                     <input
                       aria-label="Choose product photo"
-                      required={!editingProduct && !productForm.image}
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
                       onChange={event => {
@@ -3322,10 +3323,6 @@ export default function AdminDashboard() {
                   <label className="block text-xs font-medium text-stone-700">
                     Tasting notes <span className="font-normal text-stone-500">(optional)</span>
                     <input value={productForm.tasting_notes} onChange={event => setProductForm(current => ({ ...current, tasting_notes: event.target.value }))} placeholder="Optional flavor notes" className="mt-1.5 min-h-10 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#c77a4b] focus:ring-2 focus:ring-orange-100" />
-                  </label>
-                  <label className="block text-xs font-medium text-stone-700">
-                    Image description
-                    <input required value={productForm.image_alt} onChange={event => setProductForm(current => ({ ...current, image_alt: event.target.value }))} className="mt-1.5 min-h-10 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#c77a4b] focus:ring-2 focus:ring-orange-100" />
                   </label>
                   <label className="flex min-h-10 items-center gap-2 text-sm text-stone-700">
                     <input type="checkbox" checked={productForm.is_active} onChange={event => setProductForm(current => ({ ...current, is_active: event.target.checked }))} className="h-4 w-4 accent-[#593a27]" />

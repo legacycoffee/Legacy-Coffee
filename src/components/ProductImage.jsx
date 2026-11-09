@@ -35,6 +35,16 @@ function getResponsiveImageUrls(image) {
 
 export default function ProductImage({ product, className = '', objectFit = 'cover' }) {
   const objectFitClass = objectFit === 'contain' ? 'object-contain' : 'object-cover'
+  if (!product.image) {
+    return (
+      <div
+        role="img"
+        aria-label={product.imageAlt || product.name}
+        className={`h-full w-full bg-stone-100 ${className}`}
+      />
+    )
+  }
+
   const srcSet = getResponsiveImageUrls(product.image).join(', ')
 
   return (

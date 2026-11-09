@@ -74,7 +74,7 @@ class SubscriberInboxSerializer(serializers.ModelSerializer):
 
 
 class ProductManagementSerializer(serializers.ModelSerializer):
-    image = serializers.URLField(required=False)
+    image = serializers.URLField(read_only=True)
     coffee_type = serializers.ChoiceField(choices=Product.CoffeeType.choices, required=True)
 
     class Meta:
@@ -84,18 +84,15 @@ class ProductManagementSerializer(serializers.ModelSerializer):
             'details', 'tasting_notes', 'roast', 'image', 'image_alt', 'is_active',
         )
 
-    def validate(self, attrs):
-        request = self.context.get('request')
-        image_upload = request and request.FILES.get('image')
-        if not self.instance and not image_upload and not attrs.get('image'):
-            raise serializers.ValidationError({'image': 'Upload an image for this product.'})
-        return attrs
-
     def to_internal_value(self, data):
         data = data.copy()
         request = self.context.get('request')
         if request and request.FILES.get('image'):
             data.pop('image', None)
+        elif 'image' in data:
+            raise serializers.ValidationError({
+                'image': 'Upload an image file instead of providing a URL.',
+            })
         for field in ('price', 'wholesale_price'):
             if data.get(field) == '':
                 data[field] = None
