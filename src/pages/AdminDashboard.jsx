@@ -26,7 +26,7 @@ import {
   LuUndo,
 } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
-import { apiRequest } from '../context/api.js'
+import { API_BASE_URL, apiRequest } from '../context/api.js'
 import { prepareNewsletterImage } from '../utils/prepareNewsletterImage.js'
 import AnalyticsDashboard from '../components/AnalyticsDashboard.jsx'
 import NewsletterImageEditor from '../components/NewsletterImageEditor.jsx'
@@ -1548,6 +1548,12 @@ export default function AdminDashboard() {
   const [dataManagementNotice, setDataManagementNotice] = useState('')
   const [isDataManagementLoading, setIsDataManagementLoading] = useState(false)
   const [clearingDataCategory, setClearingDataCategory] = useState('')
+  const [dataTransferCategory, setDataTransferCategory] = useState('products')
+  const [dataTransferFormat, setDataTransferFormat] = useState('json')
+  const [dataTransferFile, setDataTransferFile] = useState(null)
+  const [isDataExporting, setIsDataExporting] = useState(false)
+  const [isDataImporting, setIsDataImporting] = useState(false)
+  const dataImportFileRef = useRef(null)
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [summary, setSummary] = useState(null)
   const [orders, setOrders] = useState([])
@@ -2723,6 +2729,86 @@ export default function AdminDashboard() {
     })
   }
 
+  const exportDataCategory = async () => {
+    setDataManagementError('')
+    setDataManagementNotice('')
+    setIsDataExporting(true)
+    try {
+      const query = new URLSearchParams({
+        category: dataTransferCategory,
+        file_format: dataTransferFormat,
+      })
+      const response = await fetch(`${API_BASE_URL}/dashboard/data/transfer/?${query.toString()}`, {
+        headers: { Authorization: `Token ${token}` },
+      })
+      if (!response.ok) {
+        const responseText = await response.text()
+        let message = responseText || `Export failed (HTTP ${response.status}).`
+        try {
+          const errorData = JSON.parse(responseText)
+          message = errorData.detail
+            || Object.values(errorData).flat().join(' ')
+            || message
+        } catch {
+          message = responseText || `Export failed (HTTP ${response.status}).`
+        }
+        throw new Error(message)
+      }
+
+      const file = await response.blob()
+      const objectUrl = URL.createObjectURL(file)
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = `legacy-coffee-${dataTransferCategory}.${dataTransferFormat}`
+      document.body.append(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+      setDataManagementNotice(`${dataTransferCategory} exported as ${dataTransferFormat.toUpperCase()}.`)
+    } catch (error) {
+      setDataManagementError(error.message)
+    } finally {
+      setIsDataExporting(false)
+    }
+  }
+
+  const importDataFile = async () => {
+    if (!dataTransferFile) {
+      setDataManagementError('Choose a JSON, CSV, or XML file to import.')
+      return
+    }
+
+    setDataManagementError('')
+    setDataManagementNotice('')
+    setIsDataImporting(true)
+    const body = new FormData()
+    body.append('category', dataTransferCategory)
+    body.append('file', dataTransferFile)
+    try {
+      const result = await apiRequest('/dashboard/data/transfer/', {
+        method: 'POST',
+        body,
+        token,
+      })
+      setDataManagementCounts(current => ({ ...current, ...result.counts }))
+      setDataManagementNotice(
+        `${result.imported_count} record${result.imported_count === 1 ? '' : 's'} imported from ${dataTransferFile.name}. ${result.notice}`,
+      )
+      setDataTransferFile(null)
+      if (dataImportFileRef.current) dataImportFileRef.current.value = ''
+      try {
+        const nextSummary = await apiRequest('/dashboard/', { token })
+        setSummary(nextSummary)
+      } catch (error) {
+        setDataManagementError(`Data was imported, but dashboard totals could not refresh: ${error.message}`)
+      }
+    } catch (error) {
+      setDataManagementError(error.message)
+    } finally {
+      setIsDataImporting(false)
+    }
+  }
+
   const clearDataCategoryConfirmed = async category => {
     const categoryDetails = dataCategories.find(item => item.id === category)
     if (!categoryDetails) return true
@@ -2991,6 +3077,71 @@ export default function AdminDashboard() {
               <p className="mb-5 border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
                 Deletions are permanent and require confirmation. Categories are cleared separately. Active staff accounts and superuser accounts are protected. Previously uploaded Cloudinary media is not deleted.
               </p>
+              <section aria-labelledby="data-transfer-heading" className="mb-6 border border-stone-200 bg-white p-4 sm:p-5">
+                <h2 id="data-transfer-heading" className="text-sm font-semibold text-stone-900">Import or export business data</h2>
+                <p className="mt-2 text-xs leading-5 text-stone-600">
+                  Transfer products, requests, newsletters and subscribers, or analytics as JSON, CSV, or XML. Imports only add records; duplicates are rejected, and an invalid file imports nothing. Newsletter imports are saved as drafts and are never sent automatically. Product images are not included and must be uploaded separately. Files are limited to 5 MB and 5,000 records.
+                </p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <label className="grid gap-1.5 text-xs font-semibold text-stone-700">
+                    Data category
+                    <select
+                      value={dataTransferCategory}
+                      onChange={event => setDataTransferCategory(event.target.value)}
+                      disabled={isDataExporting || isDataImporting}
+                      className="min-h-10 rounded-lg border border-stone-300 bg-white px-3 text-sm font-normal text-stone-900"
+                    >
+                      <option value="products">Products</option>
+                      <option value="requests">Requests and inquiries</option>
+                      <option value="newsletters">Newsletters and subscribers</option>
+                      <option value="analytics">Analytics and visitor data</option>
+                    </select>
+                  </label>
+                  <label className="grid gap-1.5 text-xs font-semibold text-stone-700">
+                    Export format
+                    <select
+                      value={dataTransferFormat}
+                      onChange={event => setDataTransferFormat(event.target.value)}
+                      disabled={isDataExporting || isDataImporting}
+                      className="min-h-10 rounded-lg border border-stone-300 bg-white px-3 text-sm font-normal text-stone-900"
+                    >
+                      <option value="json">JSON</option>
+                      <option value="csv">CSV</option>
+                      <option value="xml">XML</option>
+                    </select>
+                  </label>
+                  <div className="flex items-end">
+                    <button
+                      type="button"
+                      onClick={exportDataCategory}
+                      disabled={isDataExporting || isDataImporting}
+                      className="min-h-10 w-full rounded-lg bg-[#593a27] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#40291e] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isDataExporting ? 'Exporting…' : 'Export selected category'}
+                    </button>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label htmlFor="data-import-file" className="text-xs font-semibold text-stone-700">Import file</label>
+                    <input
+                      ref={dataImportFileRef}
+                      id="data-import-file"
+                      type="file"
+                      accept=".json,.csv,.xml,application/json,text/csv,application/xml,text/xml"
+                      onChange={event => setDataTransferFile(event.target.files?.[0] || null)}
+                      disabled={isDataExporting || isDataImporting}
+                      className="min-h-10 w-full min-w-0 rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-xs text-stone-700 file:mr-2 file:rounded-md file:border-0 file:bg-stone-100 file:px-2 file:py-1 file:text-xs file:font-semibold"
+                    />
+                    <button
+                      type="button"
+                      onClick={importDataFile}
+                      disabled={!dataTransferFile || isDataExporting || isDataImporting}
+                      className="min-h-10 rounded-lg border border-[#593a27] px-4 py-2 text-xs font-semibold text-[#593a27] transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      {isDataImporting ? 'Importing…' : 'Import additive data'}
+                    </button>
+                  </div>
+                </div>
+              </section>
               {isDataManagementLoading && !dataManagementCounts ? (
                 <p role="status" className="border-y border-stone-200 bg-white p-5 text-sm text-stone-500">Loading data counts…</p>
               ) : (
