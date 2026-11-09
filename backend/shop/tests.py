@@ -125,6 +125,18 @@ class ShopApiTests(APITestCase):
             [item['id'] for item in response.data['results']],
         )
 
+    def test_product_without_price_is_public_with_a_null_price(self):
+        self.product.price = None
+        self.product.save(update_fields=('price',))
+
+        response = self.client.get('/api/shop/products/')
+
+        self.assertEqual(response.status_code, 200)
+        product = next(
+            item for item in response.data['results'] if item['id'] == self.product.slug
+        )
+        self.assertIsNone(product['price'])
+
     def test_product_api_exposes_admin_configured_wholesale_price(self):
         self.product.wholesale_price = 15
         self.product.save(update_fields=('wholesale_price',))

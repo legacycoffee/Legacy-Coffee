@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { LuArrowRight, LuHeart, LuTrash2 } from 'react-icons/lu'
-import { formatPrice } from '../data/products.js'
+import { formatProductPrice } from '../data/products.js'
 import ProductImage from '../components/ProductImage.jsx'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
@@ -111,7 +111,7 @@ export default function WishlistPage() {
                         {product.name}
                       </Link>
                       <p className="mt-1 text-sm text-black/65">{product.weight}</p>
-                      <p className="mt-2 text-sm font-semibold text-black">{formatPrice(Number(product.price))}</p>
+                      <p className="mt-2 text-sm font-semibold text-black">{formatProductPrice(product.price)}</p>
                     </div>
                     <button
                       type="button"

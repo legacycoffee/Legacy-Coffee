@@ -500,6 +500,39 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(delete_response.status_code, 204)
         self.assertFalse(Product.objects.filter(slug=payload['slug']).exists())
 
+    def test_staff_can_create_product_without_a_price_and_clear_an_existing_price(self):
+        payload = {
+            'slug': 'unpriced-coffee',
+            'name': 'Unpriced Coffee',
+            'coffee_type': 'arabica',
+            'weight': '250g',
+            'price': '',
+            'description': 'Available on request.',
+            'details': 'Contact us for current availability.',
+            'tasting_notes': 'Citrus and honey',
+            'roast': 'Light roast',
+            'image': 'https://example.com/arabica.jpg',
+            'image_alt': 'Arabica coffee beans',
+            'is_active': True,
+        }
+        self.client.force_authenticate(self.staff)
+
+        create_response = self.client.post('/api/dashboard/products/', payload, format='json')
+
+        self.assertEqual(create_response.status_code, 201)
+        self.assertIsNone(create_response.data['price'])
+        product = Product.objects.get(slug=payload['slug'])
+        self.assertIsNone(product.price)
+
+        update_response = self.client.patch(
+            f'/api/dashboard/products/{payload["slug"]}/',
+            {'price': ''},
+            format='json',
+        )
+
+        self.assertEqual(update_response.status_code, 200)
+        self.assertIsNone(update_response.data['price'])
+
     def test_non_staff_cannot_manage_products_and_reviewed_products_cannot_be_deleted(self):
         product = Product.objects.create(
             slug='reviewed-coffee',
@@ -534,7 +567,7 @@ class DashboardApiTests(APITestCase):
             'name': 'Uploaded Coffee',
             'coffee_type': 'arabica',
             'weight': '250g',
-            'price': '18000',
+            'price': '',
             'description': 'Bright and sweet coffee.',
             'details': 'Grown in Uganda.',
             'tasting_notes': 'Citrus and honey',
@@ -557,6 +590,7 @@ class DashboardApiTests(APITestCase):
             'https://res.cloudinary.com/test-cloud/image/upload/products/new-coffee.jpg',
         )
         self.assertEqual(response.data['coffee_type'], 'arabica')
+        self.assertIsNone(response.data['price'])
         upload_image.assert_called_once()
 
     def test_staff_can_create_and_delete_admins_but_an_active_admin_must_remain(self):

@@ -96,8 +96,9 @@ class ProductManagementSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and request.FILES.get('image'):
             data.pop('image', None)
-        if data.get('wholesale_price') == '':
-            data['wholesale_price'] = None
+        for field in ('price', 'wholesale_price'):
+            if data.get(field) == '':
+                data[field] = None
         return super().to_internal_value(data)
 
     def validate_slug(self, value):

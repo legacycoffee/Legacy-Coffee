@@ -81,6 +81,16 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         if len(product_ids) != len(set(product_ids)):
             raise serializers.ValidationError('Each product can only appear once. Combine quantities for duplicate products.')
         for entry in items:
+            product = entry['product']
+            if entry['is_wholesale']:
+                if product.wholesale_price is None and product.price is None:
+                    raise serializers.ValidationError(
+                        f'{product.name} cannot be ordered because no price has been set.',
+                    )
+            elif product.price is None:
+                raise serializers.ValidationError(
+                    f'{product.name} cannot be ordered because no price has been set.',
+                )
             maximum_quantity = 32767 if entry['product'].slug == 'coffee-seedlings' else 99
             if entry['quantity'] > maximum_quantity:
                 raise serializers.ValidationError(

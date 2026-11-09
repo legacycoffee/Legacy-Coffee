@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { LuChevronRight, LuHeart, LuShare2, LuStar } from 'react-icons/lu'
-import { formatPrice } from '../data/products.js'
+import { formatProductPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
@@ -268,57 +268,68 @@ export default function ProductPage() {
 
             <div className="mt-4 grid grid-cols-1 items-center gap-2 border-b border-peach-mid/50 pb-4 lg:mt-3 lg:flex lg:flex-col lg:items-start lg:gap-3 lg:pb-3">
               <div className="flex items-baseline gap-2 justify-self-start">
-                <p className="text-xl font-bold tracking-tight text-brown sm:text-2xl lg:whitespace-nowrap">{formatPrice(product.price)}</p>
-                <p className="text-xs text-brown/60 sm:text-sm lg:whitespace-nowrap">per {product.weight}</p>
+                <p className="text-xl font-bold tracking-tight text-brown sm:text-2xl lg:whitespace-nowrap">{formatProductPrice(product.price)}</p>
+                {product.price != null && <p className="text-xs text-brown/60 sm:text-sm lg:whitespace-nowrap">per {product.weight}</p>}
               </div>
-              <div className="flex items-center justify-self-center overflow-hidden border border-black bg-white lg:self-center">
-                <button
-                  type="button"
-                  aria-label="Decrease quantity"
-                  disabled={quantity <= 1}
-                  onClick={() => setQuantity(current => Math.max(1, current - 1))}
-                  className="h-11 w-11 bg-black text-xl font-medium text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brown disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  −
-                </button>
-                <input
-                  id="product-quantity"
-                  type="number"
-                  min="1"
-                  max="99"
-                  value={quantity}
-                  aria-label="Quantity"
-                  onChange={event => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))}
-                  className="h-11 w-14 text-center font-semibold text-brown outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
-                />
-                <button
-                  type="button"
-                  aria-label="Increase quantity"
-                  disabled={quantity >= 99}
-                  onClick={() => setQuantity(current => Math.min(99, current + 1))}
-                  className="h-11 w-11 bg-black text-xl font-medium text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brown disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  +
-                </button>
-              </div>
+              {product.price != null && (
+                <div className="flex items-center justify-self-center overflow-hidden border border-black bg-white lg:self-center">
+                  <button
+                    type="button"
+                    aria-label="Decrease quantity"
+                    disabled={quantity <= 1}
+                    onClick={() => setQuantity(current => Math.max(1, current - 1))}
+                    className="h-11 w-11 bg-black text-xl font-medium text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brown disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    −
+                  </button>
+                  <input
+                    id="product-quantity"
+                    type="number"
+                    min="1"
+                    max="99"
+                    value={quantity}
+                    aria-label="Quantity"
+                    onChange={event => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))}
+                    className="h-11 w-14 text-center font-semibold text-brown outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+                  />
+                  <button
+                    type="button"
+                    aria-label="Increase quantity"
+                    disabled={quantity >= 99}
+                    onClick={() => setQuantity(current => Math.min(99, current + 1))}
+                    className="h-11 w-11 bg-black text-xl font-medium text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brown disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3 lg:mt-3">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className="min-h-12 bg-[#F58537] px-2 py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537] sm:px-6 sm:text-sm"
+            {product.price == null ? (
+              <Link
+                to="/contact"
+                className="mt-4 inline-flex min-h-12 items-center justify-center bg-[#F58537] px-6 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537]"
               >
-                Add to cart
-              </button>
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                className="min-h-12 border border-black bg-white px-2 py-3 text-xs font-bold text-[#d96f26] transition-colors hover:bg-[#fff3e9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537] sm:px-6 sm:text-sm"
-              >
-                Buy Now
-              </button>
-            </div>
+                Contact us for pricing
+              </Link>
+            ) : (
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3 lg:mt-3">
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="min-h-12 bg-[#F58537] px-2 py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537] sm:px-6 sm:text-sm"
+                >
+                  Add to cart
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="min-h-12 border border-black bg-white px-2 py-3 text-xs font-bold text-[#d96f26] transition-colors hover:bg-[#fff3e9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F58537] sm:px-6 sm:text-sm"
+                >
+                  Buy Now
+                </button>
+              </div>
+            )}
             {cartMessage && (
               <p role="status" aria-live="polite" className="mt-3 text-sm text-brown">
                 {cartMessage}{' '}

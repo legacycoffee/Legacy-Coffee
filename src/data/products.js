@@ -60,3 +60,7 @@ export function formatPrice(price) {
     maximumFractionDigits: 0,
   }).format(price)}`
 }
+
+export function formatProductPrice(price) {
+  return price == null ? 'Price on request' : formatPrice(price)
+}

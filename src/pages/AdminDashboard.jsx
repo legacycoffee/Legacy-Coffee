@@ -2159,7 +2159,7 @@ export default function AdminDashboard() {
     setEditingProduct(product.slug)
     setProductForm({
       ...product,
-      price: String(product.price),
+      price: product.price == null ? '' : String(product.price),
       wholesale_price: product.wholesale_price ?? '',
     })
     setProductImageFile(null)
@@ -2179,17 +2179,25 @@ export default function AdminDashboard() {
       slug: productForm.slug.trim(),
       name: productForm.name.trim(),
     }
+    if (payload.price === '') {
+      payload.price = null
+    }
+    if (payload.wholesale_price === '') {
+      payload.wholesale_price = null
+    }
     if (productImageFile) {
       payload.image = productImageFile
-    } else if (payload.wholesale_price === '') {
-      payload.wholesale_price = null
     }
     let requestBody = payload
     if (productImageFile) {
       requestBody = new FormData()
       Object.entries(payload).forEach(([key, value]) => {
-        if (key !== 'image' && value !== null && value !== undefined) {
-          requestBody.append(key, String(value))
+        if (
+          key !== 'image'
+          && value !== undefined
+          && (value !== null || key === 'price' || key === 'wholesale_price')
+        ) {
+          requestBody.append(key, value === null ? '' : String(value))
         }
       })
       requestBody.append('image', productImageFile)
@@ -2204,7 +2212,11 @@ export default function AdminDashboard() {
           : '/dashboard/products/',
         { method: editingProduct ? 'PATCH' : 'POST', body: requestBody, token },
       )
-      setProductForm({ ...saved, wholesale_price: saved.wholesale_price ?? '' })
+      setProductForm({
+        ...saved,
+        price: saved.price ?? '',
+        wholesale_price: saved.wholesale_price ?? '',
+      })
       setEditingProduct(saved.slug)
       setProductSuccess(`“${saved.name}” ${editingProduct ? 'updated' : 'created'} successfully.`)
       setSummary(current => current ? {
@@ -3121,7 +3133,7 @@ export default function AdminDashboard() {
                               {product.slug} · {product.coffee_type} · {product.weight} · {product.roast}
                             </p>
                             <p className="mt-1 text-sm font-medium text-stone-700">
-                              {formatPrice(product.price)}
+                              {product.price == null ? 'Price not listed' : formatPrice(product.price)}
                               {product.wholesale_price && <span className="ml-2 text-xs text-stone-500">Wholesale {formatPrice(product.wholesale_price)}</span>}
                             </p>
                           </div>
@@ -3291,8 +3303,8 @@ export default function AdminDashboard() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <label className="block min-w-0 text-xs font-medium text-stone-700">
-                      Retail price (UGX)
-                      <input required min="0" step="1" type="number" value={productForm.price} onChange={event => setProductForm(current => ({ ...current, price: event.target.value }))} className="mt-1.5 min-h-10 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#c77a4b] focus:ring-2 focus:ring-orange-100" />
+                      Retail price (UGX) <span className="font-normal text-stone-500">(optional)</span>
+                      <input min="0" step="1" type="number" value={productForm.price} onChange={event => setProductForm(current => ({ ...current, price: event.target.value }))} placeholder="Leave blank if not listed" className="mt-1.5 min-h-10 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#c77a4b] focus:ring-2 focus:ring-orange-100" />
                     </label>
                     <label className="block min-w-0 text-xs font-medium text-stone-700">
                       Wholesale price

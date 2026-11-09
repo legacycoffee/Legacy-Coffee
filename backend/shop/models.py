@@ -22,7 +22,7 @@ class Product(models.Model):
         default=CoffeeType.OTHER,
     )
     weight = models.CharField(max_length=40)
-    price = models.DecimalField(max_digits=12, decimal_places=0)
+    price = models.DecimalField(max_digits=12, decimal_places=0, null=True, blank=True)
     wholesale_price = models.DecimalField(
         max_digits=12,
         decimal_places=0,

@@ -217,7 +217,7 @@ export default function OurCoffeeFarm() {
   }
 
   const handleSeedlingBuy = () => {
-    if (!seedlingsProduct || !seedlingQuantity) return
+    if (!seedlingsProduct || seedlingsProduct.price == null || !seedlingQuantity) return
     addToCart({
       ...seedlingsProduct,
       seedling_type: seedlingType,
@@ -488,20 +488,20 @@ export default function OurCoffeeFarm() {
                 <p className="text-center text-sm font-semibold text-brown">
                   Total selected: {seedlingQuantity.toLocaleString()} seedlings
                   <br />
-                  {formatPrice(seedlingsProduct?.price ?? 2000)} / seedling
-                  {seedlingQuantity > 1000 && (
-                    <span className="mt-1 block text-primary">5% bulk discount: {formatPrice(Math.round((seedlingsProduct?.price ?? 2000) * 0.95))} each</span>
+                  {seedlingsProduct?.price == null ? 'Price on request' : `${formatPrice(seedlingsProduct.price)} / seedling`}
+                  {seedlingsProduct?.price != null && seedlingQuantity > 1000 && (
+                    <span className="mt-1 block text-primary">5% bulk discount: {formatPrice(Math.round(seedlingsProduct.price * 0.95))} each</span>
                   )}
                 </p>
               </div>
               <div className="mx-auto mt-6 grid w-full max-w-2xl gap-3 sm:grid-cols-2">
                 <button
                   type="button"
-                  disabled={isProductsLoading || !seedlingsProduct || !seedlingQuantity || !remainingSeedlingCapacity}
+                  disabled={isProductsLoading || !seedlingsProduct || seedlingsProduct.price == null || !seedlingQuantity || !remainingSeedlingCapacity}
                   onClick={handleSeedlingBuy}
                   className="min-h-12 rounded-full bg-primary px-6 py-3 font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isProductsLoading ? 'Loading product…' : !remainingSeedlingCapacity ? 'Maximum seedlings already in cart' : !seedlingQuantity ? 'Choose seedling quantities' : `Buy · ${formatPrice((seedlingsProduct?.price ?? 2000) * seedlingQuantity * (seedlingQuantity > 1000 ? 0.95 : 1))}`}
+                  {isProductsLoading ? 'Loading product…' : seedlingsProduct?.price == null ? 'Price on request' : !remainingSeedlingCapacity ? 'Maximum seedlings already in cart' : !seedlingQuantity ? 'Choose seedling quantities' : `Buy · ${formatPrice(seedlingsProduct.price * seedlingQuantity * (seedlingQuantity > 1000 ? 0.95 : 1))}`}
                 </button>
                 <button
                   type="button"

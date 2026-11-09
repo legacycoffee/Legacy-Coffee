@@ -133,6 +133,35 @@ class OrderApiTests(APITestCase):
         self.assertEqual(response.data['order_items'][0]['unit_price'], '18000')
         self.assertTrue(response.data['order_items'][0]['is_wholesale'])
 
+    def test_product_without_any_price_cannot_be_ordered(self):
+        self.product.price = None
+        self.product.save(update_fields=('price',))
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post('/api/orders/', self.payload, format='json')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Order.objects.count(), 0)
+
+    def test_unpriced_product_can_be_ordered_at_configured_wholesale_price(self):
+        self.product.price = None
+        self.product.wholesale_price = Decimal('15000')
+        self.product.save(update_fields=('price', 'wholesale_price'))
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post('/api/orders/', {
+            **self.payload,
+            'items': [{
+                'product_id': self.product.slug,
+                'quantity': 2,
+                'is_wholesale': True,
+            }],
+        }, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['total'], '30000')
+        self.assertEqual(response.data['order_items'][0]['unit_price'], '15000')
+
     def test_seedling_order_over_1000_receives_five_percent_discount(self):
         seedlings = Product.objects.get(slug='coffee-seedlings')
         seedlings.price = 2000

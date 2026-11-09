@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { formatPrice } from '../data/products.js'
+import { formatProductPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
 import ProductImage from '../components/ProductImage.jsx'
 import useProducts from '../hooks/useProducts.js'
@@ -178,17 +178,26 @@ export default function Home() {
                       <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary sm:text-xs">{product.roast}</p>
                       <p className="mb-2 text-sm font-bold leading-snug text-brown group-hover:text-primary sm:text-base lg:text-lg">{product.name}</p>
                       <p className="mb-4 w-full flex-1 text-balance text-center text-xs leading-relaxed text-brown/70 sm:text-sm">{product.description}</p>
-                      <p className="mt-auto text-lg font-bold text-brown sm:text-xl">{formatPrice(product.price)}</p>
+                      <p className="mt-auto text-lg font-bold text-brown sm:text-xl">{formatProductPrice(product.price)}</p>
                     </div>
                   </Link>
                   <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5 lg:pb-5">
-                    <button
-                      type="button"
-                      onClick={() => handleAddToCart(product)}
-                      className="w-full rounded-lg bg-primary px-3 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-sm"
-                    >
-                      {addedProduct === product.id ? 'Added!' : 'Add to cart'}
-                    </button>
+                    {product.price == null ? (
+                      <Link
+                        to="/contact"
+                        className="block w-full rounded-lg bg-primary px-3 py-2.5 text-center text-xs font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-sm"
+                      >
+                        Contact for price
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleAddToCart(product)}
+                        className="w-full rounded-lg bg-primary px-3 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-sm"
+                      >
+                        {addedProduct === product.id ? 'Added!' : 'Add to cart'}
+                      </button>
+                    )}
                   </div>
                   </article>
                 ))}

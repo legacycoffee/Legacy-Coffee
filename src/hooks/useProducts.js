@@ -19,7 +19,11 @@ function readStoredProducts() {
     const products = JSON.parse(storedProducts)
     if (
       !Array.isArray(products)
-      || !products.every(product => product && typeof product.id === 'string' && Number.isFinite(Number(product.price)))
+      || !products.every(product => (
+        product
+        && typeof product.id === 'string'
+        && (product.price == null || Number.isFinite(Number(product.price)))
+      ))
     ) {
       console.warn('The saved product catalog is invalid; using the bundled catalog instead.')
       return null
@@ -47,7 +51,7 @@ let productsRequest = null
 function mapProduct(product) {
   return {
     ...product,
-    price: Number(product.price),
+    price: product.price == null ? null : Number(product.price),
     wholesalePrice: product.wholesale_price == null ? null : Number(product.wholesale_price),
     tastingNotes: product.tasting_notes,
     imageAlt: product.image_alt,

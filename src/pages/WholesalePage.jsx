@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/useCart.js'
 import ProductImage from '../components/ProductImage.jsx'
-import { formatPrice } from '../data/products.js'
+import { formatPrice, formatProductPrice } from '../data/products.js'
 import useProducts from '../hooks/useProducts.js'
 
 const inputClass = 'mt-1.5 w-full border border-peach-mid bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors placeholder:text-black/40 focus:border-primary focus:ring-2 focus:ring-primary/20'
@@ -48,6 +48,10 @@ export default function WholesalePage() {
     setSubmitError('')
     if (selectedProducts.length === 0) {
       setSubmitError('Select at least one coffee product and enter its quantity.')
+      return
+    }
+    if (selectedProducts.some(product => getUnitPrice(product) == null)) {
+      setSubmitError('A selected product no longer has a listed price. Remove it or contact us for pricing.')
       return
     }
     if (selectedProducts.some(product => (
@@ -102,7 +106,7 @@ export default function WholesalePage() {
                     quantities[product.id] !== undefined ? 'border-primary ring-1 ring-primary' : 'border-peach-mid/50'
                   }`}
                 >
-                  <label className="grid cursor-pointer grid-cols-[88px_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[104px_minmax(0,1fr)]">
+                  <label className={`grid grid-cols-[88px_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[104px_minmax(0,1fr)] ${getUnitPrice(product) == null ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                     <span className="flex aspect-square items-center justify-center overflow-hidden bg-white">
                       <ProductImage product={product} />
                     </span>
@@ -117,15 +121,17 @@ export default function WholesalePage() {
                           type="checkbox"
                           checked={quantities[product.id] !== undefined}
                           onChange={event => handleProductToggle(product.id, event.target.checked)}
-                          className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+                          disabled={getUnitPrice(product) == null}
+                          className="mt-0.5 h-4 w-4 shrink-0 accent-primary disabled:cursor-not-allowed disabled:opacity-40"
                           aria-label={`Select ${product.name} for wholesale`}
                         />
                       </span>
                       <span className="mt-2 block text-sm font-semibold text-brown">
-                        {formatPrice(getUnitPrice(product))} <span className="text-xs font-normal text-brown/65">per unit</span>
+                        {formatProductPrice(getUnitPrice(product))}
+                        {getUnitPrice(product) != null && <span className="text-xs font-normal text-brown/65"> per unit</span>}
                       </span>
                       <span className="mt-0.5 block text-[10px] text-brown/60">
-                        {hasWholesalePrice(product) ? 'Wholesale price' : 'Retail estimate'}
+                        {getUnitPrice(product) == null ? 'Contact us for pricing' : hasWholesalePrice(product) ? 'Wholesale price' : 'Retail estimate'}
                       </span>
                     </span>
                   </label>
