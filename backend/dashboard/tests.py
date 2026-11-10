@@ -782,6 +782,42 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(delete_response.status_code, 204)
         self.assertFalse(Product.objects.filter(slug=payload['slug']).exists())
 
+    def test_staff_can_create_multiple_products_with_the_same_description_and_name(self):
+        payload = {
+            'slug': 'shared-product',
+            'name': 'Shared Product',
+            'coffee_type': 'arabica',
+            'weight': '250g',
+            'price': '18000',
+            'description': 'The same description can be used for multiple products.',
+            'details': 'Product details.',
+            'tasting_notes': 'Citrus',
+            'roast': 'Light roast',
+            'image_alt': 'Coffee product',
+            'is_active': True,
+        }
+        self.client.force_authenticate(self.staff)
+
+        responses = [
+            self.client.post('/api/dashboard/products/', payload, format='json')
+            for _ in range(7)
+        ]
+
+        self.assertEqual([response.status_code for response in responses], [201] * 7)
+        self.assertEqual(
+            [response.data['slug'] for response in responses],
+            ['shared-product'] + [f'shared-product-{number}' for number in range(2, 8)],
+        )
+        self.assertEqual(
+            list(
+                Product.objects.filter(description=payload['description'])
+                .order_by('slug')
+                .values_list('slug', flat=True)
+            ),
+            ['shared-product', 'shared-product-2', 'shared-product-3', 'shared-product-4',
+             'shared-product-5', 'shared-product-6', 'shared-product-7'],
+        )
+
     def test_staff_can_create_product_without_price_or_tasting_notes(self):
         payload = {
             'slug': 'unpriced-coffee',

@@ -76,6 +76,7 @@ class SubscriberInboxSerializer(serializers.ModelSerializer):
 class ProductManagementSerializer(serializers.ModelSerializer):
     image = serializers.URLField(read_only=True)
     coffee_type = serializers.ChoiceField(choices=Product.CoffeeType.choices, required=True)
+    slug = serializers.SlugField(validators=[])
 
     class Meta:
         model = Product
@@ -105,8 +106,16 @@ class ProductManagementSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         image_upload = self.context['request'].FILES.get('image')
+        base_slug = validated_data['slug']
+        slug = base_slug
+        suffix = 2
+        while Product.objects.filter(slug=slug).exists():
+            suffix_text = f'-{suffix}'
+            slug = f'{base_slug[:120 - len(suffix_text)].rstrip("-")}{suffix_text}'
+            suffix += 1
+        validated_data['slug'] = slug
         if image_upload:
-            validated_data['image'] = upload_product_image(image_upload, validated_data['slug'])
+            validated_data['image'] = upload_product_image(image_upload, slug)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
