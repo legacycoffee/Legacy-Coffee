@@ -122,6 +122,16 @@ class NotificationReadView(APIView):
         })
 
 
+class NotificationDeleteView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, public_id):
+        deleted_count, _ = request.user.notifications.filter(public_id=public_id).delete()
+        if not deleted_count:
+            return Response({'detail': 'Notification not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 

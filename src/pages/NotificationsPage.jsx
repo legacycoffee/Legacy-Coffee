@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { LuTrash2 } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import OrderInvoiceActions from '../components/OrderInvoiceActions.jsx'
@@ -21,6 +22,7 @@ export default function NotificationsPage() {
   const [selectedPublicId, setSelectedPublicId] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [deletingNotificationId, setDeletingNotificationId] = useState(null)
 
   const loadNotifications = useCallback(async () => {
     setError('')
@@ -78,6 +80,32 @@ export default function NotificationsPage() {
     navigate('/notifications')
   }
 
+  const deleteNotification = async notification => {
+    setError('')
+    setDeletingNotificationId(notification.public_id)
+    try {
+      await apiRequest(`/auth/notifications/${encodeURIComponent(notification.public_id)}/`, {
+        method: 'DELETE',
+        token,
+      })
+      const nextNotifications = notifications.filter(
+        item => item.public_id !== notification.public_id,
+      )
+      setNotifications(nextNotifications)
+      if (selectedPublicId === notification.public_id) {
+        setSelectedPublicId(null)
+        navigate('/notifications', { replace: true })
+      }
+      window.dispatchEvent(new CustomEvent('legacy-notifications-updated', {
+        detail: { unreadCount: nextNotifications.filter(item => !item.is_read).length },
+      }))
+    } catch (requestError) {
+      setError(`Could not delete notification: ${requestError.message}`)
+    } finally {
+      setDeletingNotificationId(null)
+    }
+  }
+
   useEffect(() => {
     if (!selectedNotification || selectedNotification.is_read) return
     setError('')
@@ -127,12 +155,12 @@ export default function NotificationsPage() {
             ) : (
               <ul className="max-h-[34rem] divide-y divide-peach-mid/30 overflow-y-auto">
                 {notifications.map(notification => (
-                  <li key={notification.public_id}>
+                  <li key={notification.public_id} className="flex items-start">
                     <button
                       type="button"
                       aria-current={selectedPublicId === notification.public_id ? 'true' : undefined}
                       onClick={() => openNotification(notification)}
-                      className={`flex w-full items-start gap-3 px-5 py-4 text-left transition-colors hover:bg-peach-light/40 ${
+                      className={`flex min-w-0 flex-1 items-start gap-3 px-5 py-4 text-left transition-colors hover:bg-peach-light/40 ${
                         selectedPublicId === notification.public_id ? 'bg-peach-light/50' : ''
                       }`}
                     >
@@ -157,6 +185,16 @@ export default function NotificationsPage() {
                         </time>
                       </span>
                     </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete notification: ${notification.title}`}
+                      title="Delete notification"
+                      disabled={deletingNotificationId !== null}
+                      onClick={() => deleteNotification(notification)}
+                      className="m-2 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded text-black/55 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50"
+                    >
+                      <LuTrash2 aria-hidden="true" className="h-4 w-4" />
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -178,10 +216,24 @@ export default function NotificationsPage() {
                 >
                   ← Back to notifications
                 </button>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
-                  {selectedNotification.is_read ? 'Notification' : 'New notification'}
-                </p>
-                <h2 className="mt-2 text-xl font-bold text-black sm:text-2xl">{selectedNotification.title}</h2>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                      {selectedNotification.is_read ? 'Notification' : 'New notification'}
+                    </p>
+                    <h2 className="mt-2 text-xl font-bold text-black sm:text-2xl">{selectedNotification.title}</h2>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={`Delete notification: ${selectedNotification.title}`}
+                    disabled={deletingNotificationId !== null}
+                    onClick={() => deleteNotification(selectedNotification)}
+                    className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50"
+                  >
+                    <LuTrash2 aria-hidden="true" className="h-4 w-4" />
+                    Delete
+                  </button>
+                </div>
                 <time dateTime={selectedNotification.created_at} className="mt-2 block text-sm text-black/55">
                   {formatNotificationDate(selectedNotification.created_at)}
                 </time>
