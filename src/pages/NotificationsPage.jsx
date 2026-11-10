@@ -5,6 +5,7 @@ import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import OrderInvoiceActions from '../components/OrderInvoiceActions.jsx'
 import { createReadableSlug } from '../utils/createReadableSlug.js'
+import { getHiddenNotificationIds, hideNotificationForUser } from '../utils/hiddenNotifications.js'
 import { getOrderUrl } from '../utils/orderUrl.js'
 
 function formatNotificationDate(value) {
@@ -15,7 +16,8 @@ function formatNotificationDate(value) {
 }
 
 export default function NotificationsPage() {
-  const { isAuthenticated, token } = useAuth()
+  const { isAuthenticated, token, user } = useAuth()
+  const userId = user?.id
   const navigate = useNavigate()
   const { notificationKey, notificationSlug } = useParams()
   const [notifications, setNotifications] = useState([])
@@ -28,12 +30,16 @@ export default function NotificationsPage() {
     setError('')
     try {
       const data = await apiRequest('/auth/notifications/', { token })
-      setNotifications(data.results)
+      const hiddenIds = getHiddenNotificationIds(userId)
+      const visibleNotifications = data.results.filter(
+        notification => !hiddenIds.has(notification.public_id),
+      )
+      setNotifications(visibleNotifications)
       setSelectedPublicId(currentId => (
-        data.results.some(notification => notification.public_id === currentId)
+        visibleNotifications.some(notification => notification.public_id === currentId)
           ? currentId
           : window.matchMedia('(min-width: 1024px)').matches
-            ? data.results[0]?.public_id ?? null
+            ? visibleNotifications[0]?.public_id ?? null
             : null
       ))
     } catch (requestError) {
@@ -41,7 +47,7 @@ export default function NotificationsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [token])
+  }, [token, userId])
 
   useEffect(() => {
     if (isAuthenticated) loadNotifications()
@@ -84,10 +90,7 @@ export default function NotificationsPage() {
     setError('')
     setDeletingNotificationId(notification.public_id)
     try {
-      await apiRequest(`/auth/notifications/${encodeURIComponent(notification.public_id)}/`, {
-        method: 'DELETE',
-        token,
-      })
+      hideNotificationForUser(userId, notification.public_id)
       const nextNotifications = notifications.filter(
         item => item.public_id !== notification.public_id,
       )
@@ -97,10 +100,10 @@ export default function NotificationsPage() {
         navigate('/notifications', { replace: true })
       }
       window.dispatchEvent(new CustomEvent('legacy-notifications-updated', {
-        detail: { unreadCount: nextNotifications.filter(item => !item.is_read).length },
+        detail: { refresh: true },
       }))
     } catch (requestError) {
-      setError(`Could not delete notification: ${requestError.message}`)
+      setError(`Could not hide notification: ${requestError.message}`)
     } finally {
       setDeletingNotificationId(null)
     }
@@ -113,13 +116,13 @@ export default function NotificationsPage() {
     apiRequest(`/auth/notifications/${encodeURIComponent(selectedNotification.public_id)}/read/`, {
       method: 'PATCH',
       token,
-    }).then(response => {
+    }).then(() => {
       if (!isCurrent) return
       setNotifications(current => current.map(item => (
         item.public_id === selectedNotification.public_id ? { ...item, is_read: true } : item
       )))
       window.dispatchEvent(new CustomEvent('legacy-notifications-updated', {
-        detail: { unreadCount: response.unread_count },
+        detail: { refresh: true },
       }))
     }).catch(requestError => {
       if (isCurrent) setError(requestError.message)

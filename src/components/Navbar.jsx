@@ -11,6 +11,7 @@ import {
 import { useCart } from '../context/useCart.js'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
+import { getHiddenNotificationIds } from '../utils/hiddenNotifications.js'
 
 const navLinks = [
   { label: 'Home', to: '/' },
@@ -36,6 +37,7 @@ function preloadPage(path) {
 export default function Navbar() {
   const { cartCount } = useCart()
   const { isAuthenticated, user, token, signOut } = useAuth()
+  const userId = user?.id
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
@@ -72,7 +74,11 @@ export default function Navbar() {
       const requestId = ++unreadCountRequestId.current
       try {
         const data = await apiRequest('/auth/notifications/', { token })
-        if (isCurrent && requestId === unreadCountRequestId.current) setUnreadCount(data.unread_count)
+        const hiddenIds = getHiddenNotificationIds(userId)
+        const nextUnreadCount = data.results.filter(
+          notification => !notification.is_read && !hiddenIds.has(notification.public_id),
+        ).length
+        if (isCurrent && requestId === unreadCountRequestId.current) setUnreadCount(nextUnreadCount)
       } catch (requestError) {
         if (isCurrent) setAuthMessage(requestError.message)
       }
@@ -93,7 +99,7 @@ export default function Navbar() {
       isCurrent = false
       window.removeEventListener('legacy-notifications-updated', refreshUnreadCount)
     }
-  }, [isAuthenticated, token, location.pathname])
+  }, [isAuthenticated, token, userId, location.pathname])
 
   useEffect(() => {
     if (!isAuthenticated || !token) {
