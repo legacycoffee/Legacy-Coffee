@@ -412,6 +412,16 @@ class SubscriberInboxView(generics.ListAPIView):
     search_fields = ['email']
 
 
+def get_clearable_users(request):
+    user_model = get_user_model()
+    return user_model.objects.exclude(
+        is_superuser=True,
+    ).exclude(
+        is_staff=True,
+        is_active=True,
+    ).exclude(pk=request.user.pk)
+
+
 def get_clearable_data_counts(request):
     return {
         'products': Product.objects.count(),
@@ -424,16 +434,6 @@ def get_clearable_data_counts(request):
         'visitors': AnonymousVisitor.objects.count(),
         'product_shares': ShareEvent.objects.count(),
     }
-
-
-def get_clearable_users(request):
-    user_model = get_user_model()
-    return user_model.objects.exclude(
-        is_superuser=True,
-    ).exclude(
-        is_staff=True,
-        is_active=True,
-    ).exclude(pk=request.user.pk)
 
 
 class DataManagementView(APIView):

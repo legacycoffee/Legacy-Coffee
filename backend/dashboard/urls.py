@@ -18,6 +18,7 @@ from .views import (
     UserInboxView,
     VisitorTrackingView,
 )
+from .data_transfer import DataTransferView
 from newsletter.views import (
     NewsletterDetailView,
     NewsletterImageUploadView,
@@ -31,6 +32,7 @@ urlpatterns = [
     path('visitor/', VisitorTrackingView.as_view(), name='dashboard-visitor-tracking'),
     path('data/', DataManagementView.as_view(), name='dashboard-data'),
     path('data/clear/', DataClearView.as_view(), name='dashboard-data-clear'),
+    path('data/transfer/', DataTransferView.as_view(), name='dashboard-data-transfer'),
     path('orders/', OrderInboxView.as_view(), name='dashboard-orders'),
     path('orders/<str:reference>/status/', OrderStatusUpdateView.as_view(), name='dashboard-order-status'),
     path('orders/<str:reference>/payment/', OrderPaymentUpdateView.as_view(), name='dashboard-order-payment'),

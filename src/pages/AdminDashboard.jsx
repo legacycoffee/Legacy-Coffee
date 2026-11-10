@@ -3089,7 +3089,7 @@ export default function AdminDashboard() {
                       value={dataTransferCategory}
                       onChange={event => setDataTransferCategory(event.target.value)}
                       disabled={isDataExporting || isDataImporting}
-                      className="min-h-10 rounded-lg border border-stone-300 bg-white px-3 text-sm font-normal text-stone-900"
+                      className="min-h-9 w-full max-w-56 rounded-lg border border-stone-300 bg-white px-2.5 text-xs font-normal text-stone-900"
                     >
                       <option value="products">Products</option>
                       <option value="requests">Requests and inquiries</option>
@@ -3103,7 +3103,7 @@ export default function AdminDashboard() {
                       value={dataTransferFormat}
                       onChange={event => setDataTransferFormat(event.target.value)}
                       disabled={isDataExporting || isDataImporting}
-                      className="min-h-10 rounded-lg border border-stone-300 bg-white px-3 text-sm font-normal text-stone-900"
+                      className="min-h-9 w-full max-w-36 rounded-lg border border-stone-300 bg-white px-2.5 text-xs font-normal text-stone-900"
                     >
                       <option value="json">JSON</option>
                       <option value="csv">CSV</option>
