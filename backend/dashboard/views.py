@@ -11,6 +11,7 @@ from django.utils.dateparse import parse_date
 from rest_framework import filters, generics, serializers, status
 from rest_framework.exceptions import APIException
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -412,6 +413,66 @@ class SubscriberInboxView(generics.ListAPIView):
     search_fields = ['email']
 
 
+class DashboardNotificationSerializer(serializers.ModelSerializer):
+    recipient_email = serializers.EmailField(source='user.email', read_only=True, allow_null=True)
+    recipient_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Notification
+        fields = ('public_id', 'recipient_email', 'recipient_name', 'kind', 'title', 'is_read', 'created_at')
+
+    def get_recipient_name(self, notification):
+        user = notification.user
+        return (
+            ' '.join(part for part in (user.first_name, user.last_name) if part)
+            or user.email
+            or user.phone
+            or user.username
+        )
+
+
+class DashboardNotificationDeleteSerializer(serializers.Serializer):
+    public_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        allow_empty=False,
+        max_length=500,
+    )
+
+    def validate_public_ids(self, public_ids):
+        if len(set(public_ids)) != len(public_ids):
+            raise serializers.ValidationError('Duplicate notification IDs are not allowed.')
+        return public_ids
+
+
+class DashboardNotificationsView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        paginator = PageNumberPagination()
+        paginator.page_size = 25
+        notifications = Notification.objects.select_related('user').order_by('-created_at', '-id')
+        page = paginator.paginate_queryset(notifications, request, view=self)
+        serializer = DashboardNotificationSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    @transaction.atomic
+    def delete(self, request):
+        serializer = DashboardNotificationDeleteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        public_ids = serializer.validated_data['public_ids']
+        selected = Notification.objects.filter(public_id__in=public_ids)
+        if selected.count() != len(public_ids):
+            return Response(
+                {'detail': 'One or more selected notifications were not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        deleted_count, _ = selected.delete()
+        return Response({
+            'deleted_count': deleted_count,
+            'remaining_count': Notification.objects.count(),
+        })
+
+
 def get_clearable_users(request):
     user_model = get_user_model()
     return user_model.objects.exclude(
@@ -447,7 +508,6 @@ class DataClearSerializer(serializers.Serializer):
     category = serializers.ChoiceField(choices=(
         'products',
         'orders',
-        'notifications',
         'requests',
         'newsletters',
         'users',
@@ -471,9 +531,6 @@ class DataClearView(APIView):
         elif category == 'orders':
             deleted_count = counts['orders']
             Order.objects.all().delete()
-        elif category == 'notifications':
-            deleted_count = counts['notifications']
-            Notification.objects.all().delete()
         elif category == 'requests':
             deleted_count = counts['requests']
             Inquiry.objects.all().delete()

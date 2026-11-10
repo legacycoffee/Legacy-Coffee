@@ -518,9 +518,6 @@ export default function OurCoffeeFarm() {
                 </button>
               </div>
               {productsError && <p role="alert" className="mt-3 text-sm text-red-700">Could not load seedlings: {productsError}</p>}
-              {!isProductsLoading && !productsError && !seedlingsProduct && (
-                <p role="alert" className="mt-3 text-sm text-red-700">Coffee seedlings are not available in the catalog yet. Please try again later.</p>
-              )}
             </div>
           </section>
 

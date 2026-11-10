@@ -60,7 +60,7 @@ const dataCategories = [
   {
     id: 'notifications',
     title: 'Notifications',
-    description: 'Removes all notifications belonging to user accounts.',
+    description: 'Select and delete individual or batches of notifications from the manager below.',
     count: counts => counts?.notifications ?? 0,
   },
   {
@@ -1548,6 +1548,12 @@ export default function AdminDashboard() {
   const [dataManagementNotice, setDataManagementNotice] = useState('')
   const [isDataManagementLoading, setIsDataManagementLoading] = useState(false)
   const [clearingDataCategory, setClearingDataCategory] = useState('')
+  const [adminNotificationsPage, setAdminNotificationsPage] = useState(null)
+  const [adminNotificationsPageNumber, setAdminNotificationsPageNumber] = useState(1)
+  const [selectedAdminNotificationIds, setSelectedAdminNotificationIds] = useState([])
+  const [isAdminNotificationsLoading, setIsAdminNotificationsLoading] = useState(false)
+  const [adminNotificationsError, setAdminNotificationsError] = useState('')
+  const [isDeletingAdminNotifications, setIsDeletingAdminNotifications] = useState(false)
   const [dataTransferCategory, setDataTransferCategory] = useState('products')
   const [dataTransferFormat, setDataTransferFormat] = useState('json')
   const [dataTransferFile, setDataTransferFile] = useState(null)
@@ -1702,6 +1708,28 @@ export default function AdminDashboard() {
       isCurrent = false
     }
   }, [activeTab, token])
+
+  useEffect(() => {
+    if (!token || activeTab !== 'Data') return undefined
+
+    let isCurrent = true
+    setIsAdminNotificationsLoading(true)
+    setAdminNotificationsError('')
+    apiRequest(`/dashboard/notifications/?page=${adminNotificationsPageNumber}`, { token })
+      .then(page => {
+        if (isCurrent) setAdminNotificationsPage(page)
+      })
+      .catch(error => {
+        if (isCurrent) setAdminNotificationsError(error.message)
+      })
+      .finally(() => {
+        if (isCurrent) setIsAdminNotificationsLoading(false)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [activeTab, adminNotificationsPageNumber, token])
 
   useEffect(() => {
     if (!token || activeTab !== 'Users') return undefined
@@ -2703,6 +2731,7 @@ export default function AdminDashboard() {
   ] : []
 
   const clearDataCategory = category => {
+    if (category === 'notifications') return
     const categoryDetails = dataCategories.find(item => item.id === category)
     if (!categoryDetails) return
 
@@ -2726,6 +2755,59 @@ export default function AdminDashboard() {
       warning: `${additionalWarnings[category] || 'The selected data will be permanently removed.'} This cannot be undone.`,
       confirmLabel: `Permanently delete ${categoryDetails.title.toLowerCase()}`,
       onConfirm: () => clearDataCategoryConfirmed(category),
+    })
+  }
+
+  const deleteAdminNotificationsConfirmed = async publicIds => {
+    setIsDeletingAdminNotifications(true)
+    setAdminNotificationsError('')
+    try {
+      const result = await apiRequest('/dashboard/notifications/', {
+        method: 'DELETE',
+        body: { public_ids: publicIds },
+        token,
+      })
+      setSelectedAdminNotificationIds(current => current.filter(id => !publicIds.includes(id)))
+      setDataManagementCounts(current => current
+        ? { ...current, notifications: result.remaining_count }
+        : current)
+      setDataManagementNotice(`${result.deleted_count} notification${result.deleted_count === 1 ? '' : 's'} permanently deleted.`)
+
+      const visibleIds = adminNotificationsPage?.results.map(item => item.public_id) || []
+      const selectedOnPage = visibleIds.filter(id => publicIds.includes(id)).length
+      const nextPageNumber = visibleIds.length > 0
+        && selectedOnPage === visibleIds.length
+        && adminNotificationsPageNumber > 1
+        ? adminNotificationsPageNumber - 1
+        : adminNotificationsPageNumber
+      if (nextPageNumber !== adminNotificationsPageNumber) {
+        setAdminNotificationsPageNumber(nextPageNumber)
+      } else {
+        try {
+          const nextPage = await apiRequest(`/dashboard/notifications/?page=${nextPageNumber}`, { token })
+          setAdminNotificationsPage(nextPage)
+        } catch (error) {
+          setAdminNotificationsError(`Notifications were deleted, but the list could not refresh: ${error.message}`)
+        }
+      }
+      return true
+    } catch (error) {
+      return error.message
+    } finally {
+      setIsDeletingAdminNotifications(false)
+    }
+  }
+
+  const requestAdminNotificationDeletion = () => {
+    if (!selectedAdminNotificationIds.length) return
+    const count = selectedAdminNotificationIds.length
+    setDestructiveActionError('')
+    setPendingDestructiveAction({
+      title: `Delete ${count} selected notification${count === 1 ? '' : 's'}?`,
+      description: `This will permanently delete ${count} selected notification${count === 1 ? '' : 's'} across user accounts.`,
+      warning: 'The selected notifications cannot be recovered. This action does not delete user accounts or other records.',
+      confirmLabel: `Permanently delete ${count} notification${count === 1 ? '' : 's'}`,
+      onConfirm: () => deleteAdminNotificationsConfirmed(selectedAdminNotificationIds),
     })
   }
 
@@ -3075,7 +3157,7 @@ export default function AdminDashboard() {
                 </p>
               )}
               <p className="mb-5 border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-                Deletions are permanent and require confirmation. Categories are cleared separately. Active staff accounts and superuser accounts are protected. Previously uploaded Cloudinary media is not deleted.
+                Data clears are permanent and require confirmation. Categories are cleared separately. Delete notifications individually or in selected batches below. Active staff accounts and superuser accounts are protected. Previously uploaded Cloudinary media is not deleted.
               </p>
               <section aria-labelledby="data-transfer-heading" className="mb-6 border border-stone-200 bg-white p-4 sm:p-5">
                 <h2 id="data-transfer-heading" className="text-sm font-semibold text-stone-900">Import or export business data</h2>
@@ -3142,6 +3224,107 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </section>
+              <section aria-labelledby="admin-notifications-heading" className="mb-6 border border-stone-200 bg-white">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-4 py-4 sm:px-5">
+                  <div>
+                    <h2 id="admin-notifications-heading" className="text-sm font-semibold text-stone-900">Manage notifications</h2>
+                    <p className="mt-1 text-xs text-stone-500">Select individual notifications across user accounts to delete, up to 500 per batch.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={requestAdminNotificationDeletion}
+                    disabled={!selectedAdminNotificationIds.length || isAdminNotificationsLoading || isDeletingAdminNotifications}
+                    className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    <LuTrash2 aria-hidden="true" className="h-4 w-4" />
+                    Delete selected{selectedAdminNotificationIds.length ? ` (${selectedAdminNotificationIds.length})` : ''}
+                  </button>
+                </div>
+                {adminNotificationsError && (
+                  <p role="alert" className="border-b border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:px-5">
+                    {adminNotificationsError}
+                  </p>
+                )}
+                {isAdminNotificationsLoading && !adminNotificationsPage ? (
+                  <p role="status" className="px-4 py-6 text-sm text-stone-500 sm:px-5">Loading notifications…</p>
+                ) : adminNotificationsPage?.results.length ? (
+                  <>
+                    <div className="flex items-center gap-3 border-b border-stone-100 bg-stone-50 px-4 py-2.5 sm:px-5">
+                      <input
+                        type="checkbox"
+                        aria-label="Select all notifications on this page"
+                        checked={adminNotificationsPage.results.every(item => selectedAdminNotificationIds.includes(item.public_id))}
+                        onChange={event => {
+                          const visibleIds = adminNotificationsPage.results.map(item => item.public_id)
+                          setSelectedAdminNotificationIds(current => event.target.checked
+                            ? [...new Set([...current, ...visibleIds])]
+                            : current.filter(id => !visibleIds.includes(id)))
+                        }}
+                        disabled={isAdminNotificationsLoading
+                          || isDeletingAdminNotifications
+                          || (selectedAdminNotificationIds.length >= 500
+                            && !adminNotificationsPage.results.every(item => selectedAdminNotificationIds.includes(item.public_id)))}
+                        className="h-4 w-4 accent-rose-700"
+                      />
+                      <span className="text-xs text-stone-600">
+                        Select all {adminNotificationsPage.results.length} on this page · {adminNotificationsPage.count} total
+                      </span>
+                    </div>
+                    <ul className="divide-y divide-stone-100">
+                      {adminNotificationsPage.results.map(notification => (
+                        <li key={notification.public_id} className="flex items-start gap-3 px-4 py-3 sm:px-5">
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${notification.title} for ${notification.recipient_email || notification.recipient_name}`}
+                            checked={selectedAdminNotificationIds.includes(notification.public_id)}
+                            onChange={event => setSelectedAdminNotificationIds(current => event.target.checked
+                              ? [...new Set([...current, notification.public_id])]
+                              : current.filter(id => id !== notification.public_id))}
+                            disabled={isDeletingAdminNotifications
+                              || (selectedAdminNotificationIds.length >= 500 && !selectedAdminNotificationIds.includes(notification.public_id))}
+                            className="mt-1 h-4 w-4 shrink-0 accent-rose-700"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-stone-900">{notification.title}</p>
+                            <p className="mt-1 break-all text-xs text-stone-500">
+                              {notification.recipient_name}{notification.recipient_email ? ` · ${notification.recipient_email}` : ''}
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${notification.is_read ? 'bg-stone-100 text-stone-600' : 'bg-amber-50 text-amber-800'}`}>
+                              {notification.is_read ? 'Read' : 'Unread'}
+                            </span>
+                            <time dateTime={notification.created_at} className="mt-1 block text-[10px] text-stone-500">
+                              {formatDate(notification.created_at)}
+                            </time>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="flex items-center justify-between gap-3 border-t border-stone-200 px-4 py-3 sm:px-5">
+                      <button
+                        type="button"
+                        onClick={() => setAdminNotificationsPageNumber(page => Math.max(1, page - 1))}
+                        disabled={!adminNotificationsPage.previous || isAdminNotificationsLoading || isDeletingAdminNotifications}
+                        className="min-h-9 rounded border border-stone-300 px-3 text-xs font-semibold text-stone-700 disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-xs text-stone-500">Page {adminNotificationsPageNumber}</span>
+                      <button
+                        type="button"
+                        onClick={() => setAdminNotificationsPageNumber(page => page + 1)}
+                        disabled={!adminNotificationsPage.next || isAdminNotificationsLoading || isDeletingAdminNotifications}
+                        className="min-h-9 rounded border border-stone-300 px-3 text-xs font-semibold text-stone-700 disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="px-4 py-6 text-sm text-stone-500 sm:px-5">There are no notifications to manage.</p>
+                )}
+              </section>
               {isDataManagementLoading && !dataManagementCounts ? (
                 <p role="status" className="border-y border-stone-200 bg-white p-5 text-sm text-stone-500">Loading data counts…</p>
               ) : (
@@ -3157,14 +3340,18 @@ export default function AdminDashboard() {
                           </span>
                         </div>
                         <p className="mt-2 flex-1 text-xs leading-5 text-stone-500">{category.description}</p>
-                        <button
-                          type="button"
-                          disabled={isDataManagementLoading || Boolean(clearingDataCategory) || count === 0}
-                          onClick={() => clearDataCategory(category.id)}
-                          className="mt-4 min-h-10 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-45"
-                        >
-                          {clearingDataCategory === category.id ? 'Deleting…' : `Delete ${category.title}`}
-                        </button>
+                        {category.id === 'notifications' ? (
+                          <p className="mt-4 text-xs font-semibold text-stone-500">Use the manager above to select notifications for deletion.</p>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={isDataManagementLoading || Boolean(clearingDataCategory) || count === 0}
+                            onClick={() => clearDataCategory(category.id)}
+                            className="mt-4 min-h-10 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-45"
+                          >
+                            {clearingDataCategory === category.id ? 'Deleting…' : `Delete ${category.title}`}
+                          </button>
+                        )}
                       </article>
                     )
                   })}

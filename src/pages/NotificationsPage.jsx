@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { LuTrash2 } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 import { apiRequest } from '../context/api.js'
 import OrderInvoiceActions from '../components/OrderInvoiceActions.jsx'
@@ -21,6 +22,9 @@ export default function NotificationsPage() {
   const [selectedPublicId, setSelectedPublicId] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [selectedNotificationIds, setSelectedNotificationIds] = useState([])
+  const [pendingNotificationDeletion, setPendingNotificationDeletion] = useState(null)
+  const [isDeletingNotifications, setIsDeletingNotifications] = useState(false)
 
   const loadNotifications = useCallback(async () => {
     setError('')
@@ -34,6 +38,8 @@ export default function NotificationsPage() {
             ? data.results[0]?.public_id ?? null
             : null
       ))
+      const availableIds = new Set(data.results.map(notification => notification.public_id))
+      setSelectedNotificationIds(currentIds => currentIds.filter(id => availableIds.has(id)))
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -78,6 +84,61 @@ export default function NotificationsPage() {
     navigate('/notifications')
   }
 
+  const requestNotificationDeletion = (publicIds, all = false) => {
+    setError('')
+    setPendingNotificationDeletion({
+      publicIds,
+      all,
+      count: all ? notifications.length : publicIds.length,
+    })
+  }
+
+  const confirmNotificationDeletion = async () => {
+    if (!pendingNotificationDeletion || isDeletingNotifications) return
+    setError('')
+    setIsDeletingNotifications(true)
+    try {
+      if (pendingNotificationDeletion.all) {
+        await apiRequest('/auth/notifications/', {
+          method: 'DELETE',
+          body: { all: true },
+          token,
+        })
+      } else if (pendingNotificationDeletion.publicIds.length === 1) {
+        await apiRequest(`/auth/notifications/${encodeURIComponent(pendingNotificationDeletion.publicIds[0])}/`, {
+          method: 'DELETE',
+          token,
+        })
+      } else {
+        await apiRequest('/auth/notifications/', {
+          method: 'DELETE',
+          body: { public_ids: pendingNotificationDeletion.publicIds },
+          token,
+        })
+      }
+
+      const deletedIds = new Set(
+        pendingNotificationDeletion.all
+          ? notifications.map(item => item.public_id)
+          : pendingNotificationDeletion.publicIds,
+      )
+      setNotifications(current => current.filter(item => !deletedIds.has(item.public_id)))
+      setSelectedNotificationIds(current => current.filter(id => !deletedIds.has(id)))
+      if (selectedPublicId && deletedIds.has(selectedPublicId)) {
+        setSelectedPublicId(null)
+        navigate('/notifications', { replace: true })
+      }
+      setPendingNotificationDeletion(null)
+      window.dispatchEvent(new CustomEvent('legacy-notifications-updated', {
+        detail: { refresh: true },
+      }))
+    } catch (requestError) {
+      setError(`Could not delete notifications: ${requestError.message}`)
+    } finally {
+      setIsDeletingNotifications(false)
+    }
+  }
+
   useEffect(() => {
     if (!selectedNotification || selectedNotification.is_read) return
     setError('')
@@ -85,13 +146,13 @@ export default function NotificationsPage() {
     apiRequest(`/auth/notifications/${encodeURIComponent(selectedNotification.public_id)}/read/`, {
       method: 'PATCH',
       token,
-    }).then(response => {
+    }).then(() => {
       if (!isCurrent) return
       setNotifications(current => current.map(item => (
         item.public_id === selectedNotification.public_id ? { ...item, is_read: true } : item
       )))
       window.dispatchEvent(new CustomEvent('legacy-notifications-updated', {
-        detail: { unreadCount: response.unread_count },
+        detail: { refresh: true },
       }))
     }).catch(requestError => {
       if (isCurrent) setError(requestError.message)
@@ -119,20 +180,56 @@ export default function NotificationsPage() {
               notificationKey ? 'hidden lg:block' : ''
             }`}
           >
-            <h2 className="border-b border-peach-mid/40 px-5 py-4 font-bold text-black">All notifications</h2>
+            <div className="flex items-center justify-between gap-3 border-b border-peach-mid/40 px-5 py-4">
+              <h2 className="font-bold text-black">All notifications</h2>
+              <button
+                type="button"
+                disabled={!notifications.length || isDeletingNotifications}
+                onClick={() => requestNotificationDeletion([], true)}
+                className="text-xs font-semibold text-red-700 underline decoration-red-300 underline-offset-2 hover:text-red-900 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Clear all
+              </button>
+            </div>
             {isLoading ? (
               <p className="px-5 py-6 text-sm text-black/60">Loading notifications…</p>
             ) : notifications.length === 0 ? (
               <p className="px-5 py-6 text-sm text-black/60">You don’t have any notifications yet.</p>
             ) : (
-              <ul className="max-h-[34rem] divide-y divide-peach-mid/30 overflow-y-auto">
+              <>
+                <div className="flex items-center justify-between gap-3 border-b border-peach-mid/30 px-4 py-2.5">
+                  <label className="flex items-center gap-2 text-xs text-black/70">
+                    <input
+                      type="checkbox"
+                      checked={notifications.length > 0 && notifications.every(item => selectedNotificationIds.includes(item.public_id))}
+                      onChange={event => setSelectedNotificationIds(
+                        event.target.checked
+                          ? notifications.map(item => item.public_id)
+                          : [],
+                      )}
+                      disabled={isDeletingNotifications || notifications.length > 500}
+                      className="h-4 w-4 accent-red-700"
+                    />
+                    Select all{notifications.length > 500 ? ' (max 500 per batch)' : ''}
+                  </label>
+                  <button
+                    type="button"
+                    disabled={!selectedNotificationIds.length || isDeletingNotifications}
+                    onClick={() => requestNotificationDeletion(selectedNotificationIds)}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-red-700 hover:text-red-900 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    <LuTrash2 aria-hidden="true" className="h-3.5 w-3.5" />
+                    Delete selected{selectedNotificationIds.length ? ` (${selectedNotificationIds.length})` : ''}
+                  </button>
+                </div>
+                <ul className="max-h-[34rem] divide-y divide-peach-mid/30 overflow-y-auto">
                 {notifications.map(notification => (
-                  <li key={notification.public_id}>
+                  <li key={notification.public_id} className="flex items-start">
                     <button
                       type="button"
                       aria-current={selectedPublicId === notification.public_id ? 'true' : undefined}
                       onClick={() => openNotification(notification)}
-                      className={`flex w-full items-start gap-3 px-5 py-4 text-left transition-colors hover:bg-peach-light/40 ${
+                      className={`flex min-w-0 flex-1 items-start gap-3 px-5 py-4 text-left transition-colors hover:bg-peach-light/40 ${
                         selectedPublicId === notification.public_id ? 'bg-peach-light/50' : ''
                       }`}
                     >
@@ -157,9 +254,35 @@ export default function NotificationsPage() {
                         </time>
                       </span>
                     </button>
+                    <label className="mt-4 flex h-8 w-8 shrink-0 items-center justify-center">
+                      <input
+                        type="checkbox"
+                        aria-label={`Select notification: ${notification.title}`}
+                        checked={selectedNotificationIds.includes(notification.public_id)}
+                        onChange={event => setSelectedNotificationIds(current => (
+                          event.target.checked
+                            ? [...new Set([...current, notification.public_id])]
+                            : current.filter(id => id !== notification.public_id)
+                        ))}
+                        disabled={isDeletingNotifications
+                          || (selectedNotificationIds.length >= 500 && !selectedNotificationIds.includes(notification.public_id))}
+                        className="h-4 w-4 accent-red-700"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      aria-label={`Delete notification: ${notification.title}`}
+                      title="Delete notification"
+                      disabled={isDeletingNotifications}
+                      onClick={() => requestNotificationDeletion([notification.public_id])}
+                      className="m-2 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded text-black/55 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50"
+                    >
+                      <LuTrash2 aria-hidden="true" className="h-4 w-4" />
+                    </button>
                   </li>
                 ))}
-              </ul>
+                </ul>
+              </>
             )}
           </section>
 
@@ -178,10 +301,24 @@ export default function NotificationsPage() {
                 >
                   ← Back to notifications
                 </button>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
-                  {selectedNotification.is_read ? 'Notification' : 'New notification'}
-                </p>
-                <h2 className="mt-2 text-xl font-bold text-black sm:text-2xl">{selectedNotification.title}</h2>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                      {selectedNotification.is_read ? 'Notification' : 'New notification'}
+                    </p>
+                    <h2 className="mt-2 text-xl font-bold text-black sm:text-2xl">{selectedNotification.title}</h2>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={`Delete notification: ${selectedNotification.title}`}
+                    disabled={isDeletingNotifications}
+                    onClick={() => requestNotificationDeletion([selectedNotification.public_id])}
+                    className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50"
+                  >
+                    <LuTrash2 aria-hidden="true" className="h-4 w-4" />
+                    Delete
+                  </button>
+                </div>
                 <time dateTime={selectedNotification.created_at} className="mt-2 block text-sm text-black/55">
                   {formatNotificationDate(selectedNotification.created_at)}
                 </time>
@@ -312,6 +449,57 @@ export default function NotificationsPage() {
           </section>
         </div>
       </div>
+      {pendingNotificationDeletion && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"
+          onMouseDown={event => {
+            if (event.target === event.currentTarget && !isDeletingNotifications) {
+              setPendingNotificationDeletion(null)
+            }
+          }}
+        >
+          <section
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="notification-delete-title"
+            aria-describedby="notification-delete-warning"
+            className="w-full max-w-lg border border-red-200 bg-white p-5 shadow-2xl sm:p-6"
+          >
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-700">
+                <LuTrash2 aria-hidden="true" className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 id="notification-delete-title" className="text-lg font-bold text-stone-950">
+                  {pendingNotificationDeletion.all ? 'Clear all notifications?' : `Delete ${pendingNotificationDeletion.count} selected notification${pendingNotificationDeletion.count === 1 ? '' : 's'}?`}
+                </h2>
+                <p id="notification-delete-warning" className="mt-2 text-sm leading-6 text-stone-700">
+                  This permanently removes {pendingNotificationDeletion.all ? 'all your notifications' : 'the selected notification(s)'} from your account. This cannot be undone.
+                </p>
+              </div>
+            </div>
+            {error && <p role="alert" className="mt-4 border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
+            <div className="mt-6 flex flex-col-reverse justify-end gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setPendingNotificationDeletion(null)}
+                disabled={isDeletingNotifications}
+                className="min-h-10 rounded border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmNotificationDeletion}
+                disabled={isDeletingNotifications}
+                className="min-h-10 rounded bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-wait disabled:opacity-50"
+              >
+                {isDeletingNotifications ? 'Deleting…' : 'Permanently delete'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   )
 }

@@ -335,8 +335,43 @@ class AuthenticationApiTests(APITestCase):
         self.assertTrue(notification.is_read)
         self.assertEqual(self.client.get('/api/auth/notifications/').data['unread_count'], 1)
 
+    def test_users_can_delete_only_their_own_notifications(self):
+        user = get_user_model().objects.create_user(
+            username='customer',
+            email='customer@example.com',
+            password='StrongPassword!2026',
+        )
+        other_user = get_user_model().objects.create_user(
+            username='another-customer',
+            email='another@example.com',
+            password='StrongPassword!2026',
+        )
+        notification = Notification.objects.create(
+            user=user,
+            kind=Notification.Kind.WELCOME,
+            title='Welcome',
+            message='Welcome to Legacy Coffee.',
+        )
+
+        self.client.force_authenticate(other_user)
+        self.assertEqual(
+            self.client.delete(f'/api/auth/notifications/{notification.public_id}/').status_code,
+            404,
+        )
+        self.assertTrue(Notification.objects.filter(pk=notification.pk).exists())
+
+        self.client.force_authenticate(user)
+        response = self.client.delete(f'/api/auth/notifications/{notification.public_id}/')
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(Notification.objects.filter(pk=notification.pk).exists())
+
     def test_notifications_require_authentication(self):
         self.assertEqual(self.client.get('/api/auth/notifications/').status_code, 401)
+        self.assertEqual(
+            self.client.delete('/api/auth/notifications/00000000-0000-0000-0000-000000000000/').status_code,
+            401,
+        )
 
     def test_profile_requires_authentication(self):
         self.assertEqual(self.client.get('/api/auth/me/').status_code, 401)

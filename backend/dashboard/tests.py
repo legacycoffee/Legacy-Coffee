@@ -98,7 +98,7 @@ class DashboardApiTests(APITestCase):
             expected = 1
             self.assertEqual(counts.data[category], expected, category)
 
-        for category in ('products', 'orders', 'notifications', 'requests', 'newsletters', 'analytics'):
+        for category in ('products', 'orders', 'requests', 'newsletters', 'analytics'):
             response = self.client.delete(
                 '/api/dashboard/data/clear/',
                 {'category': category},
@@ -109,7 +109,7 @@ class DashboardApiTests(APITestCase):
 
         self.assertFalse(Product.objects.exists())
         self.assertFalse(Order.objects.exists())
-        self.assertFalse(Notification.objects.exists())
+        self.assertTrue(Notification.objects.exists())
         self.assertFalse(Inquiry.objects.exists())
         self.assertFalse(Newsletter.objects.exists())
         self.assertFalse(Subscriber.objects.exists())
@@ -245,7 +245,7 @@ class DashboardApiTests(APITestCase):
         self.assertEqual(counts_response.data['visitors'], 1)
         self.assertEqual(counts_response.data['product_shares'], 1)
 
-        for category in ('products', 'orders', 'notifications', 'requests', 'newsletters', 'analytics'):
+        for category in ('products', 'orders', 'requests', 'newsletters', 'analytics'):
             response = self.client.delete(
                 '/api/dashboard/data/clear/',
                 {'category': category},
@@ -263,7 +263,7 @@ class DashboardApiTests(APITestCase):
         self.assertFalse(WishlistItem.objects.filter(product_id=product.slug).exists())
         self.assertFalse(Order.objects.filter(pk=order.pk).exists())
         self.assertFalse(OrderItem.objects.filter(order=order).exists())
-        self.assertFalse(Notification.objects.exists())
+        self.assertTrue(Notification.objects.exists())
         self.assertFalse(Inquiry.objects.exists())
         self.assertFalse(Newsletter.objects.exists())
         self.assertFalse(Subscriber.objects.exists())

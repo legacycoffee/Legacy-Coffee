@@ -1,5 +1,5 @@
 from django.db import transaction
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, serializers, status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -85,6 +85,26 @@ class AdminPasswordSetupView(generics.GenericAPIView):
         return Response({'token': token.key, 'user': UserSerializer(user).data})
 
 
+class NotificationBulkDeleteSerializer(serializers.Serializer):
+    public_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+        min_length=1,
+        max_length=500,
+    )
+    all = serializers.BooleanField(required=False, default=False)
+
+    def validate(self, attrs):
+        has_public_ids = 'public_ids' in attrs
+        if attrs['all'] == has_public_ids:
+            raise serializers.ValidationError(
+                'Provide either public_ids or all=true, but not both.',
+            )
+        if has_public_ids and len(set(attrs['public_ids'])) != len(attrs['public_ids']):
+            raise serializers.ValidationError({'public_ids': 'Duplicate notification IDs are not allowed.'})
+        return attrs
+
+
 class NotificationListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -100,6 +120,27 @@ class NotificationListView(APIView):
                 'is_read': notification.is_read,
                 'created_at': notification.created_at,
             } for notification in notifications],
+            'unread_count': notifications.filter(is_read=False).count(),
+        })
+
+    @transaction.atomic
+    def delete(self, request):
+        serializer = NotificationBulkDeleteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        notifications = request.user.notifications.all()
+        if serializer.validated_data['all']:
+            deleted_count, _ = notifications.delete()
+        else:
+            public_ids = serializer.validated_data['public_ids']
+            selected = notifications.filter(public_id__in=public_ids)
+            if selected.count() != len(public_ids):
+                return Response(
+                    {'detail': 'One or more selected notifications were not found.'},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            deleted_count, _ = selected.delete()
+        return Response({
+            'deleted_count': deleted_count,
             'unread_count': notifications.filter(is_read=False).count(),
         })
 
@@ -120,6 +161,16 @@ class NotificationReadView(APIView):
             'is_read': notification.is_read,
             'unread_count': request.user.notifications.filter(is_read=False).count(),
         })
+
+
+class NotificationDeleteView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, public_id):
+        deleted_count, _ = request.user.notifications.filter(public_id=public_id).delete()
+        if not deleted_count:
+            return Response({'detail': 'Notification not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class LogoutView(APIView):
