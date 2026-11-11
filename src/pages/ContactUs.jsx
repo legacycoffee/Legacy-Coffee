@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { FiMapPin, FiMail, FiPhone } from 'react-icons/fi'
+import { FaWhatsapp } from 'react-icons/fa6'
+import { getWhatsAppContactUrl } from '../utils/whatsappOrder.js'
 
 export default function ContactUs() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
@@ -53,6 +55,18 @@ export default function ContactUs() {
                   <p className="text-brown font-semibold">Phone</p>
                   <p className="text-brown/80 text-sm">+256 789 069 263</p>
                 </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <a
+                  href={getWhatsAppContactUrl()}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Contact us on WhatsApp"
+                  title="WhatsApp"
+                  className="text-[#25D366] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  <FaWhatsapp className="mt-1 flex-shrink-0" size={24} />
+                </a>
               </div>
             </div>
 

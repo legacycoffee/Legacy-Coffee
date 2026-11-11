@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
-import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube, FaXTwitter } from 'react-icons/fa6'
+import { FaFacebook, FaInstagram, FaLinkedin, FaWhatsapp, FaYoutube, FaXTwitter } from 'react-icons/fa6'
 import { LuArrowUpRight } from 'react-icons/lu'
+import { getWhatsAppContactUrl } from '../utils/whatsappOrder.js'
 
 const menuLinks = [
   { label: 'Home', to: '/' },
@@ -59,12 +60,21 @@ export default function Footer() {
             <p className="text-white/80 text-sm mb-4">+256 789 069 263</p>
 
             {/* Social Icons */}
-            <div className="flex gap-3 text-white text-xl mb-4">
-              <a href="https://www.facebook.com/share/1dK291V2C2/" aria-label="Facebook"><FaFacebook /></a>
-              <a href="https://www.instagram.com/legacycoffee_uganda/?__pwa=1#" aria-label="Instagram"><FaInstagram /></a>
-              <a href="https://www.linkedin.com/company/legacy-coffee-butiiti/" aria-label="LinkedIn"><FaLinkedin /></a>
-              <a href="https://www.youtube.com/@LegacyCoffeeug" aria-label="YouTube"><FaYoutube /></a>
-              <a href="https://x.com/LegacyCoffeeLTD" aria-label="X"><FaXTwitter /></a>
+            <div className="mb-4 flex gap-3">
+              <a href="https://www.facebook.com/share/1dK291V2C2/" aria-label="Facebook" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl text-[#1877F2] transition-opacity hover:opacity-80"><FaFacebook /></a>
+              <a href="https://www.instagram.com/legacycoffee_uganda/?__pwa=1#" aria-label="Instagram" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl text-[#E4405F] transition-opacity hover:opacity-80"><FaInstagram /></a>
+              <a href="https://www.linkedin.com/company/legacy-coffee-butiiti/" aria-label="LinkedIn" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl text-[#0A66C2] transition-opacity hover:opacity-80"><FaLinkedin /></a>
+              <a href="https://www.youtube.com/@LegacyCoffeeug" aria-label="YouTube" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl text-[#FF0000] transition-opacity hover:opacity-80"><FaYoutube /></a>
+              <a href="https://x.com/LegacyCoffeeLTD" aria-label="X" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl text-black transition-opacity hover:opacity-80"><FaXTwitter /></a>
+              <a
+                href={getWhatsAppContactUrl()}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Contact us on WhatsApp"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl text-[#25D366] transition-opacity hover:opacity-80"
+              >
+                <FaWhatsapp />
+              </a>
             </div>
 
           </div>

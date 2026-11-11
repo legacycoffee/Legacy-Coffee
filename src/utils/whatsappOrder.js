@@ -3,6 +3,10 @@ import { formatSeedlingVarieties, getSeedlingVarietyBreakdown } from './seedling
 
 const ORDER_WHATSAPP_NUMBER = '256789069263'
 
+export function getWhatsAppContactUrl() {
+  return `https://wa.me/${ORDER_WHATSAPP_NUMBER}`
+}
+
 export function getWhatsAppOrderUrl(items, customer = {}, seedlingType = '') {
   const selectedSeedlings = formatSeedlingVarieties(getSeedlingVarietyBreakdown(items)) || seedlingType.trim()
   const itemLines = items.flatMap((item, index) => {
