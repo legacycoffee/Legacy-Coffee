@@ -175,8 +175,8 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="flex flex-1 flex-col items-center p-3 text-center sm:p-4 lg:p-5">
-                      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary sm:text-xs">{product.roast}</p>
                       <p className="mb-2 text-sm font-bold leading-snug text-brown group-hover:text-primary sm:text-base lg:text-lg">{product.name}</p>
+                      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary sm:text-xs">{product.roast}</p>
                       <p className="mb-4 w-full flex-1 text-balance text-center text-xs leading-relaxed text-brown/70 sm:text-sm">{product.description}</p>
                       <p className="mt-auto text-lg font-bold text-brown sm:text-xl">{formatProductPrice(product.price)}</p>
                     </div>
