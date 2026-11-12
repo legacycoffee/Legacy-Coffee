@@ -1,7 +1,7 @@
 import { products } from './products.js'
 import { getProductUrl } from '../utils/productUrl.js'
 
-const defaultImage = 'https://res.cloudinary.com/vgko5mna/image/upload/v1792514667/coffee_1_farm.jpg'
+const defaultImage = 'https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png'
 
 export const defaultSeo = {
   path: '/',
@@ -9,7 +9,7 @@ export const defaultSeo = {
   description: 'Discover quality Ugandan coffee from Legacy Coffee in Kyenjojo. Shop freshly roasted Arabica and Robusta coffee, coffee seedlings and wholesale coffee.',
   keywords: 'Legacy Coffee, Ugandan coffee, coffee Kyenjojo, roasted coffee Uganda, Arabica coffee Uganda, Robusta coffee Uganda, wholesale coffee Uganda, coffee seedlings Uganda',
   image: defaultImage,
-  imageAlt: 'Coffee grown by Legacy Coffee in Uganda',
+  imageAlt: 'Legacy Coffee logo',
 }
 
 const fixedSeoPages = [
