@@ -3,7 +3,7 @@ import { apiRequest } from '../context/api.js'
 import { products as localProducts } from '../data/products.js'
 
 const PRODUCT_CACHE_DURATION = 60_000
-const PRODUCT_STORAGE_KEY = 'legacy-coffee-products'
+const PRODUCT_STORAGE_KEY = 'legacy-coffee-products-v2'
 const fallbackProducts = localProducts.map(product => ({
   ...product,
   price: Number(product.price),
