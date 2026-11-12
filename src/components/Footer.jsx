@@ -60,18 +60,18 @@ export default function Footer() {
             <p className="text-white/80 text-sm mb-4">+256 789 069 263</p>
 
             {/* Social Icons */}
-            <div className="mb-4 flex gap-3">
-              <a href="https://www.facebook.com/share/1dK291V2C2/" aria-label="Facebook" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl text-[#1877F2] transition-opacity hover:opacity-80"><FaFacebook /></a>
-              <a href="https://www.instagram.com/legacycoffee_uganda/?__pwa=1#" aria-label="Instagram" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl text-[#E4405F] transition-opacity hover:opacity-80"><FaInstagram /></a>
-              <a href="https://www.linkedin.com/company/legacy-coffee-butiiti/" aria-label="LinkedIn" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl text-[#0A66C2] transition-opacity hover:opacity-80"><FaLinkedin /></a>
-              <a href="https://www.youtube.com/@LegacyCoffeeug" aria-label="YouTube" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl text-[#FF0000] transition-opacity hover:opacity-80"><FaYoutube /></a>
-              <a href="https://x.com/LegacyCoffeeLTD" aria-label="X" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl text-black transition-opacity hover:opacity-80"><FaXTwitter /></a>
+            <div className="mb-4 flex flex-wrap gap-3">
+              <a href="https://www.facebook.com/share/1dK291V2C2/" aria-label="Facebook" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xl text-[#1877F2] transition-opacity hover:opacity-80"><FaFacebook /></a>
+              <a href="https://www.instagram.com/legacycoffee_uganda/?__pwa=1#" aria-label="Instagram" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xl text-[#E4405F] transition-opacity hover:opacity-80"><FaInstagram /></a>
+              <a href="https://www.linkedin.com/company/legacy-coffee-butiiti/" aria-label="LinkedIn" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xl text-[#0A66C2] transition-opacity hover:opacity-80"><FaLinkedin /></a>
+              <a href="https://www.youtube.com/@LegacyCoffeeug" aria-label="YouTube" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xl text-[#FF0000] transition-opacity hover:opacity-80"><FaYoutube /></a>
+              <a href="https://x.com/LegacyCoffeeLTD" aria-label="X" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xl text-black transition-opacity hover:opacity-80"><FaXTwitter /></a>
               <a
                 href={getWhatsAppContactUrl()}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Contact us on WhatsApp"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl text-[#25D366] transition-opacity hover:opacity-80"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xl text-[#25D366] transition-opacity hover:opacity-80"
               >
                 <FaWhatsapp />
               </a>
