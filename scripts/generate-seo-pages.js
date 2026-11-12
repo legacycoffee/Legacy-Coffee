@@ -1,12 +1,10 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { canonicalOrigin, privateSeoPages, seoPages } from '../src/data/seoPages.js'
+import { getCanonicalUrl, privateSeoPages, seoPages } from '../src/data/seoPages.js'
 
 const distDirectory = fileURLToPath(new URL('../dist/', import.meta.url))
 const template = await readFile(path.join(distDirectory, 'index.html'), 'utf8')
-const siteOrigin = 'http://legacycoffee.org'
-
 function escapeAttribute(value) {
   return String(value)
     .replaceAll('&', '&amp;')
@@ -29,6 +27,16 @@ function removeMeta(html, attribute, key) {
   return html.replace(pattern, '')
 }
 
+function setCanonical(html, url) {
+  const pattern = /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i
+  const tag = `<link rel="canonical" href="${escapeAttribute(url)}" />`
+  return pattern.test(html) ? html.replace(pattern, tag) : html.replace('</head>', `    ${tag}\n  </head>`)
+}
+
+function removeCanonical(html) {
+  return html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i, '')
+}
+
 function renderMetadata(page) {
   let html = template.replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeText(page.title)}</title>`)
   html = setMeta(html, 'name', 'description', page.description)
@@ -37,7 +45,7 @@ function renderMetadata(page) {
     : removeMeta(html, 'name', 'keywords')
   html = setMeta(html, 'property', 'og:type', page.type || 'website')
   html = setMeta(html, 'property', 'og:site_name', 'Legacy Coffee')
-  html = setMeta(html, 'property', 'og:url', new URL(page.path, canonicalOrigin).href)
+  html = setMeta(html, 'property', 'og:url', getCanonicalUrl(page.path))
   html = setMeta(html, 'property', 'og:title', page.title)
   html = setMeta(html, 'property', 'og:description', page.description)
   html = setMeta(html, 'property', 'og:image', page.image)
@@ -46,6 +54,9 @@ function renderMetadata(page) {
   html = setMeta(html, 'name', 'twitter:title', page.title)
   html = setMeta(html, 'name', 'twitter:description', page.description)
   html = setMeta(html, 'name', 'twitter:image', page.image)
+  html = page.robots?.includes('noindex')
+    ? removeCanonical(html)
+    : setCanonical(html, getCanonicalUrl(page.path))
   html = page.robots
     ? setMeta(html, 'name', 'robots', page.robots)
     : removeMeta(html, 'name', 'robots')
@@ -74,10 +85,9 @@ for (const page of privateSeoPages) {
   })
 }
 
-const sitemapUrls = seoPages.map(page => {
-  const route = page.path === '/' ? '/' : `${page.path.replace(/\/+$/, '')}/`
-  return `  <url>\n    <loc>${siteOrigin}${route}</loc>\n  </url>`
-})
+const sitemapUrls = seoPages.map(page => (
+  `  <url>\n    <loc>${getCanonicalUrl(page.path)}</loc>\n  </url>`
+))
 
 await writeFile(
   path.join(distDirectory, 'sitemap.xml'),

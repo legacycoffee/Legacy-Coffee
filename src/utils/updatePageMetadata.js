@@ -1,4 +1,4 @@
-import { canonicalOrigin } from '../data/seoPages.js'
+import { getCanonicalUrl } from '../data/seoPages.js'
 
 function setMeta(attribute, key, content) {
   let meta = document.head.querySelector(`meta[${attribute}="${key}"]`)
@@ -14,6 +14,20 @@ function removeMeta(attribute, key) {
   document.head.querySelector(`meta[${attribute}="${key}"]`)?.remove()
 }
 
+function setCanonical(url) {
+  let link = document.head.querySelector('link[rel="canonical"]')
+  if (!link) {
+    link = document.createElement('link')
+    link.setAttribute('rel', 'canonical')
+    document.head.append(link)
+  }
+  link.setAttribute('href', url)
+}
+
+function removeCanonical() {
+  document.head.querySelector('link[rel="canonical"]')?.remove()
+}
+
 export function updatePageMetadata(page) {
   document.title = page.title
   setMeta('name', 'description', page.description)
@@ -22,7 +36,7 @@ export function updatePageMetadata(page) {
 
   setMeta('property', 'og:type', page.type || 'website')
   setMeta('property', 'og:site_name', 'Legacy Coffee')
-  setMeta('property', 'og:url', new URL(window.location.pathname, canonicalOrigin).href)
+  setMeta('property', 'og:url', getCanonicalUrl(window.location.pathname))
   setMeta('property', 'og:title', page.title)
   setMeta('property', 'og:description', page.description)
   setMeta('property', 'og:image', page.image)
@@ -34,4 +48,7 @@ export function updatePageMetadata(page) {
 
   if (page.robots) setMeta('name', 'robots', page.robots)
   else removeMeta('name', 'robots')
+
+  if (page.robots?.includes('noindex')) removeCanonical()
+  else setCanonical(getCanonicalUrl(window.location.pathname))
 }

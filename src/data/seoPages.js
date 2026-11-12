@@ -4,6 +4,12 @@ import { getProductUrl } from '../utils/productUrl.js'
 const defaultImage = 'https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png'
 export const canonicalOrigin = 'https://legacycoffee.org'
 
+export function getCanonicalUrl(pathname) {
+  const normalizedPath = pathname.replace(/\/+$/, '') || '/'
+  const canonicalPath = normalizedPath === '/' ? '/' : `${normalizedPath}/`
+  return new URL(canonicalPath, canonicalOrigin).href
+}
+
 export const defaultSeo = {
   path: '/',
   title: 'Legacy Coffee Limited | Fresh Roasted Coffee & Wholesale',
