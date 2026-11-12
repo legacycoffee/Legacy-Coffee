@@ -26,7 +26,6 @@ export default function ProductPage() {
   const [isWishlistSaving, setIsWishlistSaving] = useState(false)
   const [shareMessage, setShareMessage] = useState('')
   const [reviewData, setReviewData] = useState(null)
-  const [reviewError, setReviewError] = useState('')
   const [showAllReviews, setShowAllReviews] = useState(false)
   const isWishlisted = Boolean(isAuthenticated && wishlistProductIds.includes(product?.id))
   const currentReviewData = reviewData?.productId === product?.id ? reviewData : null
@@ -87,13 +86,12 @@ export default function ProductPage() {
       .then(([nextReviews, eligibility]) => {
         if (isCurrent) {
           setReviewData({ productId: product.id, reviews: nextReviews, eligibility })
-          setReviewError('')
         }
       })
       .catch(error => {
         if (isCurrent) {
           setReviewData({ productId: product.id, reviews: [], eligibility: null })
-          setReviewError(`Could not load product reviews: ${error.message}`)
+          console.error('Unable to load product reviews.', error)
         }
       })
 
@@ -394,7 +392,6 @@ export default function ProductPage() {
             ))}
           </div>
 
-          {reviewError && <p role="alert" className="mb-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{reviewError}</p>}
           {!currentReviewData ? (
             <p role="status" className="mb-4 text-sm text-black/65">Loading reviews…</p>
           ) : reviews.length > 0 ? (
