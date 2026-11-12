@@ -5,6 +5,7 @@ import { privateSeoPages, seoPages } from '../src/data/seoPages.js'
 
 const distDirectory = fileURLToPath(new URL('../dist/', import.meta.url))
 const template = await readFile(path.join(distDirectory, 'index.html'), 'utf8')
+const siteOrigin = 'http://legacycoffee.org'
 
 function escapeAttribute(value) {
   return String(value)
@@ -71,5 +72,17 @@ for (const page of privateSeoPages) {
     robots: 'noindex,nofollow',
   })
 }
+
+const sitemapUrls = seoPages
+  .filter(page => !page.path.startsWith('/products/') || page.path.split('/').filter(Boolean).length > 2)
+  .map(page => {
+    const route = page.path === '/' ? '/' : `${page.path.replace(/\/+$/, '')}/`
+    return `  <url>\n    <loc>${siteOrigin}${route}</loc>\n  </url>`
+  })
+
+await writeFile(
+  path.join(distDirectory, 'sitemap.xml'),
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapUrls.join('\n')}\n</urlset>\n`,
+)
 
 console.log(`Generated static SEO metadata for ${seoPages.length + privateSeoPages.length} routes.`)
