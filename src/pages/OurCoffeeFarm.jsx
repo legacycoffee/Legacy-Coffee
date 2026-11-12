@@ -19,6 +19,15 @@ const tourActivities = [
   'The Coffee Brewing and Tasting Experience',
 ]
 
+const studentTourActivities = [
+  'Farm tour',
+  'Coffee planting demonstration',
+  'Processing and roasting demonstration',
+  'Sustainability workshop',
+  'Coffee entrepreneurship challenge',
+  'Coffee tasting session',
+]
+
 const tourPackages = [
   {
     id: 'individual',
@@ -36,7 +45,7 @@ const tourPackages = [
     title: 'School Package',
     price: 'UGX 5,000 / student',
     detail: 'For school groups',
-    activities: tourActivities,
+    activities: studentTourActivities,
   },
 ]
 

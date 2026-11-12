@@ -27,11 +27,11 @@ export default function Footer() {
       </div>
 
       <div className="bg-primary text-white pt-8 pb-6">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.1fr_0.9fr_1fr_1fr] gap-8">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.8fr_0.9fr_1fr_1.3fr] gap-8">
           {/* Logo */}
           <div className="flex flex-col items-start gap-2">
-            <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-24 w-auto brightness-0 invert md:h-28" />
-            <p className="max-w-xs text-sm leading-relaxed text-white/80">
+            <img src="https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png" alt="Legacy Coffee" className="h-24 w-auto brightness-0 invert md:h-32" />
+            <p className="max-w-md text-sm leading-relaxed text-white/80">
               We deliver premium-quality roasted coffee through sustainable farming practices &amp; fair trade to empower the community that grows the coffee.
             </p>
           </div>

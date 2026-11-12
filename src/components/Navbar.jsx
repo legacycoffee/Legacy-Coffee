@@ -166,14 +166,14 @@ export default function Navbar() {
               <li key={link.label} className="relative shrink-0">
                 {link.children ? (
                   <div onMouseEnter={() => setDropdown(link.label)} onMouseLeave={() => setDropdown(null)}>
-                    <button className="flex items-center gap-1 px-4 py-2 rounded-full text-brown hover:bg-peach-light hover:text-primary font-medium transition-all text-sm">
+                    <button className="flex items-center gap-1 px-3 py-2 rounded-full text-brown hover:bg-peach-light hover:text-primary font-medium transition-all text-lg">
                       {link.label} <FiChevronDown size={13} className={`transition-transform ${dropdown === link.label ? 'rotate-180' : ''}`} />
                     </button>
                     {dropdown === link.label && (
                       <ul className="absolute top-full left-0 mt-1 bg-white shadow-xl rounded-2xl py-2 min-w-44 z-50 border border-peach-light">
                         {link.children.map(child => (
                           <li key={child.label}>
-                            <Link to={child.to} className="flex items-center px-4 py-2.5 text-brown hover:bg-peach-light hover:text-primary transition-colors text-sm">
+                            <Link to={child.to} className="flex items-center px-4 py-2.5 text-brown hover:bg-peach-light hover:text-primary transition-colors text-base">
                               {child.label}
                             </Link>
                           </li>
@@ -188,7 +188,7 @@ export default function Navbar() {
                     onMouseEnter={() => preloadPage(link.to)}
                     onFocus={() => preloadPage(link.to)}
                     className={({ isActive }) =>
-                      `block px-4 py-2 rounded-full font-medium text-sm transition-all ${isActive ? 'bg-primary text-white shadow-sm' : 'text-brown hover:bg-peach-light hover:text-primary'}`
+                      `block px-3 py-2 rounded-full font-medium text-lg transition-all ${isActive ? 'bg-primary text-white shadow-sm' : 'text-brown hover:bg-peach-light hover:text-primary'}`
                     }
                   >
                     {link.label}
@@ -198,7 +198,7 @@ export default function Navbar() {
             ))}
           </ul>
 
-          <div className="absolute right-14 top-1/2 flex -translate-y-1/2 items-center gap-3 md:static md:translate-y-0">
+          <div className="absolute right-14 top-1/2 flex -translate-y-1/2 items-center gap-1 md:static md:translate-y-0">
             <div ref={accountMenuRef} className="relative hidden md:block">
               <button
                 type="button"
