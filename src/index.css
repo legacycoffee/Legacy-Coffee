@@ -203,6 +203,11 @@ main li[class*="shadow-"] {
   animation: partner-logo-marquee 18s linear infinite;
 }
 
+.partner-logo-track:hover,
+.partner-logo-track:focus-within {
+  animation-play-state: paused;
+}
+
 @keyframes partner-logo-marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }

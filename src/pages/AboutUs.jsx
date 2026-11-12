@@ -37,28 +37,34 @@ const partnerTypes = ['NGO / Donor', 'Restaurant / Hotel', 'Exporter / Importer'
 
 const partnerLogos = [
   {
-    src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596313/OIP-1.webp',
-    alt: 'Partner organization logo',
-  },
-  {
-    src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596313/Yonder-Life-Final-Logo-03.png',
-    alt: 'Yonder Life',
-  },
-  {
     src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/partner.png',
-    alt: 'Partner organization logo',
+    alt: 'CURAD',
+    href: 'https://curadincubator.org/',
   },
   {
     src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/KCCA-Kampala-Capital-City-Authority-Logo-Vector.svg-.png',
     alt: 'Kampala Capital City Authority',
+    href: 'https://www.kcca.go.ug/',
   },
   {
     src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596314/logo-color-2.png',
-    alt: 'Partner organization logo',
+    alt: 'UNFCU Foundation',
+    href: 'https://www.unfcufoundation.org/',
   },
   {
     src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596315/Imagine-Her-Logo-Full-Colour-1-2.png',
     alt: 'Imagine Her',
+    href: 'https://imagineher.org/',
+  },
+  {
+    src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596313/OIP-1.webp',
+    alt: 'Tony Elumelu Foundation',
+    href: 'https://www.tonyelumelufoundation.org/',
+  },
+  {
+    src: 'https://res.cloudinary.com/vgko5mna/image/upload/v1792596313/Yonder-Life-Final-Logo-03.png',
+    alt: 'Yonder Life',
+    href: 'https://yonderlife.org/',
   },
 ]
 
@@ -368,13 +374,21 @@ export default function AboutUs() {
               {[0, 1].map(copy => (
                 <div key={copy} className="flex shrink-0 items-center gap-16 pr-16" aria-hidden={copy === 1}>
                   {partnerLogos.map(logo => (
-                    <img
+                    <a
                       key={logo.src}
-                      src={logo.src}
-                      alt={logo.alt}
-                      loading="lazy"
-                      className="h-16 w-36 shrink-0 object-contain md:h-20 md:w-44"
-                    />
+                      href={logo.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      tabIndex={copy === 1 ? -1 : undefined}
+                      aria-label={`Visit ${logo.alt} website`}
+                    >
+                      <img
+                        src={logo.src}
+                        alt={logo.alt}
+                        loading="lazy"
+                        className="h-16 w-36 shrink-0 object-contain md:h-20 md:w-44"
+                      />
+                    </a>
                   ))}
                 </div>
               ))}
