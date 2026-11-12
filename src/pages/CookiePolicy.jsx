@@ -21,15 +21,21 @@ const sections = [
     ],
   },
   {
-    heading: 'Optional analytics',
+    heading: 'Google Tag Manager',
     paragraphs: [
-      'If you opt in to analytics, the website stores a random identifier in your browser and records first and last observed timestamps to count first-time visitors. This metric does not store your name, email address, or page URLs. Browser identifiers observed while signed in are excluded from the unregistered visitor count. The opt-in also loads Google Tag Manager (container GTM-NKDHS434) for the Google Analytics tags configured there. Those tags may use cookies and receive technical information or interaction data according to Google’s privacy practices. Withdrawing consent sends an analytics-denied signal to Google and stops the website’s visitor counting; the browser identifier is removed.',
+      'Google Tag Manager (container GTM-MTWH5RV8) is loaded on all pages. Tags configured in this container may collect information or use cookies according to their settings and Google’s privacy practices.',
+    ],
+  },
+  {
+    heading: 'Optional visitor analytics',
+    paragraphs: [
+      'If you opt in to anonymous visitor analytics, the website stores a random identifier in your browser and records first and last observed timestamps to count first-time visitors. This metric does not store your name, email address, or page URLs. Browser identifiers observed while signed in are excluded from the unregistered visitor count. You can withdraw this choice at any time in cookie preferences; tracking then stops and the browser identifier is removed.',
     ],
   },
   {
     heading: 'Change or withdraw your choice',
     paragraphs: [
-      'Use the preference controls below to allow or block the optional farm story video and analytics, including Google Analytics, at any time. The location map remains visible regardless of these choices. You can also clear browser storage in your browser settings; doing so may sign you out and clear your cart or saved order information.',
+      'Use the preference controls below to allow or block the optional farm story video and anonymous visitor analytics at any time. The location map remains visible regardless of these choices. You can also clear browser storage in your browser settings; doing so may sign you out and clear your cart or saved order information.',
     ],
   },
 ]

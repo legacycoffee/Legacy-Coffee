@@ -28,7 +28,7 @@ export default function CookieConsentManager() {
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#a75a31]">Your privacy</p>
           <h2 id="cookie-preferences-heading" className="mt-2 text-xl font-bold text-stone-900">Cookie and storage preferences</h2>
           <p className="mt-2 text-sm leading-6 text-stone-600">
-            Necessary browser storage keeps your cart and sign-in working and is always active. The location map is always displayed. Optional choices control the YouTube farm story video and analytics, including Google Analytics.
+            Necessary browser storage keeps your cart and sign-in working and is always active. The location map is always displayed. Optional choices control the YouTube farm story video and anonymous visitor analytics.
           </p>
           <div className="mt-5 space-y-3">
             <div className="flex items-start justify-between gap-4 border border-stone-200 p-3">
@@ -52,8 +52,8 @@ export default function CookieConsentManager() {
             </label>
             <label className="flex cursor-pointer items-start justify-between gap-4 border border-stone-200 p-3">
               <span>
-                <span className="block text-sm font-semibold text-stone-800">Analytics, including Google Analytics</span>
-                <span className="mt-1 block text-xs leading-5 text-stone-500">Allow anonymous visitor counting and load Google Tag Manager for analytics tags. Google tracking loads only after you opt in.</span>
+                <span className="block text-sm font-semibold text-stone-800">Anonymous visitor analytics</span>
+                <span className="mt-1 block text-xs leading-5 text-stone-500">Allow a random browser ID to count new visitors. Browsers used while signed in are excluded.</span>
               </span>
               <input
                 type="checkbox"
