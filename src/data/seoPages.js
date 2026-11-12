@@ -1,5 +1,5 @@
 import { products } from './products.js'
-import { createReadableSlug } from '../utils/createReadableSlug.js'
+import { getProductUrl } from '../utils/productUrl.js'
 
 const defaultImage = 'https://res.cloudinary.com/vgko5mna/image/upload/v1792514667/coffee_1_farm.jpg'
 
@@ -90,7 +90,6 @@ const fixedSeoPages = [
 ]
 
 const productSeoPages = products.flatMap(product => {
-  const path = `/products/${encodeURIComponent(product.id)}`
   const page = {
     title: `${product.name} | Ugandan Coffee | Legacy Coffee`,
     description: product.description,
@@ -99,10 +98,7 @@ const productSeoPages = products.flatMap(product => {
     type: 'product',
   }
 
-  return [
-    { path, ...page },
-    { path: `${path}/${createReadableSlug(product.name)}`, ...page },
-  ]
+  return [{ path: getProductUrl(product), ...page }]
 })
 
 export const seoPages = [...fixedSeoPages, ...productSeoPages]

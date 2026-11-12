@@ -73,12 +73,10 @@ for (const page of privateSeoPages) {
   })
 }
 
-const sitemapUrls = seoPages
-  .filter(page => !page.path.startsWith('/products/') || page.path.split('/').filter(Boolean).length > 2)
-  .map(page => {
-    const route = page.path === '/' ? '/' : `${page.path.replace(/\/+$/, '')}/`
-    return `  <url>\n    <loc>${siteOrigin}${route}</loc>\n  </url>`
-  })
+const sitemapUrls = seoPages.map(page => {
+  const route = page.path === '/' ? '/' : `${page.path.replace(/\/+$/, '')}/`
+  return `  <url>\n    <loc>${siteOrigin}${route}</loc>\n  </url>`
+})
 
 await writeFile(
   path.join(distDirectory, 'sitemap.xml'),
