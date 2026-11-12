@@ -4,6 +4,7 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import NewsletterSignup from './components/NewsletterSignup.jsx'
 import CookieConsentManager from './components/CookieConsentManager.jsx'
+import GoogleTagManager from './components/GoogleTagManager.jsx'
 import VisitorAnalyticsTracker from './components/VisitorAnalyticsTracker.jsx'
 import { CookieConsentProvider } from './context/CookieConsentContext.jsx'
 import { CartProvider } from './context/CartContext.jsx'
@@ -92,6 +93,7 @@ export default function App() {
       <CartProvider>
         <AuthProvider>
           <CookieConsentProvider>
+            <GoogleTagManager />
             <VisitorAnalyticsTracker />
             <Routes>
               <Route path="/" element={<Layout><Home /></Layout>} />
