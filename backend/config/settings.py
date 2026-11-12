@@ -131,6 +131,14 @@ CORS_ALLOWED_ORIGINS = [
 ]
 if 'https://legacycoffee.github.io' not in CORS_ALLOWED_ORIGINS:
     CORS_ALLOWED_ORIGINS.append('https://legacycoffee.github.io')
+for origin in (
+    'http://legacycoffee.org',
+    'https://legacycoffee.org',
+    'http://www.legacycoffee.org',
+    'https://www.legacycoffee.org',
+):
+    if origin not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(origin)
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

@@ -125,6 +125,24 @@ class ShopApiTests(APITestCase):
             [item['id'] for item in response.data['results']],
         )
 
+    def test_product_catalog_allows_custom_domain_origins(self):
+        for origin in (
+            'http://legacycoffee.org',
+            'https://legacycoffee.org',
+            'http://www.legacycoffee.org',
+            'https://www.legacycoffee.org',
+        ):
+            with self.subTest(origin=origin):
+                response = self.client.get(
+                    '/api/shop/products/',
+                    HTTP_ORIGIN=origin,
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    response['Access-Control-Allow-Origin'],
+                    origin,
+                )
+
     def test_product_without_price_is_public_with_a_null_price(self):
         self.product.price = None
         self.product.save(update_fields=('price',))
