@@ -36,8 +36,8 @@ const fixedSeoPages = [
     title: 'About Legacy Coffee | Ugandan Coffee, Sustainability & Community',
     description: 'Discover the story behind Legacy Coffee, transforming the coffee value chain through farmer empowerment, quality coffee production, sustainable practices and community development.',
     keywords: 'Legacy Coffee, Ugandan coffee company, coffee company Uganda, sustainable coffee Uganda, Ugandan coffee farmers, smallholder coffee farmers Uganda, farmer empowerment Uganda, coffee farming Western Uganda, coffee production Uganda, ethical coffee sourcing Uganda, coffee from Kyenjojo, Rwenzori coffee, community development Uganda, sustainable agriculture Uganda, Arabica coffee Uganda, Robusta coffee Uganda, coffee value chain Uganda, women empowerment coffee Uganda, youth empowerment Uganda, quality Ugandan coffee',
-    image: defaultImage,
-    imageAlt: 'Legacy Coffee in Uganda',
+    image: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1600',
+    imageAlt: 'Coffee beans featured in the Legacy Coffee hero',
   },
   {
     path: '/about/patrick-muhereza',
