@@ -319,9 +319,6 @@ export default function Navbar() {
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             </Link>
-            <Link to="/#quote" className="hidden shrink-0 whitespace-nowrap rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brown md:block">
-              Get a Quote
-            </Link>
           </div>
 
           {/* Hamburger */}
@@ -480,14 +477,6 @@ export default function Navbar() {
             )}
           </nav>
 
-          {/* CTA */}
-          <div className="px-6 py-5 border-t border-peach-light">
-            <Link to="/#quote"
-              className="block text-center bg-primary text-white px-6 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-brown transition-colors"
-              onClick={() => setMenuOpen(false)}>
-              Get a Quote
-            </Link>
-          </div>
         </div>
       </div>
       {authMessage && (

@@ -148,7 +148,7 @@ export default function Home() {
           ) : (
             <>
               {isProductsLoading && <p role="status" className="mb-4 text-center text-xs text-brown/60">Loading the latest catalog…</p>}
-              <div id="product-list" className="grid scroll-mt-24 grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+              <div id="product-list" className="mx-auto grid max-w-5xl scroll-mt-24 grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 lg:gap-6">
                 {products.map(product => (
                   <article key={product.id} className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-peach-mid/40 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
                   <Link to={getProductUrl(product)} aria-label={`View ${product.name}`} className="flex flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary">
