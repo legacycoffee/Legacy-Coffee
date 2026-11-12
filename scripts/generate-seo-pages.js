@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { privateSeoPages, seoPages } from '../src/data/seoPages.js'
+import { canonicalOrigin, privateSeoPages, seoPages } from '../src/data/seoPages.js'
 
 const distDirectory = fileURLToPath(new URL('../dist/', import.meta.url))
 const template = await readFile(path.join(distDirectory, 'index.html'), 'utf8')
@@ -37,6 +37,7 @@ function renderMetadata(page) {
     : removeMeta(html, 'name', 'keywords')
   html = setMeta(html, 'property', 'og:type', page.type || 'website')
   html = setMeta(html, 'property', 'og:site_name', 'Legacy Coffee')
+  html = setMeta(html, 'property', 'og:url', new URL(page.path, canonicalOrigin).href)
   html = setMeta(html, 'property', 'og:title', page.title)
   html = setMeta(html, 'property', 'og:description', page.description)
   html = setMeta(html, 'property', 'og:image', page.image)

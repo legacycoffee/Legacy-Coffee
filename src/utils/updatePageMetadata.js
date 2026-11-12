@@ -1,3 +1,5 @@
+import { canonicalOrigin } from '../data/seoPages.js'
+
 function setMeta(attribute, key, content) {
   let meta = document.head.querySelector(`meta[${attribute}="${key}"]`)
   if (!meta) {
@@ -20,6 +22,7 @@ export function updatePageMetadata(page) {
 
   setMeta('property', 'og:type', page.type || 'website')
   setMeta('property', 'og:site_name', 'Legacy Coffee')
+  setMeta('property', 'og:url', new URL(window.location.pathname, canonicalOrigin).href)
   setMeta('property', 'og:title', page.title)
   setMeta('property', 'og:description', page.description)
   setMeta('property', 'og:image', page.image)

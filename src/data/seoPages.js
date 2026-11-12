@@ -2,6 +2,7 @@ import { products } from './products.js'
 import { getProductUrl } from '../utils/productUrl.js'
 
 const defaultImage = 'https://res.cloudinary.com/adfm8lvp/image/upload/v1792498215/Legacy_logo.png'
+export const canonicalOrigin = 'https://legacycoffee.org'
 
 export const defaultSeo = {
   path: '/',
