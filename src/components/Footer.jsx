@@ -118,7 +118,7 @@ export default function Footer() {
           <p>© {new Date().getFullYear()} Legacy Coffee Limited. All rights reserved.</p>
           <p className="mt-2">
             Developed by{' '}
-            <a href="tel:+25794448750" className="font-semibold text-white/85 hover:text-white hover:underline">IndEx Software Tech</a>
+            <a href="https://wa.me/25794448750" className="font-semibold text-white/85 hover:text-white hover:underline">IndEx Software Tech</a>
           </p>
         </div>
       </div>
