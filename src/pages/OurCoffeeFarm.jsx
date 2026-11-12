@@ -116,7 +116,7 @@ function FarmImageSlider() {
 }
 
 export default function OurCoffeeFarm() {
-  const { products, isLoading: isProductsLoading, error: productsError } = useProducts()
+  const { products, isLoading: isProductsLoading } = useProducts()
   const { addToCart, items: cartItems } = useCart()
   const navigate = useNavigate()
   const seedlingsProduct = products.find(product => product.id === 'coffee-seedlings')
@@ -517,7 +517,6 @@ export default function OurCoffeeFarm() {
                   Make a Reservation
                 </button>
               </div>
-              {productsError && <p role="alert" className="mt-3 text-sm text-red-700">Could not load seedlings: {productsError}</p>}
             </div>
           </section>
 
