@@ -36,6 +36,7 @@ jobs:
         run: npm run build
         env:
           VITE_API_URL: https://legacy-production-48e0.up.railway.app/api
+          VITE_BASE_PATH: /
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
