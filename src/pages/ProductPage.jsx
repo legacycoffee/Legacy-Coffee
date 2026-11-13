@@ -228,13 +228,13 @@ export default function ProductPage() {
         </nav>
 
         <div className="grid items-start gap-6 lg:grid-cols-2 lg:gap-10">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-peach-light shadow-sm lg:w-full lg:max-w-[400px] lg:justify-self-center">
-            <ProductImage product={product} className="transition-transform duration-700 sm:hover:scale-[1.03]" />
+          <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-peach-light shadow-sm lg:w-full lg:max-w-[460px] lg:justify-self-center">
+            <ProductImage product={product} objectFit="contain" />
             <button
               type="button"
               aria-label={`Share ${product.name}`}
               onClick={handleNativeShare}
-              className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border border-black bg-white text-black shadow-sm transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:left-6 sm:top-6"
+              className="absolute left-4 top-6 flex h-11 w-11 items-center justify-center rounded-full border border-black bg-white text-black shadow-sm transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:left-6 sm:top-8"
             >
               <LuShare2 aria-hidden="true" className="h-5 w-5" />
             </button>
@@ -244,7 +244,7 @@ export default function ProductPage() {
               aria-pressed={isWishlisted}
               disabled={isWishlistSaving}
               onClick={handleToggleWishlist}
-              className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border border-black bg-white text-red-600 shadow-sm transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60 sm:right-6 sm:top-6"
+              className="absolute right-4 top-6 flex h-11 w-11 items-center justify-center rounded-full border border-black bg-white text-red-600 shadow-sm transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60 sm:right-6 sm:top-8"
             >
               <LuHeart aria-hidden="true" className={`h-5 w-5 ${isWishlisted ? 'fill-current' : ''}`} />
             </button>
