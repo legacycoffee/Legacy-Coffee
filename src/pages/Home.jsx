@@ -34,7 +34,7 @@ function OurCoffeeSection() {
           <div className="flex w-full flex-col items-center">
             <h3 className="mb-3 text-xl font-bold text-primary md:text-2xl">Flavor Notes</h3>
             <p className="w-full max-w-2xl text-center text-sm font-normal leading-relaxed text-brown/80">
-              Rich, smooth body with hints of chocolate, nutty undertones, a bright, clean finish
+              Rich, smooth body with hints of chocolate, nutty undertones, with a bright and clean finish
             </p>
           </div>
         </article>
