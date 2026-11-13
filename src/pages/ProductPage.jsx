@@ -258,6 +258,11 @@ export default function ProductPage() {
             <p className="mt-3 max-w-2xl text-sm leading-6 text-brown/75 sm:text-base lg:mt-2 lg:text-sm lg:leading-5">
               {product.description}
             </p>
+            {product.roast?.toLowerCase().includes('roast') && (
+              <p className="mt-3 text-sm text-brown">
+                <span className="font-semibold">Ingredients:</span> 100% Roasted Coffee Beans
+              </p>
+            )}
 
             <div className="mt-4 grid grid-cols-1 items-center gap-2 border-b border-peach-mid/50 pb-4 lg:mt-3 lg:flex lg:flex-col lg:items-start lg:gap-3 lg:pb-3">
               <div className="flex items-baseline gap-2 justify-self-start">
