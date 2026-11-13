@@ -365,82 +365,81 @@ export default function ProductPage() {
                 <span className="font-semibold">Ingredients:</span> 100% Roasted Coffee Beans
               </p>
             )}
+
+            <section aria-labelledby="reviews-heading" className="mt-8">
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <h2 id="reviews-heading" className="text-lg font-bold text-black">Reviews &amp; ratings</h2>
+                  <p className="mt-0.5 text-xs text-black">
+                    {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 text-sm font-semibold text-black" aria-label={`${averageRating} out of 5 stars`}>
+                  <LuStar aria-hidden="true" className="h-4 w-4 fill-[#F58537] text-[#F58537]" />
+                  {averageRating} / 5
+                </div>
+              </div>
+
+              <div className="mb-4 max-w-sm space-y-1.5" aria-label="Rating distribution from 5 stars to 1 star">
+                {ratingDistribution.map(({ rating, count }) => (
+                  <div key={rating} className="grid grid-cols-[2.5rem_1fr_1.5rem] items-center gap-2 text-xs text-black">
+                    <span className="flex items-center gap-1">{rating} <LuStar aria-hidden="true" className="h-3 w-3 fill-[#F58537] text-[#F58537]" /></span>
+                    <div className="h-2 overflow-hidden bg-peach-light">
+                      <div
+                        className="h-full bg-[#F58537]"
+                        style={{ width: `${reviews.length ? (count / reviews.length) * 100 : 0}%` }}
+                      />
+                    </div>
+                    <span className="text-right">{count}</span>
+                  </div>
+                ))}
+              </div>
+
+              {!currentReviewData ? (
+                <p role="status" className="mb-4 text-sm text-black/65">Loading reviews…</p>
+              ) : reviews.length > 0 ? (
+                <>
+                  <ul className="divide-y divide-peach-mid/50">
+                    {visibleReviews.map(review => (
+                      <li key={review.id} className="py-3">
+                        <div className="flex items-center gap-1 text-[#F58537]" aria-label={`${review.rating} out of 5 stars`}>
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <LuStar key={star} aria-hidden="true" className={`h-4 w-4 ${review.rating >= star ? 'fill-current' : ''}`} />
+                          ))}
+                        </div>
+                        <p className="mt-1.5 text-sm leading-relaxed text-black">{review.text}</p>
+                      </li>
+                    ))}
+                  </ul>
+                  {reviews.length > 3 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllReviews(show => !show)}
+                      className="mb-4 mt-2 text-sm font-semibold text-black underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                      {showAllReviews ? 'Show fewer reviews' : 'See more reviews'}
+                    </button>
+                  )}
+                </>
+              ) : null}
+
+              {isAuthenticated && currentReviewData && reviewEligibility?.can_review ? (
+                <Link
+                  to={`/review/${encodeURIComponent(product.id)}`}
+                  className="inline-flex min-h-11 items-center border border-[#593a27] bg-[#593a27] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#40291d]"
+                >
+                  Rate and review this coffee
+                </Link>
+              ) : isAuthenticated && reviewEligibility?.has_reviewed ? (
+                <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black/70">You’ve already reviewed this coffee.</p>
+              ) : isAuthenticated && currentReviewData && reviewEligibility ? (
+                <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black/70">
+                  You can rate and review this coffee after your order is marked fulfilled.
+                </p>
+              ) : null}
+            </section>
           </div>
         </div>
-
-        <section aria-labelledby="reviews-heading" className="mt-5">
-          <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 id="reviews-heading" className="text-lg font-bold text-black">Reviews &amp; ratings</h2>
-              <p className="mt-0.5 text-xs text-black">
-                {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
-              </p>
-            </div>
-            <div className="flex items-center gap-1 text-sm font-semibold text-black" aria-label={`${averageRating} out of 5 stars`}>
-              <LuStar aria-hidden="true" className="h-4 w-4 fill-[#F58537] text-[#F58537]" />
-              {averageRating} / 5
-            </div>
-          </div>
-
-          <div className="mb-4 max-w-sm space-y-1.5" aria-label="Rating distribution from 5 stars to 1 star">
-            {ratingDistribution.map(({ rating, count }) => (
-              <div key={rating} className="grid grid-cols-[2.5rem_1fr_1.5rem] items-center gap-2 text-xs text-black">
-                <span className="flex items-center gap-1">{rating} <LuStar aria-hidden="true" className="h-3 w-3 fill-[#F58537] text-[#F58537]" /></span>
-                <div className="h-2 overflow-hidden bg-peach-light">
-                  <div
-                    className="h-full bg-[#F58537]"
-                    style={{ width: `${reviews.length ? (count / reviews.length) * 100 : 0}%` }}
-                  />
-                </div>
-                <span className="text-right">{count}</span>
-              </div>
-            ))}
-          </div>
-
-          {!currentReviewData ? (
-            <p role="status" className="mb-4 text-sm text-black/65">Loading reviews…</p>
-          ) : reviews.length > 0 ? (
-            <>
-              <ul className="divide-y divide-peach-mid/50">
-                {visibleReviews.map(review => (
-                  <li key={review.id} className="py-3">
-                    <div className="flex items-center gap-1 text-[#F58537]" aria-label={`${review.rating} out of 5 stars`}>
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <LuStar key={star} aria-hidden="true" className={`h-4 w-4 ${review.rating >= star ? 'fill-current' : ''}`} />
-                      ))}
-                    </div>
-                    <p className="mt-1.5 text-sm leading-relaxed text-black">{review.text}</p>
-                  </li>
-                ))}
-              </ul>
-              {reviews.length > 3 && (
-                <button
-                  type="button"
-                  onClick={() => setShowAllReviews(show => !show)}
-                  className="mb-4 mt-2 text-sm font-semibold text-black underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                >
-                  {showAllReviews ? 'Show fewer reviews' : 'See more reviews'}
-                </button>
-              )}
-            </>
-          ) : null}
-
-          {isAuthenticated && currentReviewData && reviewEligibility?.can_review ? (
-            <Link
-              to={`/review/${encodeURIComponent(product.id)}`}
-              className="inline-flex min-h-11 items-center border border-[#593a27] bg-[#593a27] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#40291d]"
-            >
-              Rate and review this coffee
-            </Link>
-          ) : isAuthenticated && reviewEligibility?.has_reviewed ? (
-            <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black/70">You’ve already reviewed this coffee.</p>
-          ) : isAuthenticated && currentReviewData && reviewEligibility ? (
-            <p className="border border-peach-mid/50 bg-white p-4 text-sm text-black/70">
-              You can rate and review this coffee after your order is marked fulfilled.
-            </p>
-          ) : null}
-
-        </section>
 
       </div>
     </section>
