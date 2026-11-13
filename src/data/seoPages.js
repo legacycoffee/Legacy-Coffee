@@ -13,7 +13,7 @@ export function getCanonicalUrl(pathname) {
 export const defaultSeo = {
   path: '/',
   title: 'Legacy Coffee Limited | Fresh Roasted Coffee & Wholesale',
-  description: 'Discover quality Ugandan coffee from Legacy Coffee in Kyenjojo. Shop freshly roasted Arabica and Robusta coffee, coffee seedlings and wholesale coffee.',
+  description: 'Legacy Coffee is a Ugandan coffee company based in Kyenjojo, Western Uganda, producing, sourcing and supplying high-quality Robusta and speciality Arabica coffee. We work closely with smallholder farmers to promote sustainable coffee farming, improve coffee quality and create better market opportunities. From coffee cultivation and farmer support to processing and supplying exceptional coffee, we are committed to bringing out the best in every bean while empowering the communities behind every cup.',
   keywords: 'Legacy Coffee, Ugandan coffee, coffee Kyenjojo, roasted coffee Uganda, Arabica coffee Uganda, Robusta coffee Uganda, wholesale coffee Uganda, coffee seedlings Uganda',
   image: defaultImage,
   imageAlt: 'Legacy Coffee logo',
