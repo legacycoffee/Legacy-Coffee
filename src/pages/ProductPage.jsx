@@ -258,12 +258,6 @@ export default function ProductPage() {
             <p className="mt-3 max-w-2xl text-sm leading-6 text-brown/75 sm:text-base lg:mt-2 lg:text-sm lg:leading-5">
               {product.description}
             </p>
-            {product.roast?.toLowerCase().includes('roast') && (
-              <p className="mt-3 text-sm text-brown">
-                <span className="font-semibold">Ingredients:</span> 100% Roasted Coffee Beans
-              </p>
-            )}
-
             <div className="mt-4 grid grid-cols-1 items-center gap-2 border-b border-peach-mid/50 pb-4 lg:mt-3 lg:flex lg:flex-col lg:items-start lg:gap-3 lg:pb-3">
               <div className="flex items-baseline gap-2 justify-self-start">
                 <p className="text-xl font-bold tracking-tight text-brown sm:text-2xl lg:whitespace-nowrap">{formatProductPrice(product.price)}</p>
@@ -362,6 +356,9 @@ export default function ProductPage() {
           </button>
           {showDetails && (
             <div id="product-details" className="space-y-2 pb-3 text-sm leading-5 text-black lg:absolute lg:right-0 lg:top-full lg:z-20 lg:w-full lg:border lg:border-peach-mid/60 lg:bg-white lg:p-4 lg:shadow-lg">
+              {product.roast?.toLowerCase().includes('roast') && (
+                <p><span className="font-semibold">Ingredients:</span> 100% Roasted Coffee Beans</p>
+              )}
               <p>{product.details}</p>
               {product.tastingNotes && <p><span className="font-semibold">Tasting notes:</span> {product.tastingNotes}</p>}
             </div>
