@@ -227,7 +227,7 @@ export default function ProductPage() {
           <span className="truncate text-brown" aria-current="page">{product.name}</span>
         </nav>
 
-        <div className="grid items-center gap-6 lg:grid-cols-2 lg:gap-10">
+        <div className="grid items-start gap-6 lg:grid-cols-2 lg:gap-10">
           <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-peach-light shadow-sm lg:w-full lg:max-w-[400px] lg:justify-self-center">
             <ProductImage product={product} className="transition-transform duration-700 sm:hover:scale-[1.03]" />
             <button
@@ -340,33 +340,33 @@ export default function ProductPage() {
             </div>
             {shareMessage && <p role="status" aria-live="polite" className="mt-2 min-h-5 text-xs text-brown/70">{shareMessage}</p>}
             {wishlistMessage && <p role="status" aria-live="polite" className="mt-2 min-h-5 text-xs text-red-700">{wishlistMessage}</p>}
+
+            <div className="relative mt-5 border-y border-black">
+              <button
+                type="button"
+                aria-expanded={showDetails}
+                aria-controls="product-details"
+                onClick={() => setShowDetails(open => !open)}
+                className="flex w-full items-center justify-between py-2.5 text-left text-sm font-semibold text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                <span>Details</span>
+                <LuChevronRight aria-hidden="true" className={`h-5 w-5 transition-transform ${showDetails ? 'rotate-90' : ''}`} />
+              </button>
+              {showDetails && (
+                <div id="product-details" className="space-y-2 pb-3 text-sm leading-5 text-black">
+                  <p>{product.details}</p>
+                  {product.tastingNotes && <p><span className="font-semibold">Tasting notes:</span> {product.tastingNotes}</p>}
+                </div>
+              )}
+            </div>
+
+            {product.roast?.toLowerCase().includes('roast') && (
+              <p className="mt-3 text-sm text-black">
+                <span className="font-semibold">Ingredients:</span> 100% Roasted Coffee Beans
+              </p>
+            )}
           </div>
         </div>
-
-        <div className="relative mt-5 border-y border-black lg:ml-auto lg:max-w-[400px]">
-          <button
-            type="button"
-            aria-expanded={showDetails}
-            aria-controls="product-details"
-            onClick={() => setShowDetails(open => !open)}
-            className="flex w-full items-center justify-between py-2.5 text-left text-sm font-semibold text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            <span>Details</span>
-            <LuChevronRight aria-hidden="true" className={`h-5 w-5 transition-transform ${showDetails ? 'rotate-90' : ''}`} />
-          </button>
-          {showDetails && (
-            <div id="product-details" className="space-y-2 pb-3 text-sm leading-5 text-black lg:absolute lg:right-0 lg:top-full lg:z-20 lg:w-full lg:border lg:border-peach-mid/60 lg:bg-white lg:p-4 lg:shadow-lg">
-              <p>{product.details}</p>
-              {product.tastingNotes && <p><span className="font-semibold">Tasting notes:</span> {product.tastingNotes}</p>}
-            </div>
-          )}
-        </div>
-
-        {product.roast?.toLowerCase().includes('roast') && (
-          <p className="mt-3 text-sm text-black">
-            <span className="font-semibold">Ingredients:</span> 100% Roasted Coffee Beans
-          </p>
-        )}
 
         <section aria-labelledby="reviews-heading" className="mt-5">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
