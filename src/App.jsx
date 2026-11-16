@@ -35,6 +35,20 @@ const CookiePolicy = lazy(() => import('./pages/CookiePolicy.jsx'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
 const PatrickStoryPage = lazy(() => import('./pages/PatrickStoryPage'))
 
+const cPanelLoginUrl = 'https://cpanel.legacycoffee.org:2083/'
+
+function CPanelRedirect() {
+  useEffect(() => {
+    window.location.replace(cPanelLoginUrl)
+  }, [])
+
+  return (
+    <p className="p-6 text-center">
+      Redirecting to cPanel. If you are not redirected, <a className="underline" href={cPanelLoginUrl}>open the cPanel login</a>.
+    </p>
+  )
+}
+
 const githubPagesRedirect = sessionStorage.getItem('gh-pages-redirect')
 if (githubPagesRedirect) {
   sessionStorage.removeItem('gh-pages-redirect')
@@ -94,6 +108,7 @@ export default function App() {
           <CookieConsentProvider>
             <VisitorAnalyticsTracker />
             <Routes>
+              <Route path="/cPanel" element={<CPanelRedirect />} />
               <Route path="/" element={<Layout><Home /></Layout>} />
               <Route path="/coffee-farm" element={<Layout><OurCoffeeFarm /></Layout>} />
               <Route path="/services" element={<Layout><OurServices /></Layout>} />
