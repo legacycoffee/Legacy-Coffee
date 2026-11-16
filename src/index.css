@@ -17,6 +17,15 @@ body {
   color: #5C3A1E;
 }
 
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
 @layer base {
   main p[class*="leading-relaxed"]:not([class*="text-center"]):not([class*="text-left"]):not([class*="text-right"]):not([class*="text-start"]):not([class*="text-justify"]) {
     text-align: justify;
