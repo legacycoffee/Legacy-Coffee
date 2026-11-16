@@ -42,11 +42,7 @@ function CPanelRedirect() {
     window.location.replace(cPanelLoginUrl)
   }, [])
 
-  return (
-    <p className="p-6 text-center">
-      Redirecting to cPanel. If you are not redirected, <a className="underline" href={cPanelLoginUrl}>open the cPanel login</a>.
-    </p>
-  )
+  return null
 }
 
 const githubPagesRedirect = sessionStorage.getItem('gh-pages-redirect')
