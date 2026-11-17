@@ -11,9 +11,11 @@ export function getWhatsAppOrderUrl(items, customer = {}, seedlingType = '') {
   const selectedSeedlings = formatSeedlingVarieties(getSeedlingVarietyBreakdown(items)) || seedlingType.trim()
   const itemLines = items.flatMap((item, index) => {
     const unitPrice = getCartItemUnitPrice(item)
+    const productType = item.roast || item.coffee_type
+    const productDescription = [item.name, productType].filter(Boolean).join(' — ')
     const wholesaleLabel = item.is_wholesale ? ' (wholesale)' : ''
     return [
-      `${index + 1}. ${item.name} (${item.weight})${wholesaleLabel}`,
+      `${index + 1}. ${productDescription} (${item.weight})${wholesaleLabel}`,
       `   ${item.quantity} × ${formatPrice(unitPrice)}  —  ${formatPrice(unitPrice * item.quantity)}`,
     ]
   })
@@ -30,23 +32,26 @@ export function getWhatsAppOrderUrl(items, customer = {}, seedlingType = '') {
     customer.notes && `Delivery notes: ${customer.notes}`,
   ].filter(Boolean)
 
-  const message = [
-    'LEGACY COFFEE — ORDER REQUEST',
-    '━━━━━━━━━━━━━━━━━━━━',
-    '',
+  const itemSection = [
     'ORDER ITEMS',
     ...itemLines,
     selectedSeedlings ? `   Seedling varieties: ${selectedSeedlings}` : null,
-    '',
+  ].filter(line => line !== null).join('\n')
+  const totalSection = [
     '━━━━━━━━━━━━━━━━━━━━',
     `PRODUCTS TOTAL: ${formatPrice(total)}`,
     'Delivery fee: To be confirmed',
-    '',
-    customerDetails.length ? 'CUSTOMER DETAILS' : null,
-    ...customerDetails,
-    '',
+  ].join('\n')
+  const customerSection = customerDetails.length
+    ? ['CUSTOMER DETAILS', ...customerDetails].join('\n')
+    : null
+  const message = [
+    ['LEGACY COFFEE — ORDER REQUEST', '━━━━━━━━━━━━━━━━━━━━'].join('\n'),
+    itemSection,
+    totalSection,
+    customerSection,
     'Please confirm availability, final prices, and delivery fee before payment.',
-  ].filter(line => line !== null).join('\n')
+  ].filter(Boolean).join('\n\n')
 
   return `https://wa.me/${ORDER_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
 }
