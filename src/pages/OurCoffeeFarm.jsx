@@ -123,7 +123,7 @@ function FarmImageSlider() {
 }
 
 export default function OurCoffeeFarm() {
-  const { products, isLoading: isProductsLoading } = useProducts()
+  const { products } = useProducts()
   const seedlingsProduct = products.find(product => product.id === 'coffee-seedlings')
   const [seedlingQuantities, setSeedlingQuantities] = useState(() => Object.fromEntries(
     seedlingVarieties.flatMap(group => group.varieties.map(variety => [`${group.type} - ${variety}`, ''])),
@@ -214,9 +214,8 @@ export default function OurCoffeeFarm() {
     }
   }
 
-  const handleSeedlingBuy = () => {
-    if (!seedlingsProduct || !seedlingQuantity) return
-    const unitPrice = seedlingsProduct.price == null
+  const makeSeedlingOrderUrl = () => {
+    const unitPrice = seedlingsProduct?.price == null
       ? null
       : seedlingQuantity > 1000
         ? Math.round(seedlingsProduct.price * 0.95)
@@ -228,7 +227,7 @@ export default function OurCoffeeFarm() {
       unitPrice == null ? 'Price: To be confirmed' : `Unit price: ${formatPrice(unitPrice)}`,
       unitPrice == null ? '' : `Estimated total: ${formatPrice(unitPrice * seedlingQuantity)}`,
     ].filter(Boolean).join('\n')
-    window.location.assign(`https://wa.me/${farmWhatsApp}?text=${encodeURIComponent(message)}`)
+    return `https://wa.me/${farmWhatsApp}?text=${encodeURIComponent(message)}`
   }
 
   const handleSeedlingReservation = event => {
@@ -487,18 +486,17 @@ export default function OurCoffeeFarm() {
                 </p>
               </div>
               <div className="mx-auto mt-6 grid w-full max-w-2xl gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  disabled={isProductsLoading || !seedlingsProduct || !seedlingQuantity}
-                  onClick={handleSeedlingBuy}
-                  className="min-h-12 rounded-full bg-primary px-6 py-3 font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
+                <a
+                  href={seedlingQuantity ? makeSeedlingOrderUrl() : undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-disabled={!seedlingQuantity}
+                  className={`min-h-12 rounded-full bg-primary px-6 py-3 text-center font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                    seedlingQuantity ? '' : 'pointer-events-none cursor-not-allowed opacity-60'
+                  }`}
                 >
-                  {isProductsLoading
-                    ? 'Loading product…'
-                    : !seedlingQuantity
-                      ? 'Choose seedling quantities'
-                      : 'Order via WhatsApp'}
-                </button>
+                  {seedlingQuantity ? 'Order via WhatsApp' : 'Choose seedling quantities'}
+                </a>
                 <button
                   type="button"
                   disabled={!seedlingQuantity}
