@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import { LuChevronDown } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import { apiRequest } from '../context/api.js'
-import useProducts from '../hooks/useProducts.js'
 import { formatPrice } from '../data/products.js'
 import { formatSeedlingVarieties, seedlingVarieties } from '../utils/seedlings.js'
 
 const farmWhatsApp = '256789069263'
+const seedlingUnitPrice = 1500
 
 const tourActivities = [
   'A Personalised Farm Tour',
@@ -123,8 +123,6 @@ function FarmImageSlider() {
 }
 
 export default function OurCoffeeFarm() {
-  const { products } = useProducts()
-  const seedlingsProduct = products.find(product => product.id === 'coffee-seedlings')
   const [seedlingQuantities, setSeedlingQuantities] = useState(() => Object.fromEntries(
     seedlingVarieties.flatMap(group => group.varieties.map(variety => [`${group.type} - ${variety}`, ''])),
   ))
@@ -136,6 +134,10 @@ export default function OurCoffeeFarm() {
       .map(([key]) => [key, Number.parseInt(seedlingQuantities[key], 10)]),
   )
   const seedlingQuantity = Object.values(selectedSeedlingVarieties).reduce((total, quantity) => total + quantity, 0)
+  const seedlingOrderUnitPrice = seedlingQuantity > 1000
+    ? Math.round(seedlingUnitPrice * 0.95)
+    : seedlingUnitPrice
+  const seedlingOrderTotal = seedlingOrderUnitPrice * seedlingQuantity
   const seedlingType = formatSeedlingVarieties(selectedSeedlingVarieties)
   const [seedlingReservationOpen, setSeedlingReservationOpen] = useState(false)
   const [seedlingReservation, setSeedlingReservation] = useState({
@@ -215,18 +217,13 @@ export default function OurCoffeeFarm() {
   }
 
   const makeSeedlingOrderUrl = () => {
-    const unitPrice = seedlingsProduct?.price == null
-      ? null
-      : seedlingQuantity > 1000
-        ? Math.round(seedlingsProduct.price * 0.95)
-        : seedlingsProduct.price
     const message = [
       'Hello Legacy Coffee! I would like to order coffee seedlings.',
       `Requested quantity: ${seedlingQuantity.toLocaleString()} seedlings`,
       `Varieties and quantities: ${seedlingType}`,
-      unitPrice == null ? 'Price: To be confirmed' : `Unit price: ${formatPrice(unitPrice)}`,
-      unitPrice == null ? '' : `Estimated total: ${formatPrice(unitPrice * seedlingQuantity)}`,
-    ].filter(Boolean).join('\n')
+      `Unit price: ${formatPrice(seedlingOrderUnitPrice)}`,
+      `Total price: ${formatPrice(seedlingOrderTotal)}`,
+    ].join('\n')
     return `https://wa.me/${farmWhatsApp}?text=${encodeURIComponent(message)}`
   }
 
@@ -474,14 +471,13 @@ export default function OurCoffeeFarm() {
                 </div>
                 <p className="text-center text-sm font-semibold text-brown">
                   Total selected: {seedlingQuantity.toLocaleString()} seedlings
-                  {seedlingsProduct?.price != null && (
-                    <>
-                      <br />
-                      {formatPrice(seedlingsProduct.price)} / seedling
-                    </>
+                  <br />
+                  {formatPrice(seedlingUnitPrice)} / seedling
+                  {seedlingQuantity > 1000 && (
+                    <span className="mt-1 block text-primary">5% bulk discount: {formatPrice(seedlingOrderUnitPrice)} each</span>
                   )}
-                  {seedlingsProduct?.price != null && seedlingQuantity > 1000 && (
-                    <span className="mt-1 block text-primary">5% bulk discount: {formatPrice(Math.round(seedlingsProduct.price * 0.95))} each</span>
+                  {seedlingQuantity > 0 && (
+                    <span className="mt-1 block">Total price: {formatPrice(seedlingOrderTotal)}</span>
                   )}
                 </p>
               </div>
