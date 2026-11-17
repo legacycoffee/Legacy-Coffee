@@ -475,8 +475,12 @@ export default function OurCoffeeFarm() {
                 </div>
                 <p className="text-center text-sm font-semibold text-brown">
                   Total selected: {seedlingQuantity.toLocaleString()} seedlings
-                  <br />
-                  {seedlingsProduct?.price == null ? 'Price on request' : `${formatPrice(seedlingsProduct.price)} / seedling`}
+                  {seedlingsProduct?.price != null && (
+                    <>
+                      <br />
+                      {formatPrice(seedlingsProduct.price)} / seedling
+                    </>
+                  )}
                   {seedlingsProduct?.price != null && seedlingQuantity > 1000 && (
                     <span className="mt-1 block text-primary">5% bulk discount: {formatPrice(Math.round(seedlingsProduct.price * 0.95))} each</span>
                   )}
@@ -493,9 +497,7 @@ export default function OurCoffeeFarm() {
                     ? 'Loading product…'
                     : !seedlingQuantity
                       ? 'Choose seedling quantities'
-                      : seedlingsProduct?.price == null
-                        ? 'Order via WhatsApp · Price on request'
-                        : `Order via WhatsApp · ${formatPrice(seedlingsProduct.price * seedlingQuantity * (seedlingQuantity > 1000 ? 0.95 : 1))}`}
+                      : 'Order via WhatsApp'}
                 </button>
                 <button
                   type="button"
