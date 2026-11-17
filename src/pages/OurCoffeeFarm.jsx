@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react'
 import { LuChevronDown } from 'react-icons/lu'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { apiRequest } from '../context/api.js'
-import { useCart } from '../context/useCart.js'
 import useProducts from '../hooks/useProducts.js'
 import { formatPrice } from '../data/products.js'
 import { formatSeedlingVarieties, seedlingVarieties } from '../utils/seedlings.js'
 
-const farmEmail = 'info@legacycoffee.org'
 const farmWhatsApp = '256789069263'
 
 const tourActivities = [
@@ -126,8 +124,6 @@ function FarmImageSlider() {
 
 export default function OurCoffeeFarm() {
   const { products, isLoading: isProductsLoading } = useProducts()
-  const { addToCart, items: cartItems } = useCart()
-  const navigate = useNavigate()
   const seedlingsProduct = products.find(product => product.id === 'coffee-seedlings')
   const [seedlingQuantities, setSeedlingQuantities] = useState(() => Object.fromEntries(
     seedlingVarieties.flatMap(group => group.varieties.map(variety => [`${group.type} - ${variety}`, ''])),
@@ -141,22 +137,15 @@ export default function OurCoffeeFarm() {
   )
   const seedlingQuantity = Object.values(selectedSeedlingVarieties).reduce((total, quantity) => total + quantity, 0)
   const seedlingType = formatSeedlingVarieties(selectedSeedlingVarieties)
-  const seedlingsInCart = cartItems
-    .filter(item => item.id === 'coffee-seedlings')
-    .reduce((total, item) => total + item.quantity, 0)
-  const remainingSeedlingCapacity = Math.max(0, 32767 - seedlingsInCart)
   const [seedlingReservationOpen, setSeedlingReservationOpen] = useState(false)
   const [seedlingReservation, setSeedlingReservation] = useState({
     name: '',
-    email: '',
     phone: '',
     quantity: '1',
     seedlingType: '',
     message: '',
   })
   const [seedlingReservationError, setSeedlingReservationError] = useState('')
-  const [seedlingReservationSubmitting, setSeedlingReservationSubmitting] = useState(false)
-  const [seedlingReservationSubmitted, setSeedlingReservationSubmitted] = useState(false)
   const [reservationOpen, setReservationOpen] = useState(false)
   const [reservationError, setReservationError] = useState('')
   const [reservationSubmitting, setReservationSubmitting] = useState(false)
@@ -226,48 +215,38 @@ export default function OurCoffeeFarm() {
   }
 
   const handleSeedlingBuy = () => {
-    if (!seedlingsProduct || seedlingsProduct.price == null || !seedlingQuantity) return
-    addToCart({
-      ...seedlingsProduct,
-      seedling_type: seedlingType,
-      seedling_varieties: selectedSeedlingVarieties,
-    }, seedlingQuantity)
-    navigate('/cart')
+    if (!seedlingsProduct || !seedlingQuantity) return
+    const unitPrice = seedlingsProduct.price == null
+      ? null
+      : seedlingQuantity > 1000
+        ? Math.round(seedlingsProduct.price * 0.95)
+        : seedlingsProduct.price
+    const message = [
+      'Hello Legacy Coffee! I would like to order coffee seedlings.',
+      `Requested quantity: ${seedlingQuantity.toLocaleString()} seedlings`,
+      `Varieties and quantities: ${seedlingType}`,
+      unitPrice == null ? 'Price: To be confirmed' : `Unit price: ${formatPrice(unitPrice)}`,
+      unitPrice == null ? '' : `Estimated total: ${formatPrice(unitPrice * seedlingQuantity)}`,
+    ].filter(Boolean).join('\n')
+    window.location.assign(`https://wa.me/${farmWhatsApp}?text=${encodeURIComponent(message)}`)
   }
 
-  const handleSeedlingReservation = async event => {
+  const handleSeedlingReservation = event => {
     event.preventDefault()
     setSeedlingReservationError('')
     if (!seedlingQuantity) {
       setSeedlingReservationError('Choose a quantity for at least one seedling variety.')
       return
     }
-    setSeedlingReservationSubmitting(true)
-
-    try {
-      await apiRequest('/inquiries/', {
-        method: 'POST',
-        body: {
-          kind: 'seedling_reservation',
-          name: seedlingReservation.name,
-          email: seedlingReservation.email,
-          phone: seedlingReservation.phone,
-          product: 'Coffee seedlings',
-          quantity: seedlingReservation.quantity,
-          subject: 'Coffee seedling reservation',
-          message: [
-            `Requested quantity: ${seedlingReservation.quantity} seedlings`,
-            `Varieties and quantities: ${seedlingReservation.seedlingType}`,
-            seedlingReservation.message ? `Additional details: ${seedlingReservation.message}` : '',
-          ].filter(Boolean).join('\n'),
-        },
-      })
-      setSeedlingReservationSubmitted(true)
-    } catch (error) {
-      setSeedlingReservationError(error.message)
-    } finally {
-      setSeedlingReservationSubmitting(false)
-    }
+    const message = [
+      'Hello Legacy Coffee! I would like to reserve coffee seedlings.',
+      `Name: ${seedlingReservation.name}`,
+      `Phone: ${seedlingReservation.phone}`,
+      `Requested quantity: ${seedlingReservation.quantity} seedlings`,
+      `Varieties and quantities: ${seedlingReservation.seedlingType}`,
+      seedlingReservation.message ? `Additional details: ${seedlingReservation.message}` : '',
+    ].filter(Boolean).join('\n')
+    window.location.assign(`https://wa.me/${farmWhatsApp}?text=${encodeURIComponent(message)}`)
   }
 
   const makeWhatsAppUrl = packageTitle => {
@@ -461,7 +440,7 @@ export default function OurCoffeeFarm() {
                                       1,
                                       Math.min(
                                         32767,
-                                        remainingSeedlingCapacity - seedlingQuantity + (Number.parseInt(seedlingQuantities[key], 10) || 0),
+                                        32767 - seedlingQuantity + (Number.parseInt(seedlingQuantities[key], 10) || 0),
                                       ),
                                     )}
                                     step="1"
@@ -473,7 +452,7 @@ export default function OurCoffeeFarm() {
                                         1,
                                         Math.min(
                                           32767,
-                                          remainingSeedlingCapacity - seedlingQuantity + (Number.parseInt(seedlingQuantities[key], 10) || 0),
+                                          32767 - seedlingQuantity + (Number.parseInt(seedlingQuantities[key], 10) || 0),
                                         ),
                                       )
                                       setSeedlingQuantities(current => ({
@@ -506,19 +485,24 @@ export default function OurCoffeeFarm() {
               <div className="mx-auto mt-6 grid w-full max-w-2xl gap-3 sm:grid-cols-2">
                 <button
                   type="button"
-                  disabled={isProductsLoading || !seedlingsProduct || seedlingsProduct.price == null || !seedlingQuantity || !remainingSeedlingCapacity}
+                  disabled={isProductsLoading || !seedlingsProduct || !seedlingQuantity}
                   onClick={handleSeedlingBuy}
                   className="min-h-12 rounded-full bg-primary px-6 py-3 font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isProductsLoading ? 'Loading product…' : seedlingsProduct?.price == null ? 'Price on request' : !remainingSeedlingCapacity ? 'Maximum seedlings already in cart' : !seedlingQuantity ? 'Choose seedling quantities' : `Buy · ${formatPrice(seedlingsProduct.price * seedlingQuantity * (seedlingQuantity > 1000 ? 0.95 : 1))}`}
+                  {isProductsLoading
+                    ? 'Loading product…'
+                    : !seedlingQuantity
+                      ? 'Choose seedling quantities'
+                      : seedlingsProduct?.price == null
+                        ? 'Order via WhatsApp · Price on request'
+                        : `Order via WhatsApp · ${formatPrice(seedlingsProduct.price * seedlingQuantity * (seedlingQuantity > 1000 ? 0.95 : 1))}`}
                 </button>
                 <button
                   type="button"
                   disabled={!seedlingQuantity}
                   onClick={() => {
-                    setSeedlingReservation({ name: '', email: '', phone: '', quantity: String(seedlingQuantity), seedlingType, message: '' })
+                    setSeedlingReservation({ name: '', phone: '', quantity: String(seedlingQuantity), seedlingType, message: '' })
                     setSeedlingReservationError('')
-                    setSeedlingReservationSubmitted(false)
                     setSeedlingReservationOpen(true)
                   }}
                   className="min-h-12 rounded-full border border-primary px-6 py-3 font-bold text-primary transition-colors hover:bg-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
@@ -703,104 +687,79 @@ export default function OurCoffeeFarm() {
                 <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-primary">Coffee Seedlings</p>
                 <h2 id="seedling-reservation-title" className="mb-3 text-3xl font-black text-brown md:text-4xl">Make a Reservation</h2>
                 <p className="text-sm leading-relaxed text-brown/70">
-                  Submit your request and it will be emailed directly to {farmEmail}.
+                  Continue to WhatsApp to review and send your seedling reservation request.
                 </p>
               </div>
 
-              {seedlingReservationSubmitted ? (
-                <div role="status" className="rounded-2xl bg-white p-8 text-center shadow-sm">
-                  <p className="text-4xl" aria-hidden="true">✓</p>
-                  <h3 className="mt-3 text-xl font-bold text-brown">Reservation request received</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-brown/70">
-                    Your request for {seedlingReservation.quantity} seedlings has been received. Our team will be in touch.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setSeedlingReservationOpen(false)}
-                    className="mt-6 rounded-full bg-primary px-6 py-3 font-bold text-white transition-colors hover:bg-brown"
-                  >
-                    Done
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSeedlingReservation} className="space-y-4 rounded-2xl bg-white p-6 shadow-sm md:p-8">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="space-y-2 text-sm font-semibold text-brown">
-                      Your name
-                      <input
-                        required
-                        autoComplete="name"
-                        value={seedlingReservation.name}
-                        onChange={event => setSeedlingReservation({ ...seedlingReservation, name: event.target.value })}
-                        className="w-full rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
-                      />
-                    </label>
-                    <label className="space-y-2 text-sm font-semibold text-brown">
-                      Email address
-                      <input
-                        required
-                        type="email"
-                        autoComplete="email"
-                        value={seedlingReservation.email}
-                        onChange={event => setSeedlingReservation({ ...seedlingReservation, email: event.target.value })}
-                        className="w-full rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
-                      />
-                    </label>
-                    <label className="space-y-2 text-sm font-semibold text-brown">
-                      Phone number
-                      <input
-                        type="tel"
-                        autoComplete="tel"
-                        value={seedlingReservation.phone}
-                        onChange={event => setSeedlingReservation({ ...seedlingReservation, phone: event.target.value })}
-                        className="w-full rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
-                      />
-                    </label>
-                    <label className="space-y-2 text-sm font-semibold text-brown">
-                      Number of seedlings
-                      <input
-                        required
-                        type="number"
-                        min="1"
-                        max="32767"
-                        step="1"
-                        readOnly
-                        value={seedlingReservation.quantity}
-                        className="w-full rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
-                      />
-                    </label>
-                    <label className="space-y-2 text-sm font-semibold text-brown sm:col-span-2">
-                      Varieties and quantities
-                      <textarea
-                        required
-                        readOnly
-                        rows={3}
-                        value={seedlingReservation.seedlingType}
-                        className="w-full resize-y rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
-                      />
-                    </label>
-                  </div>
-                  <label className="block space-y-2 text-sm font-semibold text-brown">
-                    Additional details
+              <form onSubmit={handleSeedlingReservation} className="space-y-4 rounded-2xl bg-white p-6 shadow-sm md:p-8">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="space-y-2 text-sm font-semibold text-brown">
+                    Your name
+                    <input
+                      required
+                      autoComplete="name"
+                      value={seedlingReservation.name}
+                      onChange={event => setSeedlingReservation({ ...seedlingReservation, name: event.target.value })}
+                      className="w-full rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
+                    />
+                  </label>
+                  <label className="space-y-2 text-sm font-semibold text-brown">
+                    Phone number
+                    <input
+                      required
+                      type="tel"
+                      autoComplete="tel"
+                      value={seedlingReservation.phone}
+                      onChange={event => setSeedlingReservation({ ...seedlingReservation, phone: event.target.value })}
+                      className="w-full rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
+                    />
+                  </label>
+                  <label className="space-y-2 text-sm font-semibold text-brown">
+                    Number of seedlings
+                    <input
+                      required
+                      type="number"
+                      min="1"
+                      max="32767"
+                      step="1"
+                      readOnly
+                      value={seedlingReservation.quantity}
+                      className="w-full rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
+                    />
+                  </label>
+                  <label className="space-y-2 text-sm font-semibold text-brown sm:col-span-2">
+                    Varieties and quantities
                     <textarea
-                      rows={4}
-                      value={seedlingReservation.message}
-                      onChange={event => setSeedlingReservation({ ...seedlingReservation, message: event.target.value })}
+                      required
+                      readOnly
+                      rows={3}
+                      value={seedlingReservation.seedlingType}
                       className="w-full resize-y rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
                     />
                   </label>
-                  {seedlingReservationError && <p role="alert" className="text-sm text-red-700">{seedlingReservationError}</p>}
-                  <div>
-                    <button
-                      type="submit"
-                      disabled={seedlingReservationSubmitting}
-                      className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"
-                    >
-                      {seedlingReservationSubmitting ? 'Sending reservation…' : 'Send reservation request'}
-                    </button>
-                  </div>
-                </form>
-              )}
+                </div>
+                <label className="block space-y-2 text-sm font-semibold text-brown">
+                  Additional details
+                  <textarea
+                    rows={4}
+                    value={seedlingReservation.message}
+                    onChange={event => setSeedlingReservation({ ...seedlingReservation, message: event.target.value })}
+                    className="w-full resize-y rounded-lg border border-peach-mid px-4 py-3 font-normal outline-none focus:border-primary"
+                  />
+                </label>
+                {seedlingReservationError && <p role="alert" className="text-sm text-red-700">{seedlingReservationError}</p>}
+                <div>
+                  <button
+                    type="submit"
+                    className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brown focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    Continue to WhatsApp
+                  </button>
+                  <p className="mt-2 text-center text-xs text-brown/65">
+                    WhatsApp opens a prepared message. Send it there to submit your request.
+                  </p>
+                </div>
+              </form>
             </div>
           </section>
         </div>
