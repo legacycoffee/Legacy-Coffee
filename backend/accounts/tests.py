@@ -131,6 +131,8 @@ class AuthenticationApiTests(APITestCase):
             'email': 'new-customer@example.com',
             'email_verified': True,
             'sub': 'google-sub-123',
+            'given_name': 'New',
+            'family_name': 'Customer',
         }
 
         response = self.client.post('/api/auth/google/', {
@@ -140,6 +142,8 @@ class AuthenticationApiTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('token', response.data)
         self.assertEqual(response.data['user']['email'], 'new-customer@example.com')
+        self.assertEqual(response.data['user']['first_name'], 'New')
+        self.assertEqual(response.data['user']['last_name'], 'Customer')
         user = get_user_model().objects.get(email='new-customer@example.com')
         self.assertEqual(user.google_sub, 'google-sub-123')
         self.assertFalse(user.has_usable_password())
@@ -157,11 +161,14 @@ class AuthenticationApiTests(APITestCase):
             username='existing-customer',
             email='existing-customer@example.com',
             password='StrongPassword!2026',
+            first_name='Existing',
         )
         verify_token.return_value = {
             'email': 'existing-customer@example.com',
             'email_verified': True,
             'sub': 'google-sub-456',
+            'given_name': 'Google',
+            'family_name': 'Customer',
         }
 
         response = self.client.post('/api/auth/google/', {
@@ -172,7 +179,27 @@ class AuthenticationApiTests(APITestCase):
         self.assertEqual(response.data['user']['id'], str(user.public_id))
         user.refresh_from_db()
         self.assertEqual(user.google_sub, 'google-sub-456')
+        self.assertEqual(user.first_name, 'Existing')
+        self.assertEqual(user.last_name, 'Customer')
         self.assertTrue(user.check_password('StrongPassword!2026'))
+
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID='google-web-client-id')
+    @patch('accounts.google_auth.id_token.verify_oauth2_token')
+    def test_google_sign_in_uses_full_name_when_given_and_family_names_are_missing(self, verify_token):
+        verify_token.return_value = {
+            'email': 'full-name@example.com',
+            'email_verified': True,
+            'sub': 'google-sub-full-name',
+            'name': 'Coffee Customer',
+        }
+
+        response = self.client.post('/api/auth/google/', {
+            'credential': 'signed-google-id-token',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['user']['first_name'], 'Coffee')
+        self.assertEqual(response.data['user']['last_name'], 'Customer')
 
     @override_settings(GOOGLE_OAUTH_CLIENT_ID='google-web-client-id')
     @patch('accounts.google_auth.id_token.verify_oauth2_token')

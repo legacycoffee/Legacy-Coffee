@@ -43,4 +43,21 @@ def verify_google_credential(credential):
     ):
         raise GoogleCredentialInvalid
 
-    return {'email': email.strip().lower(), 'google_sub': subject}
+    first_name = claims.get('given_name')
+    last_name = claims.get('family_name')
+    first_name = first_name.strip() if isinstance(first_name, str) else ''
+    last_name = last_name.strip() if isinstance(last_name, str) else ''
+
+    if not first_name and not last_name:
+        full_name = claims.get('name')
+        if isinstance(full_name, str):
+            name_parts = full_name.strip().split(maxsplit=1)
+            first_name = name_parts[0] if name_parts else ''
+            last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+    return {
+        'email': email.strip().lower(),
+        'google_sub': subject,
+        'first_name': first_name[:150],
+        'last_name': last_name[:150],
+    }

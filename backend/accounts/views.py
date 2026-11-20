@@ -90,6 +90,8 @@ class GoogleSignInView(APIView):
                     email=identity['email'],
                     password=None,
                     google_sub=identity['google_sub'],
+                    first_name=identity['first_name'],
+                    last_name=identity['last_name'],
                 )
                 created = True
         elif not user.is_active:
@@ -98,6 +100,15 @@ class GoogleSignInView(APIView):
             raise serializers.ValidationError(
                 'Google sign-in is not enabled for administrator accounts.',
             )
+
+        if not created:
+            updated_name_fields = []
+            for field in ('first_name', 'last_name'):
+                if not getattr(user, field) and identity[field]:
+                    setattr(user, field, identity[field])
+                    updated_name_fields.append(field)
+            if updated_name_fields:
+                user.save(update_fields=updated_name_fields)
 
         if created:
             Notification.objects.create(
