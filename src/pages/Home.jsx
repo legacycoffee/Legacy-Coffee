@@ -46,6 +46,11 @@ function OurCoffeeSection() {
 export default function Home() {
   const { addToCart } = useCart()
   const { products, isLoading: isProductsLoading, error: productsError } = useProducts()
+  const homepageProducts = products.filter(product => ![
+    'coffee-seedlings',
+    'robusta-blend',
+    'single-origin-arabica',
+  ].includes(product.id))
   const [addedProduct, setAddedProduct] = useState('')
   const [currentHeroImage, setCurrentHeroImage] = useState(0)
 
@@ -139,17 +144,17 @@ export default function Home() {
               <h2 className="text-2xl font-bold text-brown sm:text-3xl">Order your favorite coffee</h2>
             </div>
           </div>
-          {isProductsLoading && products.length === 0 ? (
+          {isProductsLoading && homepageProducts.length === 0 ? (
             <p role="status" className="text-center text-sm text-brown/70">Loading products…</p>
-          ) : productsError && products.length === 0 ? (
+          ) : productsError && homepageProducts.length === 0 ? (
             <p role="alert" className="mb-5 text-center text-sm text-red-700">Could not load products: {productsError}</p>
-          ) : products.length === 0 ? (
+          ) : homepageProducts.length === 0 ? (
             <p className="text-center text-sm text-brown/70">No products are currently available.</p>
           ) : (
             <>
               {isProductsLoading && <p role="status" className="mb-4 text-center text-xs text-brown/60">Loading the latest catalog…</p>}
               <div id="product-list" className="mx-auto grid max-w-5xl scroll-mt-24 grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 lg:gap-6">
-                {products.map(product => (
+                {homepageProducts.map(product => (
                   <article key={product.id} className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-peach-mid/40 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
                   <Link to={getProductUrl(product)} aria-label={`View ${product.name}`} className="flex flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary">
                     <div className="relative block aspect-[4/3] w-full overflow-hidden bg-peach-light">
