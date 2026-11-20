@@ -1,4 +1,5 @@
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
@@ -244,10 +245,19 @@ class OrderApiTests(APITestCase):
         self.client.post('/api/orders/', self.payload, format='json')
         order = Order.objects.get()
 
-        order.status = Order.Status.CONFIRMED
-        order.save()
-        order.status = Order.Status.FULFILLED
-        order.save()
+        with patch('accounts.email.send_order_status_email') as send_status_email:
+            with self.captureOnCommitCallbacks(execute=True) as callbacks:
+                order.status = Order.Status.CONFIRMED
+                order.save()
+                order.status = Order.Status.FULFILLED
+                order.save()
+
+        self.assertEqual(len(callbacks), 2)
+        self.assertEqual(send_status_email.call_count, 2)
+        self.assertEqual(
+            [call.args[1] for call in send_status_email.call_args_list],
+            ['Confirmed', 'Fulfilled'],
+        )
 
         notifications = list(
             Notification.objects.filter(user=self.user).order_by('created_at')
@@ -270,6 +280,24 @@ class OrderApiTests(APITestCase):
             and notification.details['items'][0]['image'] == self.product.image
             for notification in notifications
         ))
+
+    def test_guest_order_status_change_sends_email_to_order_contact(self):
+        order = Order.objects.create(
+            customer_name='Guest Customer',
+            customer_email='guest@example.com',
+            customer_phone='+256700000008',
+            delivery_address='1 Coffee Road',
+            delivery_city='Kampala',
+        )
+
+        with patch('accounts.email.send_order_status_email') as send_status_email:
+            with self.captureOnCommitCallbacks(execute=True) as callbacks:
+                order.status = Order.Status.CONFIRMED
+                order.save(update_fields=('status',))
+
+        self.assertEqual(len(callbacks), 1)
+        send_status_email.assert_called_once_with(order, 'Confirmed')
+        self.assertFalse(Notification.objects.exists())
 
     def test_order_rejects_invalid_quantity_and_duplicate_products(self):
         self.client.force_authenticate(self.user)

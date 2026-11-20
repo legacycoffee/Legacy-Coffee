@@ -16,6 +16,7 @@ from .google_auth import (
     GoogleProviderUnavailable,
     verify_google_credential,
 )
+from .email import send_welcome_email
 from .models import Notification
 from .serializers import (
     LoginSerializer,
@@ -117,6 +118,7 @@ class GoogleSignInView(APIView):
                 title='Welcome to Legacy Coffee',
                 message='Your account is ready. You can manage your profile, delivery location, and orders here.',
             )
+            transaction.on_commit(lambda: send_welcome_email(user))
         Notification.objects.create(
             user=user,
             kind=Notification.Kind.SIGN_IN,
@@ -143,6 +145,7 @@ class RegisterView(generics.CreateAPIView):
             title='Welcome to Legacy Coffee',
             message='Your account is ready. You can manage your profile, delivery location, and orders here.',
         )
+        transaction.on_commit(lambda: send_welcome_email(user))
         return Response(
             {'token': token.key, 'user': UserSerializer(user).data},
             status=status.HTTP_201_CREATED,

@@ -13,6 +13,7 @@ from django.test import override_settings
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
+from accounts.email import send_order_status_email, send_welcome_email
 from accounts.services import upload_profile_photo
 from accounts.models import Notification
 from orders.models import Order
@@ -120,6 +121,89 @@ class CloudinaryUploadTests(SimpleTestCase):
         self.assertIn(f'name="signature"\r\n\r\n{expected_signature}', request_body)
 
 
+class TransactionalEmailTests(SimpleTestCase):
+    @override_settings(
+        RESEND_API_KEY='re_test_key',
+        NEWSLETTER_FROM_EMAIL='Legacy Coffee <orders@example.com>',
+    )
+    @patch('accounts.email.urlopen')
+    def test_welcome_email_uses_resend_configuration(self, urlopen):
+        response = urlopen.return_value.__enter__.return_value
+        response.status = 200
+        user = type('UserStub', (), {
+            'pk': 12,
+            'email': 'customer@example.com',
+            'first_name': 'Coffee',
+        })()
+
+        self.assertTrue(send_welcome_email(user))
+
+        request = urlopen.call_args.args[0]
+        self.assertEqual(request.full_url, 'https://api.resend.com/emails')
+        self.assertEqual(request.get_header('Authorization'), 'Bearer re_test_key')
+        payload = json.loads(request.data)
+        self.assertEqual(payload['from'], 'Legacy Coffee <orders@example.com>')
+        self.assertEqual(payload['to'], ['customer@example.com'])
+        self.assertEqual(payload['subject'], 'Welcome to Legacy Coffee')
+        self.assertIn('Hello Coffee', payload['text'])
+
+    @override_settings(
+        RESEND_API_KEY='re_test_key',
+        NEWSLETTER_FROM_EMAIL='orders@example.com',
+    )
+    @patch('accounts.email.urlopen')
+    def test_order_status_email_sends_to_order_and_registered_addresses_once(self, urlopen):
+        response = urlopen.return_value.__enter__.return_value
+        response.status = 200
+        user = type('UserStub', (), {'email': 'account@example.com'})()
+        order = type('OrderStub', (), {
+            'customer_email': 'customer@example.com',
+            'customer_name': 'Coffee Customer',
+            'reference': 'LC-123456789',
+            'user_id': 3,
+            'user': user,
+        })()
+
+        self.assertTrue(send_order_status_email(order, 'Confirmed'))
+
+        self.assertEqual(urlopen.call_count, 2)
+        payloads = [
+            json.loads(call.args[0].data)
+            for call in urlopen.call_args_list
+        ]
+        self.assertEqual(
+            [payload['to'] for payload in payloads],
+            [['customer@example.com'], ['account@example.com']],
+        )
+        self.assertTrue(all(
+            payload['subject'] == 'Order LC-123456789: Confirmed'
+            and 'Current status: Confirmed.' in payload['text']
+            for payload in payloads
+        ))
+
+    @override_settings(
+        RESEND_API_KEY='re_test_key',
+        NEWSLETTER_FROM_EMAIL='orders@example.com',
+    )
+    @patch('accounts.email.urlopen')
+    def test_order_status_email_deduplicates_matching_addresses(self, urlopen):
+        response = urlopen.return_value.__enter__.return_value
+        response.status = 200
+        user = type('UserStub', (), {'email': 'Customer@example.com'})()
+        order = type('OrderStub', (), {
+            'customer_email': 'customer@example.com',
+            'customer_name': 'Coffee Customer',
+            'reference': 'LC-123456789',
+            'user_id': 3,
+            'user': user,
+        })()
+
+        self.assertTrue(send_order_status_email(order, 'Fulfilled'))
+
+        payload = json.loads(urlopen.call_args.args[0].data)
+        self.assertEqual(payload['to'], ['customer@example.com'])
+
+
 class AuthenticationApiTests(APITestCase):
     def setUp(self):
         cache.clear()
@@ -135,11 +219,15 @@ class AuthenticationApiTests(APITestCase):
             'family_name': 'Customer',
         }
 
-        response = self.client.post('/api/auth/google/', {
-            'credential': 'signed-google-id-token',
-        })
+        with patch('accounts.views.send_welcome_email') as send_welcome_email:
+            with self.captureOnCommitCallbacks(execute=True) as callbacks:
+                response = self.client.post('/api/auth/google/', {
+                    'credential': 'signed-google-id-token',
+                })
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(callbacks), 1)
+        send_welcome_email.assert_called_once()
         self.assertIn('token', response.data)
         self.assertEqual(response.data['user']['email'], 'new-customer@example.com')
         self.assertEqual(response.data['user']['first_name'], 'New')
@@ -252,20 +340,24 @@ class AuthenticationApiTests(APITestCase):
         verify_token.assert_not_called()
 
     def test_registration_creates_token_and_user(self):
-        response = self.client.post('/api/auth/register/', {
-            'username': 'coffee-customer',
-            'email': 'customer@example.com',
-            'phone': '+256700000001',
-            'password': 'StrongPassword!2026',
-            'confirm_password': 'StrongPassword!2026',
-            'first_name': 'Coffee',
-            'delivery_address': '1 Coffee Road',
-            'delivery_city': 'Kampala',
-            'location_latitude': '0.347600',
-            'location_longitude': '32.582500',
-        })
+        with patch('accounts.views.send_welcome_email') as send_welcome_email:
+            with self.captureOnCommitCallbacks(execute=True) as callbacks:
+                response = self.client.post('/api/auth/register/', {
+                    'username': 'coffee-customer',
+                    'email': 'customer@example.com',
+                    'phone': '+256700000001',
+                    'password': 'StrongPassword!2026',
+                    'confirm_password': 'StrongPassword!2026',
+                    'first_name': 'Coffee',
+                    'delivery_address': '1 Coffee Road',
+                    'delivery_city': 'Kampala',
+                    'location_latitude': '0.347600',
+                    'location_longitude': '32.582500',
+                })
 
         self.assertEqual(response.status_code, 201)
+        self.assertEqual(len(callbacks), 1)
+        send_welcome_email.assert_called_once()
         self.assertIn('token', response.data)
         self.assertEqual(response.data['user']['email'], 'customer@example.com')
         self.assertEqual(response.data['user']['phone'], '+256700000001')

@@ -34,3 +34,7 @@ services:
         value: https://legacycoffee.substack.com
       - key: GOOGLE_OAUTH_CLIENT_ID
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: NEWSLETTER_FROM_EMAIL
+        sync: false
