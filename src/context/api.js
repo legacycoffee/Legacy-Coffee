@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://legacy-coffee-backend.onrender.com/api'
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-44is.onrender.com/api'
 
 export async function apiRequest(path, { method = 'GET', body, token } = {}) {
   const isFormData = body instanceof FormData
