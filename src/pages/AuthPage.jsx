@@ -80,17 +80,18 @@ export default function AuthPage({ mode }) {
     const googleButton = googleButtonRef.current
     loadGoogleIdentityServices()
       .then(googleIdentity => {
-        if (!isCurrent || !googleButtonRef.current) return
+        if (!isCurrent || !googleButton) return
         googleIdentity.initialize({
           client_id: GOOGLE_CLIENT_ID,
           callback: handleGoogleSignIn,
           auto_select: false,
         })
-        googleIdentity.renderButton(googleButtonRef.current, {
+        googleIdentity.renderButton(googleButton, {
           theme: 'outline',
           size: 'large',
           text: isSignUp ? 'signup_with' : 'signin_with',
           shape: 'rectangular',
+          width: Math.min(googleButton.clientWidth, 400),
         })
       })
       .catch(loadError => {
@@ -209,7 +210,7 @@ export default function AuthPage({ mode }) {
             </p>
           </div>
 
-          <form onSubmit={passwordSetupRequired ? handleAdminPasswordSetup : handleSubmit} className="mt-6 space-y-4">
+          <form onSubmit={passwordSetupRequired ? handleAdminPasswordSetup : handleSubmit} className="mx-auto mt-6 w-full max-w-[400px] space-y-4">
             {isSignUp && (
               <>
                 <label className="block text-sm font-medium text-black" htmlFor="signup-first-name">
@@ -311,7 +312,7 @@ export default function AuthPage({ mode }) {
           {!passwordSetupRequired && GOOGLE_CLIENT_ID && (
             <div className={`mt-5 border-t border-peach-mid/40 pt-5 ${isSubmitting ? 'pointer-events-none opacity-60' : ''}`}>
               <p className="mb-4 text-center text-xs font-medium uppercase tracking-wide text-black/50">Or continue with</p>
-              <div ref={googleButtonRef} className="flex justify-center" />
+              <div ref={googleButtonRef} className="mx-auto w-full max-w-[400px]" />
             </div>
           )}
 
