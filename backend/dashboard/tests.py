@@ -233,9 +233,10 @@ class DashboardApiTests(APITestCase):
 
         self.client.force_authenticate(self.staff)
         counts_response = self.client.get('/api/dashboard/data/')
+        product_count = Product.objects.count()
 
         self.assertEqual(counts_response.status_code, 200)
-        self.assertEqual(counts_response.data['products'], 1)
+        self.assertEqual(counts_response.data['products'], product_count)
         self.assertEqual(counts_response.data['orders'], 1)
         self.assertEqual(counts_response.data['notifications'], 1)
         self.assertEqual(counts_response.data['requests'], 1)
@@ -253,7 +254,12 @@ class DashboardApiTests(APITestCase):
             )
             self.assertEqual(response.status_code, 200, category)
             self.assertEqual(response.data['category'], category)
-            expected_deleted = 2 if category in ('newsletters', 'analytics') else 1
+            if category == 'products':
+                expected_deleted = product_count
+            elif category in ('newsletters', 'analytics'):
+                expected_deleted = 2
+            else:
+                expected_deleted = 1
             self.assertEqual(response.data['deleted_count'], expected_deleted)
             if category == 'products':
                 self.assertIsNone(OrderItem.objects.get(order=order).product_id)
