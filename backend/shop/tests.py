@@ -33,8 +33,39 @@ class SeedProductsCommandTests(APITestCase):
         self.assertEqual(existing_product.name, 'Custom product name')
         self.assertTrue(Product.objects.filter(slug='single-origin-arabica').exists())
         self.assertTrue(Product.objects.get(slug='coffee-seedlings').is_active)
-        self.assertEqual(Product.objects.count(), 5)
+        self.assertEqual(Product.objects.count(), 7)
         self.assertIn('Skipped: robusta-blend', output.getvalue())
+
+    def test_homepage_products_migration_updates_250g_and_adds_other_sizes(self):
+        coffee = Product.objects.get(slug='roasted-ground-coffee')
+        original_public_id = coffee.public_id
+        coffee.name = 'Customized coffee listing'
+        coffee.save(update_fields=('name',))
+        Product.objects.filter(slug__in=('legacy-coffee-500g', 'legacy-coffee-1kg')).delete()
+        migration = import_module('shop.migrations.0011_sync_homepage_coffee_products')
+        schema_editor = SimpleNamespace(connection=SimpleNamespace(alias='default'))
+
+        migration.sync_homepage_coffee_products(apps, schema_editor)
+
+        coffee.refresh_from_db()
+        self.assertEqual(coffee.public_id, original_public_id)
+        self.assertEqual(coffee.name, 'Legacy Coffee')
+        self.assertEqual(coffee.weight, '250g')
+        self.assertEqual(coffee.price, 15000)
+        self.assertTrue(coffee.is_active)
+        self.assertEqual(
+            set(Product.objects.filter(name='Legacy Coffee').values_list('weight', flat=True)),
+            {'250g', '500g', '1 Kg'},
+        )
+        self.assertTrue(Product.objects.filter(slug='coffee-seedlings').exists())
+        self.assertEqual(Product.objects.count(), 4)
+        response = self.client.get('/api/shop/products/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue({
+            'roasted-ground-coffee',
+            'legacy-coffee-500g',
+            'legacy-coffee-1kg',
+        }.issubset({product['id'] for product in response.data['results']}))
 
     def test_skip_existing_reactivates_customized_coffee_seedlings(self):
         seedlings = Product.objects.get(slug='coffee-seedlings')
