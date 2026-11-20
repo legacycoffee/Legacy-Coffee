@@ -88,7 +88,7 @@ export default function AuthPage({ mode }) {
         googleIdentity.renderButton(googleButtonRef.current, {
           theme: 'outline',
           size: 'large',
-          text: 'continue_with',
+          text: isSignUp ? 'signup_with' : 'signin_with',
           shape: 'rectangular',
         })
       })
@@ -100,7 +100,7 @@ export default function AuthPage({ mode }) {
       isCurrent = false
       googleButton?.replaceChildren()
     }
-  }, [handleGoogleSignIn, isAuthenticated, passwordSetupRequired])
+  }, [handleGoogleSignIn, isAuthenticated, isSignUp, passwordSetupRequired])
 
   if (isAuthenticated) {
     return <Navigate to={authenticatedDestination} replace />
