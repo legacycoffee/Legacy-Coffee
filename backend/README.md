@@ -78,5 +78,5 @@ Wishlist items are private to the signed-in account. Product share events record
 
 Customers can submit one review per product only after an order containing that product has been marked fulfilled. Pending or confirmed order requests do not qualify.
 
-The React storefront has sign-in and sign-up pages and submits authenticated order requests to this API. The cart and product catalog still use localStorage and local product data. Set `VITE_API_URL` in the frontend environment to override the default `http://127.0.0.1:8000/api` API URL.
+The React storefront has sign-in and sign-up pages and submits authenticated order requests to this API. The cart and product catalog still use localStorage and local product data. The frontend defaults to `https://legacy-coffee-backend.onrender.com/api`; set `VITE_API_URL=http://127.0.0.1:8000/api` for local development or use another URL to override it.
 Account notifications are created for new-account welcome messages, successful sign-ins, order submissions, and order status changes to confirmed, fulfilled, or cancelled. Order notifications include a snapshot of the customer, delivery details, total, and ordered items with product images, names, quantities, and prices. Each account can access only its own notifications; opening a notification marks it as read.
