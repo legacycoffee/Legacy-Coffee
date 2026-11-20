@@ -74,6 +74,13 @@ const fixedSeoPages = [
     imageAlt: 'Coffee farm in Uganda',
   },
   {
+    path: '/blog',
+    title: 'Legacy Coffee Blog | Stories from Ugandan Coffee',
+    description: 'Read Legacy Coffee stories, coffee farm updates, and news from our Substack publication.',
+    image: defaultImage,
+    imageAlt: 'Legacy Coffee stories from Uganda',
+  },
+  {
     path: '/privacy',
     title: 'Privacy Policy | Legacy Coffee',
     description: 'Read how Legacy Coffee collects, uses, and protects personal information when you use our website and services.',

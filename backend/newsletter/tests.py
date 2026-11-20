@@ -1,6 +1,8 @@
 import json
 from unittest.mock import patch
+from urllib.error import URLError
 
+from django.core.cache import cache
 from django.test import override_settings
 from django.core import signing
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -13,6 +15,20 @@ from .services import ResendDeliveryError, sanitize_newsletter_html, send_resend
 
 
 class NewsletterApiTests(APITestCase):
+    def setUp(self):
+        cache.clear()
+        self.staff = User.objects.create_user(
+            username='newsletter-admin',
+            email='staff@example.com',
+            password='StrongPassword!2026',
+            is_staff=True,
+        )
+        self.customer = User.objects.create_user(
+            username='newsletter-customer',
+            email='customer@example.com',
+            password='StrongPassword!2026',
+        )
+
     def test_subscribe_is_idempotent(self):
         payload = {'email': 'reader@example.com'}
         self.assertEqual(self.client.post('/api/newsletter/subscribe/', payload).status_code, 201)
@@ -65,18 +81,59 @@ class NewsletterApiTests(APITestCase):
         self.assertNotIn('<script>', response.data[0]['content_html'])
         self.assertNotIn('recipient_count', response.data[0])
 
-    def setUp(self):
-        self.staff = User.objects.create_user(
-            username='newsletter-admin',
-            email='staff@example.com',
-            password='StrongPassword!2026',
-            is_staff=True,
-        )
-        self.customer = User.objects.create_user(
-            username='newsletter-customer',
-            email='customer@example.com',
-            password='StrongPassword!2026',
-        )
+    @patch('newsletter.substack.urlopen')
+    def test_substack_posts_returns_publication_entries_and_caches_feed(self, urlopen_mock):
+        response = urlopen_mock.return_value.__enter__.return_value
+        response.read.return_value = b'''<?xml version="1.0"?>
+            <rss version="2.0">
+              <channel>
+                <item>
+                  <title><![CDATA[Coffee harvest update]]></title>
+                  <link>https://legacycoffee.substack.com/p/harvest-update</link>
+                  <guid>harvest-update</guid>
+                  <pubDate>Fri, 20 Nov 2026 12:00:00 GMT</pubDate>
+                  <description><![CDATA[<p>Fresh coffee from <strong>Uganda</strong>.</p>
+                    <img src="https://substackcdn.com/image.jpg">]]></description>
+                </item>
+              </channel>
+            </rss>'''
+
+        first_response = self.client.get('/api/newsletter/substack-posts/')
+        second_response = self.client.get('/api/newsletter/substack-posts/')
+
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(first_response['Cache-Control'], 'public, max-age=900')
+        self.assertEqual(first_response.data[0]['title'], 'Coffee harvest update')
+        self.assertEqual(first_response.data[0]['url'], 'https://legacycoffee.substack.com/p/harvest-update')
+        self.assertEqual(first_response.data[0]['excerpt'], 'Fresh coffee from Uganda.')
+        self.assertEqual(first_response.data[0]['image_url'], 'https://substackcdn.com/image.jpg')
+        self.assertEqual(second_response.data, first_response.data)
+        urlopen_mock.assert_called_once()
+
+    @patch('newsletter.substack.urlopen')
+    def test_substack_posts_returns_an_empty_list_before_first_publication(self, urlopen_mock):
+        response = urlopen_mock.return_value.__enter__.return_value
+        response.read.return_value = b'<rss version="2.0"><channel></channel></rss>'
+
+        response = self.client.get('/api/newsletter/substack-posts/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [])
+
+    @override_settings(SUBSTACK_PUBLICATION_URL='https://legacycoffee.substack.com')
+    @patch('newsletter.substack.urlopen', side_effect=URLError('Substack is unavailable'))
+    def test_substack_feed_failure_returns_a_gateway_error(self, _urlopen_mock):
+        response = self.client.get('/api/newsletter/substack-posts/')
+
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(response.data['detail'], 'The Substack feed is temporarily unavailable.')
+
+    @override_settings(SUBSTACK_PUBLICATION_URL='https://example.com')
+    def test_substack_feed_rejects_non_substack_urls(self):
+        response = self.client.get('/api/newsletter/substack-posts/')
+
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(response.data['detail'], 'The configured Substack publication URL is invalid.')
 
     def test_newsletter_dashboard_endpoints_are_staff_only(self):
         self.assertEqual(self.client.get('/api/dashboard/newsletters/').status_code, 401)

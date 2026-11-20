@@ -17,6 +17,7 @@ const navLinks = [
   { label: 'Our Coffee Farm', to: '/coffee-farm' },
   { label: 'Our Services', to: '/services' },
   { label: 'About Us', to: '/about' },
+  { label: 'Blog', to: '/blog' },
 ]
 
 const pagePreloaders = {
@@ -24,6 +25,7 @@ const pagePreloaders = {
   '/coffee-farm': () => import('../pages/OurCoffeeFarm'),
   '/services': () => import('../pages/OurServices'),
   '/about': () => import('../pages/AboutUs'),
+  '/blog': () => import('../pages/Blog.jsx'),
 }
 
 function preloadPage(path) {

@@ -8,6 +8,7 @@ const menuLinks = [
   { label: 'Our Coffee Farm', to: '/coffee-farm' },
   { label: 'Our Services', to: '/services' },
   { label: 'About Us', to: '/about' },
+  { label: 'Blog', to: '/blog' },
   { label: 'Wholesale', to: '/wholesale' },
   { label: 'Contact Us', to: '/contact' },
   { label: 'Newsletter', to: '/newsletter' },

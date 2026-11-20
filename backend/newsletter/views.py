@@ -19,6 +19,7 @@ from .dashboard_serializers import NewsletterSerializer
 from .models import Newsletter, Subscriber
 from .serializers import PublicNewsletterSerializer, SubscribeSerializer
 from .services import ResendConfigurationError, ResendDeliveryError, send_resend_batch
+from .substack import get_substack_posts
 
 
 class NewsletterConflict(APIException):
@@ -71,6 +72,15 @@ class PublicNewsletterListView(APIView):
         serializer = PublicNewsletterSerializer(newsletters, many=True)
         response = Response(serializer.data)
         response['Cache-Control'] = 'no-store'
+        return response
+
+
+class SubstackPostsView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        response = Response(get_substack_posts())
+        response['Cache-Control'] = 'public, max-age=900'
         return response
 
 

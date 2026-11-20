@@ -18,6 +18,7 @@ const AboutUs = lazy(() => import('./pages/AboutUs'))
 const WholesalePage = lazy(() => import('./pages/WholesalePage'))
 const ContactUs = lazy(() => import('./pages/ContactUs'))
 const Newsletter = lazy(() => import('./pages/Newsletter'))
+const Blog = lazy(() => import('./pages/Blog.jsx'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 const ProductPage = lazy(() => import('./pages/ProductPage'))
 const ReviewPage = lazy(() => import('./pages/ReviewPage.jsx'))
@@ -127,6 +128,7 @@ export default function App() {
               <Route path="/confirm" element={<Layout><ConfirmationPage /></Layout>} />
               <Route path="/wholesale" element={<Layout><WholesalePage /></Layout>} />
               <Route path="/contact" element={<Layout><ContactUs /></Layout>} />
+              <Route path="/blog" element={<Layout><Blog /></Layout>} />
               <Route path="/newsletter" element={<Layout><Newsletter /></Layout>} />
               <Route path="/privacy" element={<Layout><PrivacyPolicy /></Layout>} />
               <Route path="/terms-and-conditions" element={<Layout><TermsAndConditions /></Layout>} />

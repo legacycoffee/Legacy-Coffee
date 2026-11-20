@@ -13,6 +13,7 @@ The backend is a standalone repository at `legacycoffee/backend`. Its root conta
 5. Deploy. The build installs requirements and collects static files. On startup, the service runs migrations against Neon, optionally creates an initial admin when configured, seeds missing starter products, and starts Gunicorn. Render's health check uses `/api/health/`.
 6. To create the initial admin automatically, set `INITIAL_ADMIN_EMAIL`, `INITIAL_ADMIN_USERNAME`, and `INITIAL_ADMIN_PASSWORD` in the Render service variables before deploying. Use a strong password. Once the first superuser exists, later starts leave it unchanged; remove `INITIAL_ADMIN_PASSWORD` after successful creation. Alternatively, create an admin from the Render Shell with `python manage.py createsuperuser`.
 7. For profile and product image uploads, set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`. For newsletter delivery and reservation notifications, set `RESEND_API_KEY` and `NEWSLETTER_FROM_EMAIL` (the sender must be verified in Resend). Set `NEWSLETTER_PUBLIC_URL` if the frontend URL differs from `https://legacycoffee.github.io/Legacy-Coffee`.
+8. The `/blog` page reads the public Substack RSS feed from `SUBSTACK_PUBLICATION_URL` (defaults to `https://legacycoffee.substack.com`). Publish posts in Substack; the website refreshes its cached feed every 15 minutes. The public Substack subscription link is shown on the Blog page.
 
 The GitHub Pages workflow builds the frontend with `VITE_API_URL=https://api.legacycoffee.org/api`. Render's filesystem is ephemeral; keep production data in Neon, not SQLite. Do not commit database URLs or other secrets.
 
@@ -54,6 +55,7 @@ Create the first staff superuser from the backend environment with `py backend\m
 ## API routes
 
 - `GET /api/health/`
+- `GET /api/newsletter/substack-posts/` (public, cached list of published Substack posts)
 - `POST /api/auth/register/`, `POST /api/auth/login/`, `POST /api/auth/logout/`, `GET|PATCH /api/auth/me/`
 - `POST /api/auth/admin-password-setup/` (public setup endpoint; verifies a newly created admin's temporary password, then issues an auth token only after a validated new password is set)
 - `POST /api/auth/profile-photo/` (authenticated multipart upload; stores the image in Cloudinary)

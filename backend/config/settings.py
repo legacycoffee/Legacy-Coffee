@@ -131,6 +131,10 @@ NEWSLETTER_PUBLIC_URL = os.environ.get(
     'NEWSLETTER_PUBLIC_URL',
     'https://legacycoffee.github.io/Legacy-Coffee',
 ).rstrip('/')
+SUBSTACK_PUBLICATION_URL = os.environ.get(
+    'SUBSTACK_PUBLICATION_URL',
+    'https://legacycoffee.substack.com',
+).rstrip('/')
 
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
