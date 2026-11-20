@@ -13,39 +13,37 @@ from .models import Product, Review, ShareEvent, WishlistItem
 
 class SeedProductsCommandTests(APITestCase):
     def test_skip_existing_seeds_missing_products_without_overwriting_existing(self):
-        existing_product = Product.objects.create(
-            slug='robusta-blend',
-            name='Custom product name',
-            weight='500g',
-            price=25000,
-            description='Custom description.',
-            details='Custom details.',
-            tasting_notes='Custom notes.',
-            roast='Dark roast',
-            image='https://example.com/custom.jpg',
-            image_alt='Custom coffee',
-        )
+        existing_product = Product.objects.get(slug='legacy-coffee-500g')
+        existing_product.name = 'Custom product name'
+        existing_product.save(update_fields=('name',))
         output = StringIO()
 
         call_command('seed_products', skip_existing=True, stdout=output)
 
         existing_product.refresh_from_db()
         self.assertEqual(existing_product.name, 'Custom product name')
-        self.assertTrue(Product.objects.filter(slug='single-origin-arabica').exists())
-        self.assertTrue(Product.objects.get(slug='coffee-seedlings').is_active)
-        self.assertEqual(Product.objects.count(), 7)
-        self.assertIn('Skipped: robusta-blend', output.getvalue())
+        self.assertTrue(Product.objects.filter(slug='legacy-coffee').exists())
+        self.assertTrue(Product.objects.filter(slug='legacy-coffe').exists())
+        self.assertEqual(
+            set(Product.objects.filter(is_active=True).values_list('slug', flat=True)),
+            {'legacy-coffee', 'legacy-coffee-500g', 'legacy-coffe'},
+        )
+        self.assertIn('Skipped: legacy-coffee-500g', output.getvalue())
 
-    def test_homepage_products_migration_updates_250g_and_adds_other_sizes(self):
-        coffee = Product.objects.get(slug='roasted-ground-coffee')
+    def test_homepage_products_migration_preserves_ids_and_hides_other_products(self):
+        coffee = Product.objects.get(slug='legacy-coffee')
         original_public_id = coffee.public_id
         coffee.name = 'Customized coffee listing'
         coffee.save(update_fields=('name',))
-        Product.objects.filter(slug__in=('legacy-coffee-500g', 'legacy-coffee-1kg')).delete()
-        migration = import_module('shop.migrations.0011_sync_homepage_coffee_products')
+        Product.objects.filter(slug__in=(
+            'single-origin-arabica',
+            'robusta-blend',
+            'coffee-seedlings',
+        )).update(is_active=True)
+        migration = import_module('shop.migrations.0012_keep_current_homepage_products')
         schema_editor = SimpleNamespace(connection=SimpleNamespace(alias='default'))
 
-        migration.sync_homepage_coffee_products(apps, schema_editor)
+        migration.sync_current_homepage_products(apps, schema_editor)
 
         coffee.refresh_from_db()
         self.assertEqual(coffee.public_id, original_public_id)
@@ -54,53 +52,49 @@ class SeedProductsCommandTests(APITestCase):
         self.assertEqual(coffee.price, 15000)
         self.assertTrue(coffee.is_active)
         self.assertEqual(
-            set(Product.objects.filter(name='Legacy Coffee').values_list('weight', flat=True)),
-            {'250g', '500g', '1 Kg'},
+            set(Product.objects.filter(is_active=True).values_list('slug', flat=True)),
+            {'legacy-coffee', 'legacy-coffee-500g', 'legacy-coffe'},
         )
-        self.assertTrue(Product.objects.filter(slug='coffee-seedlings').exists())
-        self.assertEqual(Product.objects.count(), 4)
+        self.assertFalse(Product.objects.get(slug='roasted-ground-coffee').is_active)
+        self.assertFalse(Product.objects.get(slug='legacy-coffee-1kg').is_active)
+        self.assertFalse(Product.objects.get(slug='coffee-seedlings').is_active)
         response = self.client.get('/api/shop/products/')
         self.assertEqual(response.status_code, 200)
-        self.assertTrue({
-            'roasted-ground-coffee',
-            'legacy-coffee-500g',
-            'legacy-coffee-1kg',
-        }.issubset({product['id'] for product in response.data['results']}))
+        self.assertEqual(
+            {product['id'] for product in response.data['results']},
+            {'legacy-coffee', 'legacy-coffee-500g', 'legacy-coffe'},
+        )
 
-    def test_skip_existing_reactivates_customized_coffee_seedlings(self):
+    def test_skip_existing_does_not_reactivate_seedlings_or_old_samples(self):
         seedlings = Product.objects.get(slug='coffee-seedlings')
-        seedlings.name = 'Legacy Coffee Seedlings'
-        seedlings.price = 2500
-        seedlings.description = 'Available coffee seedlings.'
-        seedlings.details = 'Locally managed catalog entry.'
-        seedlings.image = 'https://example.com/seedlings.jpg'
-        seedlings.image_alt = 'Coffee seedlings'
+        seedlings.name = 'Custom Seedlings'
         seedlings.is_active = False
-        seedlings.save()
+        seedlings.save(update_fields=('name', 'is_active'))
         output = StringIO()
 
         call_command('seed_products', skip_existing=True, stdout=output)
 
         seedlings.refresh_from_db()
-        self.assertTrue(seedlings.is_active)
-        self.assertEqual(seedlings.name, 'Legacy Coffee Seedlings')
-        self.assertEqual(seedlings.price, 2500)
-        self.assertIn('Activated: coffee-seedlings', output.getvalue())
+        self.assertFalse(seedlings.is_active)
+        self.assertEqual(seedlings.name, 'Custom Seedlings')
+        self.assertFalse(Product.objects.filter(slug='single-origin-arabica', is_active=True).exists())
+        self.assertFalse(Product.objects.filter(slug='robusta-blend', is_active=True).exists())
+        self.assertNotIn('coffee-seedlings', output.getvalue())
         response = self.client.get('/api/shop/products/')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(
-            'coffee-seedlings',
-            [product['id'] for product in response.data['results']],
+        self.assertEqual(
+            {product['id'] for product in response.data['results']},
+            {'legacy-coffee', 'legacy-coffee-500g', 'legacy-coffe'},
         )
 
-    def test_seedlings_data_migration_adds_active_product_to_catalog(self):
+    def test_homepage_catalog_migration_exposes_only_the_three_current_sizes(self):
         seedlings = Product.objects.get(slug='coffee-seedlings')
-        self.assertTrue(seedlings.is_active)
+        self.assertFalse(seedlings.is_active)
         response = self.client.get('/api/shop/products/')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(
-            'coffee-seedlings',
-            [product['id'] for product in response.data['results']],
+        self.assertEqual(
+            {product['id'] for product in response.data['results']},
+            {'legacy-coffee', 'legacy-coffee-500g', 'legacy-coffe'},
         )
 
     def test_seedlings_data_migration_reactivates_without_overwriting_custom_product(self):
@@ -151,7 +145,7 @@ class ShopApiTests(APITestCase):
         self.assertEqual(str(product['public_id']), str(self.product.public_id))
         self.assertEqual(product['price'], '18')
         self.assertIsNone(product['wholesale_price'])
-        self.assertIn(
+        self.assertNotIn(
             'coffee-seedlings',
             [item['id'] for item in response.data['results']],
         )
