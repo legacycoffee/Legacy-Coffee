@@ -1,13 +1,45 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { LuCoffee, LuLockKeyhole } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 
 const inputClass = 'mt-1.5 w-full border border-peach-mid px-3.5 py-3 text-sm text-black outline-none placeholder:text-black/40 focus:border-primary focus:ring-2 focus:ring-primary/20'
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+let googleIdentityScriptPromise
+
+function loadGoogleIdentityServices() {
+  if (window.google?.accounts?.id) return Promise.resolve(window.google.accounts.id)
+
+  if (!googleIdentityScriptPromise) {
+    googleIdentityScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      script.defer = true
+      script.onload = () => {
+        if (window.google?.accounts?.id) {
+          resolve(window.google.accounts.id)
+        } else {
+          reject(new Error('Google sign-in did not initialize. Please try again later.'))
+        }
+      }
+      script.onerror = () => {
+        script.remove()
+        reject(new Error('Google sign-in could not be loaded. Check your connection and try again.'))
+      }
+      document.head.appendChild(script)
+    }).catch(error => {
+      googleIdentityScriptPromise = null
+      throw error
+    })
+  }
+
+  return googleIdentityScriptPromise
+}
 
 export default function AuthPage({ mode }) {
   const isSignUp = mode === 'signup'
-  const { isAuthenticated, user, signIn, signUp, completeAdminPasswordSetup } = useAuth()
+  const { isAuthenticated, user, signIn, signInWithGoogle, signUp, completeAdminPasswordSetup } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [form, setForm] = useState({
@@ -18,8 +50,57 @@ export default function AuthPage({ mode }) {
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [passwordSetupRequired, setPasswordSetupRequired] = useState(false)
+  const googleButtonRef = useRef(null)
   const destination = location.state?.from || '/checkout'
   const authenticatedDestination = !isSignUp && user?.is_staff ? '/admin' : destination
+
+  const handleGoogleSignIn = useCallback(async ({ credential }) => {
+    if (!credential) {
+      setError('Google did not return a sign-in credential. Please try again.')
+      return
+    }
+
+    setError('')
+    setIsSubmitting(true)
+    try {
+      const signedInUser = await signInWithGoogle(credential)
+      navigate(signedInUser.is_staff ? '/admin' : destination, { replace: true })
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [destination, navigate, signInWithGoogle])
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID || isAuthenticated || passwordSetupRequired) return undefined
+
+    let isCurrent = true
+    const googleButton = googleButtonRef.current
+    loadGoogleIdentityServices()
+      .then(googleIdentity => {
+        if (!isCurrent || !googleButtonRef.current) return
+        googleIdentity.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleSignIn,
+          auto_select: false,
+        })
+        googleIdentity.renderButton(googleButtonRef.current, {
+          theme: 'outline',
+          size: 'large',
+          text: 'continue_with',
+          shape: 'rectangular',
+        })
+      })
+      .catch(loadError => {
+        if (isCurrent) setError(loadError.message)
+      })
+
+    return () => {
+      isCurrent = false
+      googleButton?.replaceChildren()
+    }
+  }, [handleGoogleSignIn, isAuthenticated, passwordSetupRequired])
 
   if (isAuthenticated) {
     return <Navigate to={authenticatedDestination} replace />
@@ -225,6 +306,13 @@ export default function AuthPage({ mode }) {
               </button>
             )}
           </form>
+
+          {!passwordSetupRequired && GOOGLE_CLIENT_ID && (
+            <div className={`mt-5 border-t border-peach-mid/40 pt-5 ${isSubmitting ? 'pointer-events-none opacity-60' : ''}`}>
+              <p className="mb-4 text-center text-xs font-medium uppercase tracking-wide text-black/50">Or continue with</p>
+              <div ref={googleButtonRef} className="flex justify-center" />
+            </div>
+          )}
 
           {!passwordSetupRequired && <p className="mt-5 text-center text-sm text-black/70">
             {isSignUp ? 'Already have an account?' : 'New to Legacy Coffee?'}{' '}

@@ -32,3 +32,5 @@ services:
         value: https://legacycoffee.github.io,https://legacycoffee.org,https://www.legacycoffee.org
       - key: SUBSTACK_PUBLICATION_URL
         value: https://legacycoffee.substack.com
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false

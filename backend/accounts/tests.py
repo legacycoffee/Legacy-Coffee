@@ -124,6 +124,106 @@ class AuthenticationApiTests(APITestCase):
     def setUp(self):
         cache.clear()
 
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID='google-web-client-id')
+    @patch('accounts.google_auth.id_token.verify_oauth2_token')
+    def test_google_sign_in_creates_customer_and_returns_token(self, verify_token):
+        verify_token.return_value = {
+            'email': 'new-customer@example.com',
+            'email_verified': True,
+            'sub': 'google-sub-123',
+        }
+
+        response = self.client.post('/api/auth/google/', {
+            'credential': 'signed-google-id-token',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('token', response.data)
+        self.assertEqual(response.data['user']['email'], 'new-customer@example.com')
+        user = get_user_model().objects.get(email='new-customer@example.com')
+        self.assertEqual(user.google_sub, 'google-sub-123')
+        self.assertFalse(user.has_usable_password())
+        self.assertEqual(
+            set(Notification.objects.filter(user=user).values_list('kind', flat=True)),
+            {Notification.Kind.WELCOME, Notification.Kind.SIGN_IN},
+        )
+        verify_token.assert_called_once()
+        self.assertEqual(verify_token.call_args.kwargs['audience'], 'google-web-client-id')
+
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID='google-web-client-id')
+    @patch('accounts.google_auth.id_token.verify_oauth2_token')
+    def test_google_sign_in_links_verified_email_to_existing_customer(self, verify_token):
+        user = get_user_model().objects.create_user(
+            username='existing-customer',
+            email='existing-customer@example.com',
+            password='StrongPassword!2026',
+        )
+        verify_token.return_value = {
+            'email': 'existing-customer@example.com',
+            'email_verified': True,
+            'sub': 'google-sub-456',
+        }
+
+        response = self.client.post('/api/auth/google/', {
+            'credential': 'signed-google-id-token',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['user']['id'], str(user.public_id))
+        user.refresh_from_db()
+        self.assertEqual(user.google_sub, 'google-sub-456')
+        self.assertTrue(user.check_password('StrongPassword!2026'))
+
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID='google-web-client-id')
+    @patch('accounts.google_auth.id_token.verify_oauth2_token')
+    def test_google_sign_in_rejects_unverified_email(self, verify_token):
+        verify_token.return_value = {
+            'email': 'unverified@example.com',
+            'email_verified': False,
+            'sub': 'google-sub-789',
+        }
+
+        response = self.client.post('/api/auth/google/', {
+            'credential': 'signed-google-id-token',
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(get_user_model().objects.filter(email='unverified@example.com').exists())
+
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID='google-web-client-id')
+    @patch('accounts.google_auth.id_token.verify_oauth2_token')
+    def test_google_sign_in_rejects_administrator_account(self, verify_token):
+        admin = get_user_model().objects.create_user(
+            username='google-admin',
+            email='admin@example.com',
+            password='StrongPassword!2026',
+            is_staff=True,
+        )
+        verify_token.return_value = {
+            'email': 'admin@example.com',
+            'email_verified': True,
+            'sub': 'google-admin-sub',
+        }
+
+        response = self.client.post('/api/auth/google/', {
+            'credential': 'signed-google-id-token',
+        })
+
+        self.assertEqual(response.status_code, 400)
+        admin.refresh_from_db()
+        self.assertIsNone(admin.google_sub)
+        self.assertFalse(Token.objects.filter(user=admin).exists())
+
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID='')
+    @patch('accounts.google_auth.id_token.verify_oauth2_token')
+    def test_google_sign_in_requires_server_configuration(self, verify_token):
+        response = self.client.post('/api/auth/google/', {
+            'credential': 'signed-google-id-token',
+        })
+
+        self.assertEqual(response.status_code, 503)
+        verify_token.assert_not_called()
+
     def test_registration_creates_token_and_user(self):
         response = self.client.post('/api/auth/register/', {
             'username': 'coffee-customer',

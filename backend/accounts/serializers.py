@@ -121,6 +121,14 @@ class LoginSerializer(serializers.Serializer):
         return attrs
 
 
+class GoogleSignInSerializer(serializers.Serializer):
+    credential = serializers.CharField(
+        write_only=True,
+        trim_whitespace=True,
+        max_length=8192,
+    )
+
+
 class AdminPasswordSetupSerializer(serializers.Serializer):
     email = serializers.EmailField()
     temporary_password = serializers.CharField(write_only=True, trim_whitespace=False)

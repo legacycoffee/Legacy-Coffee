@@ -1,13 +1,25 @@
+import uuid
+
+from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.utils.text import slugify
 from rest_framework import generics, permissions, serializers, status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .google_auth import (
+    GoogleCredentialInvalid,
+    GoogleOAuthNotConfigured,
+    GoogleProviderUnavailable,
+    verify_google_credential,
+)
 from .models import Notification
 from .serializers import (
     LoginSerializer,
+    GoogleSignInSerializer,
     CurrentPasswordSerializer,
     DeleteAccountSerializer,
     PasswordChangeSerializer,
@@ -16,6 +28,92 @@ from .serializers import (
     UserSerializer,
 )
 from .services import upload_profile_photo
+
+
+class GoogleSignInUnavailable(APIException):
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    default_detail = 'Google sign-in is not configured on this server.'
+    default_code = 'google_sign_in_not_configured'
+
+
+class GoogleSignInView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = 'login'
+
+    @transaction.atomic
+    def post(self, request):
+        serializer = GoogleSignInSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            identity = verify_google_credential(serializer.validated_data['credential'])
+        except GoogleOAuthNotConfigured as error:
+            raise GoogleSignInUnavailable() from error
+        except GoogleProviderUnavailable as error:
+            raise GoogleSignInUnavailable(
+                'Google could not be reached to verify your sign-in. Please try again.',
+            ) from error
+        except GoogleCredentialInvalid as error:
+            raise serializers.ValidationError({
+                'credential': 'Google could not verify this sign-in. Please try again.',
+            }) from error
+
+        User = get_user_model()
+        user = User.objects.select_for_update().filter(
+            google_sub=identity['google_sub'],
+        ).first()
+        created = False
+
+        if user is None:
+            user = User.objects.select_for_update().filter(
+                email__iexact=identity['email'],
+            ).first()
+            if user is not None:
+                if user.is_staff or user.is_superuser or user.must_change_password:
+                    raise serializers.ValidationError(
+                        'Google sign-in is not enabled for administrator accounts.',
+                    )
+                if not user.is_active:
+                    raise serializers.ValidationError('This account is inactive.')
+                if user.google_sub and user.google_sub != identity['google_sub']:
+                    raise serializers.ValidationError(
+                        {'credential': 'This Google account is already linked to another account.'},
+                    )
+                user.google_sub = identity['google_sub']
+                user.save(update_fields=('google_sub',))
+            else:
+                username_base = slugify(identity['email'].split('@', 1)[0])[:130] or 'google-user'
+                username = username_base
+                while User.objects.filter(username__iexact=username).exists():
+                    username = f'{username_base[:130]}-{uuid.uuid4().hex[:8]}'
+                user = User.objects.create_user(
+                    username=username,
+                    email=identity['email'],
+                    password=None,
+                    google_sub=identity['google_sub'],
+                )
+                created = True
+        elif not user.is_active:
+            raise serializers.ValidationError('This account is inactive.')
+        elif user.is_staff or user.is_superuser or user.must_change_password:
+            raise serializers.ValidationError(
+                'Google sign-in is not enabled for administrator accounts.',
+            )
+
+        if created:
+            Notification.objects.create(
+                user=user,
+                kind=Notification.Kind.WELCOME,
+                title='Welcome to Legacy Coffee',
+                message='Your account is ready. You can manage your profile, delivery location, and orders here.',
+            )
+        Notification.objects.create(
+            user=user,
+            kind=Notification.Kind.SIGN_IN,
+            title='Welcome back',
+            message='You have successfully signed in to your Legacy Coffee account.',
+        )
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({'token': token.key, 'user': UserSerializer(user).data})
 
 
 class RegisterView(generics.CreateAPIView):

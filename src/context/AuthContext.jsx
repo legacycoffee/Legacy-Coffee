@@ -51,6 +51,12 @@ export function AuthProvider({ children }) {
     return data.user
   }, [saveAuth])
 
+  const signInWithGoogle = useCallback(async credential => {
+    const data = await authRequest('/auth/google/', { credential })
+    saveAuth(data)
+    return data.user
+  }, [saveAuth])
+
   const completeAdminPasswordSetup = useCallback(async details => {
     const data = await authRequest('/auth/admin-password-setup/', details)
     saveAuth(data)
@@ -89,12 +95,13 @@ export function AuthProvider({ children }) {
     user: auth?.user || null,
     isAuthenticated: Boolean(auth?.token),
     signIn,
+    signInWithGoogle,
     completeAdminPasswordSetup,
     signUp,
     signOut,
     updateUser,
     clearAuth,
-  }), [auth, signIn, completeAdminPasswordSetup, signUp, signOut, updateUser, clearAuth])
+  }), [auth, signIn, signInWithGoogle, completeAdminPasswordSetup, signUp, signOut, updateUser, clearAuth])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
