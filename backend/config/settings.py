@@ -3,13 +3,19 @@ from pathlib import Path
 
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_ENV_FILE = BASE_DIR.parent / '.env.local'
+load_dotenv(PROJECT_ENV_FILE)
 load_dotenv(BASE_DIR / '.env')
+if not os.environ.get('DATABASE_URL'):
+    project_database_url = dotenv_values(PROJECT_ENV_FILE).get('DATABASE_URL')
+    if project_database_url:
+        os.environ['DATABASE_URL'] = project_database_url
 
 DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() == 'true'
-if os.environ.get('RAILWAY_ENVIRONMENT'):
+if os.environ.get('RENDER') or os.environ.get('RAILWAY_ENVIRONMENT'):
     DEBUG = False
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
@@ -21,7 +27,10 @@ ALLOWED_HOSTS = [
     for host in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
     if host.strip()
 ]
-for host in ('legacy-production-48e0.up.railway.app', os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')):
+for host in (
+    os.environ.get('RENDER_EXTERNAL_HOSTNAME', ''),
+    os.environ.get('RAILWAY_PUBLIC_DOMAIN', ''),
+):
     if host and host not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(host)
 
@@ -86,6 +95,7 @@ if database_url := os.environ.get('DATABASE_URL'):
         database_url,
         conn_max_age=600,
         conn_health_checks=True,
+        ssl_require=True,
     )
 
 AUTH_USER_MODEL = 'accounts.User'

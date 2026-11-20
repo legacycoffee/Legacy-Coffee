@@ -1,23 +1,21 @@
 # Legacy Coffee API
 
-Django REST API for the Legacy Coffee storefront. Local development uses SQLite; production can use PostgreSQL through `DATABASE_URL`. Static admin assets are served with WhiteNoise, and Railway starts the app with Gunicorn.
+Django REST API for the Legacy Coffee storefront. Local development uses SQLite; production uses Neon Postgres through `DATABASE_URL`. Static admin assets are served with WhiteNoise, and Render runs the app with Gunicorn.
 
-## Railway deployment
+## Render deployment
 
-The backend is a standalone repository, so create a Railway service from `gadgetsmajo/legacy` on the `main` branch. Its repository root already contains `manage.py` and the `Procfile`; no monorepo root-directory setting is needed.
+The backend is a standalone repository at `legacycoffee/backend`. Its root contains `render.yaml`, `manage.py`, and `requirements.txt`.
 
-1. Add a Railway PostgreSQL service.
-2. In the Django service variables, set `DATABASE_URL` to `${{Postgres.DATABASE_URL}}` (replace `Postgres` if your database service has a different name).
-3. Set `DJANGO_SECRET_KEY` to a new, long random secret and set `DJANGO_DEBUG` to `false`.
-4. The current backend domain is `legacy-production-48e0.up.railway.app`; set `DJANGO_ALLOWED_HOSTS` to that hostname only (without `https://`).
-5. Set `CORS_ALLOWED_ORIGINS` to `https://legacycoffee.github.io` (the origin only; do not include `/Legacy-Coffee/`). Set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` for profile and product image uploads.
-6. To create the initial admin automatically, set `INITIAL_ADMIN_EMAIL`, `INITIAL_ADMIN_USERNAME`, and `INITIAL_ADMIN_PASSWORD` in the Railway service variables. Use a strong password. After migrations, the Procfile promotes an existing account with that email to superuser (updating its username and password from these variables), or creates it if it does not exist. Once a superuser exists, later starts leave it unchanged. Remove `INITIAL_ADMIN_PASSWORD` from Railway after the first successful creation.
-7. Deploy. The Procfile runs migrations, creates the initial admin when configured, creates any missing starter products, reactivates the coffee seedlings listing if it was unpublished, collects static files, then starts Gunicorn. A shop data migration also creates or reactivates the seedlings catalog entry on databases missing it; existing product details are preserved.
-8. For newsletter delivery and coffee farm or seedling reservation notifications, set `RESEND_API_KEY` and `NEWSLETTER_FROM_EMAIL` in Railway. The sender address or domain must be verified in Resend. Reservation requests are saved and emailed by the backend to `info@legacycoffee.org`; customers do not need to open their own email app. Set `NEWSLETTER_PUBLIC_URL` to the public frontend base URL if it differs from `https://legacycoffee.github.io/Legacy-Coffee`. Newsletter drafts and image uploads work without Resend, but sending newsletters and reservation email notifications require these delivery settings; image uploads also require the Cloudinary variables above.
+1. In Render, create a Blueprint Instance and connect `legacycoffee/backend` on the `main` branch. Render will read `render.yaml` from the repository root and create the free web service in Virginia to match the Neon project region. The free web service can spin down while idle, so the first request after inactivity may be delayed.
+2. In the service environment, set `DATABASE_URL` to Neon's **pooled** connection string (the hostname includes `-pooler`) and `DATABASE_URL_UNPOOLED` to Neon's **direct** connection string (no `-pooler`). Keep both values secret. The service uses the pooled URL for web traffic and the direct URL for Django migrations and startup data commands.
+3. The Blueprint generates `DJANGO_SECRET_KEY`, sets `DJANGO_DEBUG=false`, configures the GitHub Pages and custom-domain CORS origins, and Django reads Render's `RENDER_EXTERNAL_HOSTNAME` for `ALLOWED_HOSTS`.
+4. Deploy. The build installs requirements and collects static files. On startup, the service runs migrations against Neon, optionally creates an initial admin when configured, seeds missing starter products, and starts Gunicorn. Render's health check uses `/api/health/`.
+5. To create the initial admin automatically, set `INITIAL_ADMIN_EMAIL`, `INITIAL_ADMIN_USERNAME`, and `INITIAL_ADMIN_PASSWORD` in the Render service variables before deploying. Use a strong password. Once the first superuser exists, later starts leave it unchanged; remove `INITIAL_ADMIN_PASSWORD` after successful creation. Alternatively, create an admin from the Render Shell with `python manage.py createsuperuser`.
+6. For profile and product image uploads, set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`. For newsletter delivery and reservation notifications, set `RESEND_API_KEY` and `NEWSLETTER_FROM_EMAIL` (the sender must be verified in Resend). Set `NEWSLETTER_PUBLIC_URL` if the frontend URL differs from `https://legacycoffee.github.io/Legacy-Coffee`.
 
-The GitHub Pages workflow builds the frontend with `VITE_API_URL=https://legacy-production-48e0.up.railway.app/api`. Railway's filesystem is ephemeral; use the PostgreSQL service rather than the local SQLite database for production data. Do not set `DATABASE_URL` to SQLite or commit real secrets.
+The GitHub Pages workflow builds the frontend with `VITE_API_URL=https://legacy-coffee-backend.onrender.com/api`. If Render assigns a different service hostname, update that value in `.github/workflows/ci.yml`. Render's filesystem is ephemeral; keep production data in Neon, not SQLite. Do not commit database URLs or other secrets.
 
-Authentication endpoints have additional throttling: login is limited to 5 requests per minute per client, registration to 3 per hour, and initial admin password setup to 5 per hour. For shared throttling across multiple backend workers or replicas, attach a Railway Redis service and set `REDIS_URL` to its private connection URL. Without `REDIS_URL`, Django uses its local in-process cache, so throttle counters are not shared across workers.
+Authentication endpoints have additional throttling: login is limited to 5 requests per minute per client, registration to 3 per hour, and initial admin password setup to 5 per hour. For shared throttling across multiple backend workers or replicas, set `REDIS_URL` to a Redis connection URL. Without `REDIS_URL`, Django uses its local in-process cache, so throttle counters are not shared across workers.
 
 Wholesale pricing is optional for each product and can be set in Django admin. The wholesale page uses a configured wholesale price when present; otherwise, it calculates an estimate using the retail price.
 
@@ -39,7 +37,7 @@ The API runs at `http://127.0.0.1:8000/`; the Django admin is at `/admin/`. Djan
 
 ## Repository remotes
 
-The project root remains in `legacycoffee/Legacy-Coffee`; the `backend` directory is also an independent Git repository hosted at `gadgetsmajo/legacy`. Run backend Git commands from this directory so pushes go to its `origin`; run project-wide Git commands from the project root to continue collaborating on the original repository. The backend `.gitignore` excludes local environment files and the SQLite database.
+The project root remains in `legacycoffee/Legacy-Coffee`; the `backend` directory is an independent Git repository hosted at `legacycoffee/backend`. Run backend Git commands from this directory so pushes go to its `origin`; run project-wide Git commands from the project root to continue collaborating on the original repository. The backend `.gitignore` excludes local environment files and the SQLite database.
 
 ## Apps
 

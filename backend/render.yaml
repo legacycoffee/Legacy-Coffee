@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: legacy-coffee-backend
+    runtime: python
+    plan: free
+    region: virginia
+    branch: main
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: >-
+      set -eu;
+      : "${DATABASE_URL_UNPOOLED:?Set DATABASE_URL_UNPOOLED to the direct connection string}";
+      DATABASE_URL="$DATABASE_URL_UNPOOLED" python manage.py migrate --noinput &&
+      DATABASE_URL="$DATABASE_URL_UNPOOLED" python manage.py create_initial_admin &&
+      DATABASE_URL="$DATABASE_URL_UNPOOLED" python manage.py seed_products --skip-existing &&
+      exec gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/health/
+    autoDeployTrigger: commit
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_UNPOOLED
+        sync: false
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://legacycoffee.github.io,https://legacycoffee.org,https://www.legacycoffee.org
