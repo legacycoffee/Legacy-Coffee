@@ -28,6 +28,7 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 for host in (
+    'api.legacycoffee.org',
     os.environ.get('RENDER_EXTERNAL_HOSTNAME', ''),
     os.environ.get('RAILWAY_PUBLIC_DOMAIN', ''),
 ):
