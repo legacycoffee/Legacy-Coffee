@@ -4,7 +4,8 @@ import { LuCoffee, LuLockKeyhole } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
 
 const inputClass = 'mt-1.5 w-full border border-peach-mid px-3.5 py-3 text-sm text-black outline-none placeholder:text-black/40 focus:border-primary focus:ring-2 focus:ring-primary/20'
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+  || '291214252494-n4so2ljkb1sufuqp8v1co7hfhafn3l12.apps.googleusercontent.com'
 let googleIdentityScriptPromise
 
 function loadGoogleIdentityServices() {
