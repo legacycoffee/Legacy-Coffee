@@ -167,8 +167,8 @@ export default function Home() {
                               imageAlt: 'Coffee seedlings growing at the farm',
                             }
                           : product}
-                        objectFit="contain"
-                        className={`p-3 transition-transform duration-500 sm:p-5 sm:group-hover:scale-105 ${
+                        objectFit="cover"
+                        className={`transition-transform duration-500 sm:group-hover:scale-105 ${
                           product.id === 'coffee-seedlings' ? 'object-[center_50%]' : ''
                         }`}
                       />
