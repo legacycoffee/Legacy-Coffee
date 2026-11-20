@@ -7,11 +7,22 @@
   </head>
   <body>
     <script>
-      sessionStorage.setItem(
-        'gh-pages-redirect',
-        window.location.pathname + window.location.search + window.location.hash,
+      const isCustomDomain = ['legacycoffee.org', 'www.legacycoffee.org'].includes(
+        window.location.hostname.toLowerCase(),
       )
-      window.location.replace('/Legacy-Coffee/')
+      const requestedPath = window.location.pathname + window.location.search + window.location.hash
+
+      if (isCustomDomain) {
+        const appPath = window.location.pathname.replace(/^\/Legacy-Coffee(?=\/|$)/i, '') || '/'
+        sessionStorage.setItem(
+          'gh-pages-redirect',
+          appPath + window.location.search + window.location.hash,
+        )
+        window.location.replace('/')
+      } else {
+        sessionStorage.setItem('gh-pages-redirect', requestedPath)
+        window.location.replace('/Legacy-Coffee/')
+      }
     </script>
     <p>Redirecting to Legacy Coffee...</p>
   </body>
