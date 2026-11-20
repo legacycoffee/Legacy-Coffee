@@ -229,7 +229,7 @@ export default function ProductPage() {
 
         <div className="grid items-start gap-6 lg:grid-cols-2 lg:gap-10">
           <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-peach-light shadow-sm lg:w-full lg:max-w-[460px] lg:justify-self-center">
-            <ProductImage product={product} objectFit="contain" />
+            <ProductImage product={product} objectFit="cover" />
             <button
               type="button"
               aria-label={`Share ${product.name}`}
