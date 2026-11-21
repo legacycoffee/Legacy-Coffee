@@ -1,6 +1,6 @@
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.legacycoffee.org/api'
 
-export async function apiRequest(path, { method = 'GET', body, token } = {}) {
+export async function apiRequest(path, { method = 'GET', body, token, signal } = {}) {
   const isFormData = body instanceof FormData
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
@@ -9,6 +9,7 @@ export async function apiRequest(path, { method = 'GET', body, token } = {}) {
       ...(token ? { Authorization: `Token ${token}` } : {}),
     },
     ...(body ? { body: isFormData ? body : JSON.stringify(body) } : {}),
+    signal,
   })
 
   let data = null

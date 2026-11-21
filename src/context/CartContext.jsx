@@ -91,10 +91,10 @@ export function CartProvider({ children }) {
     localStorage.removeItem(WHOLESALE_DETAILS_STORAGE_KEY)
   }, [])
 
-  const saveOrder = order => {
+  const saveOrder = useCallback(order => {
     setLatestOrder(order)
     localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(order))
-  }
+  }, [])
 
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0)
   const cartTotal = items.reduce((sum, item) => sum + getCartItemUnitPrice(item) * item.quantity, 0)

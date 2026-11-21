@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { LuArrowRight } from 'react-icons/lu'
-import { apiRequest } from '../context/api.js'
+import { useSubmissionQueue } from '../context/useSubmissionQueue.js'
 
 export default function NewsletterSignup() {
+  const { enqueueNewsletterSubscription } = useSubmissionQueue()
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -15,11 +16,8 @@ export default function NewsletterSignup() {
     setIsSubmitting(true)
 
     try {
-      const response = await apiRequest('/newsletter/subscribe/', {
-        method: 'POST',
-        body: { email },
-      })
-      setMessage(response.message || 'You are subscribed to Legacy Coffee updates.')
+      enqueueNewsletterSubscription(email)
+      setMessage('Your subscription is queued on this device. We’ll finish it in the background when the server is ready.')
       setEmail('')
     } catch (requestError) {
       setError(requestError.message)

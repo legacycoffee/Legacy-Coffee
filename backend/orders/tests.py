@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -51,6 +52,7 @@ class OrderApiTests(APITestCase):
         self.assertRegex(order.reference, r'^LC-[A-Z0-9]{9}$')
         self.assertEqual(response.data['reference'], order.reference)
         self.assertEqual(order.total, Decimal('36000'))
+        self.assertEqual(order.status, Order.Status.PENDING)
         self.assertEqual(order.user, self.user)
         self.assertEqual(order.customer_email, self.user.email)
         self.assertEqual(str(order.delivery_latitude), '0.347600')
@@ -79,6 +81,51 @@ class OrderApiTests(APITestCase):
             'image_alt': 'Coffee',
             'is_wholesale': False,
         }])
+
+    def test_repeated_submission_id_returns_the_same_order_without_duplicates(self):
+        self.client.force_authenticate(self.user)
+        submission_id = uuid.uuid4()
+        payload = {**self.payload, 'submission_id': str(submission_id)}
+
+        first_response = self.client.post('/api/orders/', payload, format='json')
+        second_response = self.client.post('/api/orders/', payload, format='json')
+
+        self.assertEqual(first_response.status_code, 201)
+        self.assertEqual(second_response.status_code, 201)
+        self.assertEqual(first_response.data['public_id'], str(submission_id))
+        self.assertEqual(second_response.data['public_id'], first_response.data['public_id'])
+        self.assertEqual(second_response.data['reference'], first_response.data['reference'])
+        self.assertEqual(Order.objects.count(), 1)
+        self.assertEqual(OrderItem.objects.count(), 1)
+        self.assertEqual(
+            Notification.objects.filter(kind=Notification.Kind.ORDER_SUBMITTED).count(),
+            1,
+        )
+
+    def test_submission_id_cannot_be_reused_by_another_user(self):
+        self.client.force_authenticate(self.user)
+        submission_id = str(uuid.uuid4())
+        first_response = self.client.post(
+            '/api/orders/',
+            {**self.payload, 'submission_id': submission_id},
+            format='json',
+        )
+        self.assertEqual(first_response.status_code, 201)
+
+        other_user = get_user_model().objects.create_user(
+            username='another-customer',
+            email='another@example.com',
+            password='StrongPassword!2026',
+        )
+        self.client.force_authenticate(other_user)
+        duplicate_response = self.client.post(
+            '/api/orders/',
+            {**self.payload, 'submission_id': submission_id},
+            format='json',
+        )
+
+        self.assertEqual(duplicate_response.status_code, 400)
+        self.assertEqual(Order.objects.count(), 1)
 
     def test_order_without_account_email_uses_checkout_email(self):
         user = get_user_model().objects.create_user(

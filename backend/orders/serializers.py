@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from rest_framework import serializers
 
 from accounts.models import Notification
@@ -64,12 +64,14 @@ class OrderHistorySerializer(serializers.ModelSerializer):
 
 class OrderCreateSerializer(serializers.ModelSerializer):
     items = OrderItemInputSerializer(many=True, write_only=True, allow_empty=False)
+    submission_id = serializers.UUIDField(write_only=True, required=False)
     order_items = OrderItemSerializer(source='items', many=True, read_only=True)
 
     class Meta:
         model = Order
         fields = (
-            'public_id', 'reference', 'customer_name', 'business_name', 'customer_email', 'customer_phone',
+            'public_id', 'submission_id', 'reference', 'customer_name', 'business_name',
+            'customer_email', 'customer_phone',
             'delivery_address', 'delivery_city', 'delivery_notes', 'status',
             'delivery_latitude', 'delivery_longitude',
             'total', 'order_items', 'items', 'created_at',
@@ -101,8 +103,37 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         order_items = validated_data.pop('items')
+        submission_id = validated_data.pop('submission_id', None)
         user = self.context['request'].user
         validated_data['customer_email'] = user.email or validated_data['customer_email']
+
+        if submission_id is not None:
+            existing_order = Order.objects.filter(public_id=submission_id).first()
+            if existing_order:
+                if existing_order.user_id != user.pk:
+                    raise serializers.ValidationError({
+                        'submission_id': 'This order submission could not be verified.',
+                    })
+                return existing_order
+
+        try:
+            with transaction.atomic():
+                order = Order.objects.create(
+                    user=user,
+                    # The client UUID doubles as the order ID for idempotent retries.
+                    **({'public_id': submission_id} if submission_id is not None else {}),
+                    **validated_data,
+                )
+        except IntegrityError:
+            if not submission_id:
+                raise
+            existing_order = Order.objects.filter(public_id=submission_id).first()
+            if existing_order and existing_order.user_id == user.pk:
+                return existing_order
+            raise serializers.ValidationError({
+                'submission_id': 'This order submission could not be verified.',
+            })
+
         user.delivery_address = validated_data['delivery_address']
         user.delivery_city = validated_data['delivery_city']
         user.delivery_notes = validated_data.get('delivery_notes', '')
@@ -112,10 +143,6 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             'delivery_address', 'delivery_city', 'delivery_notes',
             'location_latitude', 'location_longitude',
         ))
-        order = Order.objects.create(
-            user=user,
-            **validated_data,
-        )
         total = Decimal('0')
         for entry in order_items:
             product = entry['product']

@@ -844,6 +844,8 @@ function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnl
       let caretParagraph = followingParagraph
       if (asRecommendation) {
         const imageBlock = image.closest('p, h1, h2, h3, h4, h5, h6, blockquote, li')
+        const imageParent = image.parentElement
+        const imageNextSibling = image.nextSibling
         const recommendation = document.createElement('div')
         recommendation.className = 'newsletter-recommendation'
         recommendation.append(image)
@@ -864,7 +866,20 @@ function NewsletterEditor({ value, onChange, onImageUpload, isUploading, readOnl
           imageBlock.insertAdjacentElement('afterend', recommendation)
           if (!imageBlock.textContent.trim() && imageBlock.children.length === 0) imageBlock.remove()
         } else {
-          image.insertAdjacentElement('afterend', recommendation)
+          if (!imageParent || !editor.contains(imageParent)) {
+            throw new Error('The image could not be placed in the newsletter.')
+          }
+          imageParent.insertBefore(
+            recommendation,
+            imageNextSibling?.parentNode === imageParent ? imageNextSibling : null,
+          )
+          if (
+            followingParagraph.parentElement === imageParent
+            && !followingParagraph.textContent.trim()
+            && followingParagraph.children.length === 0
+          ) {
+            followingParagraph.remove()
+          }
         }
       }
 

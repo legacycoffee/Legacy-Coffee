@@ -4,7 +4,7 @@ import { LuArrowLeft, LuCheck, LuClipboardList, LuMapPin, LuShieldCheck } from '
 import { formatPrice, getCartItemUnitPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
 import { useAuth } from '../context/useAuth.js'
-import { apiRequest } from '../context/api.js'
+import { useSubmissionQueue } from '../context/useSubmissionQueue.js'
 import ProductImage from '../components/ProductImage.jsx'
 import { getWhatsAppOrderUrl } from '../utils/whatsappOrder.js'
 import { formatSeedlingVarieties, getSeedlingVarietyBreakdown } from '../utils/seedlings.js'
@@ -13,8 +13,9 @@ const inputClass = 'mt-1.5 w-full border border-peach-mid bg-white px-3.5 py-3 t
 const labelClass = 'block text-sm font-medium text-black'
 
 export default function CheckoutPage() {
-  const { items, cartTotal, saveOrder, wholesaleDetails } = useCart()
-  const { isAuthenticated, token, user, updateUser } = useAuth()
+  const { items, cartTotal, clearCart, wholesaleDetails } = useCart()
+  const { isAuthenticated, user } = useAuth()
+  const { enqueueOrder } = useSubmissionQueue()
   const navigate = useNavigate()
   const [customer, setCustomer] = useState(() => ({
     name: wholesaleDetails?.name || [user?.first_name, user?.last_name].filter(Boolean).join(' '),
@@ -42,71 +43,57 @@ export default function CheckoutPage() {
 
   const handleChange = event => setCustomer(current => ({ ...current, [event.target.name]: event.target.value }))
 
-  const handleSubmit = async event => {
+  const handleSubmit = event => {
     event.preventDefault()
     setSubmitError('')
     setCanUseWhatsAppFallback(false)
     setIsSubmitting(true)
 
     try {
-      const result = await apiRequest('/orders/', {
-        method: 'POST',
-        token,
-        body: {
-          customer_name: customer.name,
-          business_name: customer.business_name,
-          customer_email: customer.email,
-          customer_phone: customer.phone,
-          delivery_address: customer.address,
-          delivery_city: customer.city,
-          delivery_notes: [
-            includesSeedlings ? `Coffee seedling varieties and quantities: ${seedlingType}` : '',
-            customer.notes,
-          ].filter(Boolean).join('\n'),
-          items: items.map(item => ({
-            product_id: item.id,
-            quantity: item.quantity,
-            is_wholesale: Boolean(item.is_wholesale),
-          })),
-        },
-      })
-
-      updateUser({
-        ...user,
-        delivery_address: result.delivery_address,
-        delivery_city: result.delivery_city,
-        delivery_notes: result.delivery_notes,
-      })
-
-      const order = {
-        id: result.reference,
-        public_id: result.public_id,
-        status: result.status,
-        customer: {
-          name: result.customer_name,
-          business_name: result.business_name,
-          email: result.customer_email,
-          phone: result.customer_phone,
-          address: result.delivery_address,
-          city: result.delivery_city,
-          notes: result.delivery_notes,
-        },
-        items: result.order_items.map((orderItem, index) => ({
-          ...items[index],
-          price: Number(orderItem.unit_price),
-          quantity: orderItem.quantity,
+      const payload = {
+        customer_name: customer.name,
+        business_name: customer.business_name,
+        customer_email: customer.email,
+        customer_phone: customer.phone,
+        delivery_address: customer.address,
+        delivery_city: customer.city,
+        delivery_notes: [
+          includesSeedlings ? `Coffee seedling varieties and quantities: ${seedlingType}` : '',
+          customer.notes,
+        ].filter(Boolean).join('\n'),
+        items: items.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity,
+          is_wholesale: Boolean(item.is_wholesale),
         })),
-        total: Number(result.total),
-        createdAt: result.created_at,
       }
-      saveOrder(order)
-      navigate('/confirm', { state: { order } })
+      const order = {
+        id: null,
+        public_id: null,
+        status: 'pending',
+        submissionStatus: 'queued',
+        customer: {
+          name: customer.name,
+          business_name: customer.business_name,
+          email: customer.email,
+          phone: customer.phone,
+          address: customer.address,
+          city: customer.city,
+          notes: payload.delivery_notes,
+        },
+        items: items.map(item => ({
+          ...item,
+          price: getCartItemUnitPrice(item),
+        })),
+        total: cartTotal,
+        createdAt: new Date().toISOString(),
+      }
+      const queuedOrder = enqueueOrder({ payload, displayOrder: order })
+      clearCart()
+      navigate('/confirm', { state: { order: queuedOrder } })
     } catch (error) {
-      const serverUnavailable = error instanceof TypeError || error.status >= 500
-      setSubmitError(serverUnavailable
-        ? 'The order server is unavailable, so we could not confirm whether your order was received.'
-        : error.message)
-      setCanUseWhatsAppFallback(serverUnavailable)
+      setSubmitError(error.message)
+      setCanUseWhatsAppFallback(true)
     } finally {
       setIsSubmitting(false)
     }
@@ -250,7 +237,7 @@ export default function CheckoutPage() {
             )}
             <div className="flex justify-end">
               <button type="submit" disabled={isSubmitting} className="w-full bg-[#F58537] px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#e8742b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60 sm:w-auto">
-                {isSubmitting ? 'Sending order…' : 'Place order request'}
+                {isSubmitting ? 'Saving order…' : 'Place order request'}
               </button>
             </div>
           </form>

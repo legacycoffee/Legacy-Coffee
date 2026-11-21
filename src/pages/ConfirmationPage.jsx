@@ -4,6 +4,7 @@ import { LuArrowRight, LuCheck, LuClock3, LuCoffee, LuPackageCheck } from 'react
 import { formatPrice } from '../data/products.js'
 import { useCart } from '../context/useCart.js'
 import { useAuth } from '../context/useAuth.js'
+import { useSubmissionQueue } from '../context/useSubmissionQueue.js'
 import ProductImage from '../components/ProductImage.jsx'
 import OrderInvoiceActions from '../components/OrderInvoiceActions.jsx'
 import { getOrderUrl } from '../utils/orderUrl.js'
@@ -12,13 +13,22 @@ export default function ConfirmationPage() {
   const location = useLocation()
   const { latestOrder, clearCart } = useCart()
   const { token } = useAuth()
-  const order = location.state?.order || latestOrder
+  const { retrySubmission } = useSubmissionQueue()
+  const routeOrder = location.state?.order
+  const order = latestOrder?.submissionId
+    && latestOrder.submissionId === routeOrder?.submissionId
+    ? latestOrder
+    : routeOrder || latestOrder
+  const isOrderReceived = Boolean(order?.id && order?.public_id)
+    && !['queued', 'sending', 'failed'].includes(order.submissionStatus)
+  const isSubmissionFailed = order?.submissionStatus === 'failed'
+  const isSubmissionPending = !isOrderReceived && !isSubmissionFailed
 
   useEffect(() => {
     if (order) clearCart()
   }, [order, clearCart])
 
-  if (!order?.id || !Array.isArray(order.items)) {
+  if (!order || !Array.isArray(order.items)) {
     return <Navigate to="/" replace />
   }
 
@@ -35,20 +45,34 @@ export default function ConfirmationPage() {
     <section className="bg-[#fffdfa] px-4 py-10 sm:px-6 sm:py-14">
       <div className="mx-auto max-w-4xl">
         <header className="mb-8 text-center">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#e8f3e9] text-[#28713b]">
-            <LuCheck aria-hidden="true" className="h-8 w-8" strokeWidth={2.5} />
+          <div className={`mx-auto mb-5 flex h-16 w-16 items-center justify-center ${
+            isOrderReceived ? 'bg-[#e8f3e9] text-[#28713b]' : 'bg-amber-100 text-amber-800'
+          }`}>
+            {isOrderReceived
+              ? <LuCheck aria-hidden="true" className="h-8 w-8" strokeWidth={2.5} />
+              : <LuClock3 aria-hidden="true" className="h-8 w-8" />}
           </div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-primary">Order request received</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-primary">
+            {isOrderReceived ? 'Order request received' : isSubmissionFailed ? 'Order needs attention' : 'Order submission pending'}
+          </p>
           <h1 className="text-3xl font-bold tracking-tight text-black sm:text-4xl">
-            Thank you{order.customer?.name ? `, ${order.customer.name}` : ''}!
+            {isOrderReceived
+              ? `Thank you${order.customer?.name ? `, ${order.customer.name}` : ''}!`
+              : isSubmissionFailed
+                ? 'We could not submit your order yet'
+                : isSubmissionPending ? 'Your order is being processed' : 'Your order is being processed'}
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-black/70 sm:text-base">
-            We’ve received your coffee order request. Our team will be in touch to confirm delivery and payment details.
+            {isOrderReceived
+              ? 'We’ve received your coffee order request. Our team will be in touch to confirm delivery and payment details.'
+              : isSubmissionFailed
+                ? order.failureMessage
+                : 'Your request is saved on this device and is being sent in the background. You can continue browsing; we’ll notify you when the server confirms receipt. If you close the site, it will retry when you visit again.'}
           </p>
           <div className="mt-5 flex justify-center">
-            <OrderInvoiceActions reference={order.id} token={token} />
+            {isOrderReceived && <OrderInvoiceActions reference={order.id} token={token} />}
           </div>
-          {order.public_id && (
+          {isOrderReceived && (
             <Link
               to={getOrderUrl({ public_id: order.public_id, items: order.items })}
               className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
@@ -69,13 +93,17 @@ export default function ConfirmationPage() {
                 </div>
                 <div className="inline-flex items-center gap-1.5 border border-[#f3d4b9] bg-[#fff7ef] px-3 py-1.5 text-xs font-semibold capitalize text-[#8a4a1f]">
                   <LuClock3 aria-hidden="true" className="h-3.5 w-3.5" />
-                  {order.status === 'pending' ? 'Awaiting confirmation' : order.status || 'Pending'}
+                  {isOrderReceived
+                    ? order.status === 'pending' ? 'Awaiting confirmation' : order.status || 'Pending'
+                    : isSubmissionFailed ? 'Needs attention' : 'Submission pending'}
                 </div>
               </div>
 
               <div className="mb-4 flex flex-wrap justify-between gap-2 text-sm">
                 <span className="text-black/60">Order reference</span>
-                <strong className="font-bold tracking-wide text-black">{order.id}</strong>
+                <strong className="font-bold tracking-wide text-black">
+                  {order.id || 'Pending server confirmation'}
+                </strong>
               </div>
 
               <ul className="space-y-4 border-y border-peach-mid/40 py-4">
@@ -96,10 +124,14 @@ export default function ConfirmationPage() {
               </ul>
 
               <div className="flex justify-between gap-4 pt-4 text-base font-bold text-black">
-                <span>Order total</span>
+                <span>{isOrderReceived ? 'Order total' : 'Estimated total'}</span>
                 <span>{formatPrice(order.total)}</span>
               </div>
-              <p className="mt-2 text-xs text-black/60">Delivery cost will be confirmed by our team.</p>
+              <p className="mt-2 text-xs text-black/60">
+                {isOrderReceived
+                  ? 'Delivery cost will be confirmed by our team.'
+                  : 'The server will confirm product prices and the final total when it receives your order.'}
+              </p>
             </section>
 
             {order.customer && (
@@ -139,8 +171,16 @@ export default function ConfirmationPage() {
                   <LuCheck aria-hidden="true" className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-black">Request received</p>
-                  <p className="mt-1 text-xs leading-relaxed text-black/60">Your order is safely with our team.</p>
+                  <p className="text-sm font-semibold text-black">
+                    {isOrderReceived ? 'Request received' : isSubmissionFailed ? 'Submission stopped' : 'Waiting for server receipt'}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-black/60">
+                    {isOrderReceived
+                      ? 'Your order is safely with our team.'
+                      : isSubmissionFailed
+                        ? 'Your request is still saved on this device.'
+                        : 'Your order will be marked received after the backend confirms it.'}
+                  </p>
                 </div>
               </li>
               <li className="flex gap-3">
@@ -148,10 +188,13 @@ export default function ConfirmationPage() {
                   <LuCoffee aria-hidden="true" className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-black">We’ll get in touch</p>
+                  <p className="text-sm font-semibold text-black">
+                    {isOrderReceived ? 'We’ll get in touch' : 'We’ll notify you'}
+                  </p>
                   <p className="mt-1 text-xs leading-relaxed text-black/60">
-                    {order.customer?.email ? `We’ll contact you at ${order.customer.email} ` : 'Our team will contact you '}
-                    to confirm availability and delivery.
+                    {isOrderReceived
+                      ? `${order.customer?.email ? `We’ll contact you at ${order.customer.email} ` : 'Our team will contact you '}to confirm availability and delivery.`
+                      : 'We’ll let you know once the server accepts your order.'}
                   </p>
                 </div>
               </li>
@@ -178,6 +221,15 @@ export default function ConfirmationPage() {
           <Link to="/" className="inline-flex items-center justify-center border border-black/20 px-6 py-3 text-sm font-bold text-black transition-colors hover:bg-peach-light">
             Back to home
           </Link>
+          {isSubmissionFailed && (
+            <button
+              type="button"
+              onClick={() => retrySubmission(order.submissionId)}
+              className="inline-flex items-center justify-center border border-primary px-6 py-3 text-sm font-bold text-primary transition-colors hover:bg-peach-light"
+            >
+              Retry order submission
+            </button>
+          )}
         </div>
       </div>
     </section>

@@ -8,6 +8,7 @@ import VisitorAnalyticsTracker from './components/VisitorAnalyticsTracker.jsx'
 import { CookieConsentProvider } from './context/CookieConsentContext.jsx'
 import { CartProvider } from './context/CartContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
+import { SubmissionQueueProvider } from './context/SubmissionQueueContext.jsx'
 import { getSeoMetadata } from './data/seoPages.js'
 import { updatePageMetadata } from './utils/updatePageMetadata.js'
 
@@ -102,45 +103,47 @@ export default function App() {
       <RouteMetadata />
       <CartProvider>
         <AuthProvider>
-          <CookieConsentProvider>
-            <VisitorAnalyticsTracker />
-            <Routes>
-              <Route path="/cPanel" element={<CPanelRedirect />} />
-              <Route path="/" element={<Layout><Home /></Layout>} />
-              <Route path="/coffee-farm" element={<Layout><OurCoffeeFarm /></Layout>} />
-              <Route path="/services" element={<Layout><OurServices /></Layout>} />
-              <Route path="/about" element={<Layout><AboutUs /></Layout>} />
-              <Route path="/about/patrick-muhereza" element={<Layout><PatrickStoryPage /></Layout>} />
-              <Route path="/shop" element={<Navigate to="/" replace />} />
-              <Route path="/products/:productKey/:productSlug?" element={<Layout><ProductPage /></Layout>} />
-              <Route path="/review/:productId" element={<Layout><ReviewPage /></Layout>} />
-              <Route path="/cart" element={<Layout><CartPage /></Layout>} />
-              <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
-              <Route path="/my-orders" element={<Layout><MyOrdersPage /></Layout>} />
-              <Route path="/my-orders/:orderKey/:orderSlug?" element={<Layout><MyOrdersPage /></Layout>} />
-              <Route path="/my-account" element={<Layout><MyAccountPage /></Layout>} />
-              <Route path="/wishlist" element={<Layout><WishlistPage /></Layout>} />
-              <Route path="/notifications" element={<Layout><NotificationsPage /></Layout>} />
-              <Route path="/notifications/:notificationKey/:notificationSlug?" element={<Layout><NotificationsPage /></Layout>} />
-              <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
-              <Route path="/signin" element={<Layout><AuthPage mode="signin" /></Layout>} />
-              <Route path="/signup" element={<Layout><AuthPage mode="signup" /></Layout>} />
-              <Route path="/confirm" element={<Layout><ConfirmationPage /></Layout>} />
-              <Route path="/wholesale" element={<Layout><WholesalePage /></Layout>} />
-              <Route path="/contact" element={<Layout><ContactUs /></Layout>} />
-              <Route path="/blog" element={<Layout><Blog /></Layout>} />
-              <Route path="/newsletter" element={<Layout><Newsletter /></Layout>} />
-              <Route path="/privacy" element={<Layout><PrivacyPolicy /></Layout>} />
-              <Route path="/terms-and-conditions" element={<Layout><TermsAndConditions /></Layout>} />
-              <Route path="/cookies" element={<Layout><CookiePolicy /></Layout>} />
-              <Route path="/admin" element={
-                <Suspense fallback={<div className="px-6 py-16 text-center text-brown/70">Loading page…</div>}>
-                  <AdminDashboard />
-                </Suspense>
-              } />
-            </Routes>
-            <CookieConsentManager />
-          </CookieConsentProvider>
+          <SubmissionQueueProvider>
+            <CookieConsentProvider>
+              <VisitorAnalyticsTracker />
+              <Routes>
+                <Route path="/cPanel" element={<CPanelRedirect />} />
+                <Route path="/" element={<Layout><Home /></Layout>} />
+                <Route path="/coffee-farm" element={<Layout><OurCoffeeFarm /></Layout>} />
+                <Route path="/services" element={<Layout><OurServices /></Layout>} />
+                <Route path="/about" element={<Layout><AboutUs /></Layout>} />
+                <Route path="/about/patrick-muhereza" element={<Layout><PatrickStoryPage /></Layout>} />
+                <Route path="/shop" element={<Navigate to="/" replace />} />
+                <Route path="/products/:productKey/:productSlug?" element={<Layout><ProductPage /></Layout>} />
+                <Route path="/review/:productId" element={<Layout><ReviewPage /></Layout>} />
+                <Route path="/cart" element={<Layout><CartPage /></Layout>} />
+                <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
+                <Route path="/my-orders" element={<Layout><MyOrdersPage /></Layout>} />
+                <Route path="/my-orders/:orderKey/:orderSlug?" element={<Layout><MyOrdersPage /></Layout>} />
+                <Route path="/my-account" element={<Layout><MyAccountPage /></Layout>} />
+                <Route path="/wishlist" element={<Layout><WishlistPage /></Layout>} />
+                <Route path="/notifications" element={<Layout><NotificationsPage /></Layout>} />
+                <Route path="/notifications/:notificationKey/:notificationSlug?" element={<Layout><NotificationsPage /></Layout>} />
+                <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
+                <Route path="/signin" element={<Layout><AuthPage mode="signin" /></Layout>} />
+                <Route path="/signup" element={<Layout><AuthPage mode="signup" /></Layout>} />
+                <Route path="/confirm" element={<Layout><ConfirmationPage /></Layout>} />
+                <Route path="/wholesale" element={<Layout><WholesalePage /></Layout>} />
+                <Route path="/contact" element={<Layout><ContactUs /></Layout>} />
+                <Route path="/blog" element={<Layout><Blog /></Layout>} />
+                <Route path="/newsletter" element={<Layout><Newsletter /></Layout>} />
+                <Route path="/privacy" element={<Layout><PrivacyPolicy /></Layout>} />
+                <Route path="/terms-and-conditions" element={<Layout><TermsAndConditions /></Layout>} />
+                <Route path="/cookies" element={<Layout><CookiePolicy /></Layout>} />
+                <Route path="/admin" element={
+                  <Suspense fallback={<div className="px-6 py-16 text-center text-brown/70">Loading page…</div>}>
+                    <AdminDashboard />
+                  </Suspense>
+                } />
+              </Routes>
+              <CookieConsentManager />
+            </CookieConsentProvider>
+          </SubmissionQueueProvider>
         </AuthProvider>
       </CartProvider>
     </BrowserRouter>
