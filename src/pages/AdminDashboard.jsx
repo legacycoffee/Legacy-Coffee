@@ -1647,7 +1647,13 @@ export default function AdminDashboard() {
   const [admins, setAdmins] = useState([])
   const [adminsError, setAdminsError] = useState('')
   const [adminSuccess, setAdminSuccess] = useState('')
-  const [newAdmin, setNewAdmin] = useState({ username: '', email: '', password: '' })
+  const [newAdmin, setNewAdmin] = useState({
+    first_name: '',
+    last_name: '',
+    username: '',
+    email: '',
+    password: '',
+  })
   const [isNewAdminEditing, setIsNewAdminEditing] = useState(false)
   const [isAdminSaving, setIsAdminSaving] = useState(false)
   const [deletingAdminId, setDeletingAdminId] = useState(null)
@@ -2449,7 +2455,7 @@ export default function AdminDashboard() {
         token,
       })
       setAdmins(current => [...current, created].sort((first, second) => first.email.localeCompare(second.email)))
-      setNewAdmin({ username: '', email: '', password: '' })
+      setNewAdmin({ first_name: '', last_name: '', username: '', email: '', password: '' })
       setAdminSuccess(`Administrator ${created.email} was added.`)
       setIsNewAdminEditing(false)
     } catch (error) {
@@ -4047,6 +4053,26 @@ export default function AdminDashboard() {
 
                 <form onSubmit={createAdmin} className="mt-5 grid gap-3 sm:grid-cols-2">
                   <label className="block text-xs font-medium text-stone-700">
+                    First name
+                    <input
+                      disabled={!isNewAdminEditing}
+                      autoComplete="given-name"
+                      value={newAdmin.first_name}
+                      onChange={event => setNewAdmin(current => ({ ...current, first_name: event.target.value }))}
+                      className="mt-1.5 min-h-11 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#c77a4b] focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:text-stone-500"
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-stone-700">
+                    Last name
+                    <input
+                      disabled={!isNewAdminEditing}
+                      autoComplete="family-name"
+                      value={newAdmin.last_name}
+                      onChange={event => setNewAdmin(current => ({ ...current, last_name: event.target.value }))}
+                      className="mt-1.5 min-h-11 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#c77a4b] focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:text-stone-500"
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-stone-700">
                     Username
                     <input
                       disabled={!isNewAdminEditing}
@@ -4089,7 +4115,7 @@ export default function AdminDashboard() {
                         Add administrator
                       </SavingButton>
                       <button type="button" onClick={() => {
-                        setNewAdmin({ username: '', email: '', password: '' })
+                        setNewAdmin({ first_name: '', last_name: '', username: '', email: '', password: '' })
                         setAdminsError('')
                         setIsNewAdminEditing(false)
                       }} className="min-h-11 rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50">
@@ -4103,12 +4129,13 @@ export default function AdminDashboard() {
                   {admins.map(admin => {
                     const activeAdminCount = admins.filter(item => item.is_active).length
                     const isLastActiveAdmin = admin.is_active && activeAdminCount <= 1
+                    const adminName = [admin.first_name, admin.last_name].filter(Boolean).join(' ')
                     return (
                       <li key={admin.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                         <div className="min-w-0">
-                          <p className="break-all text-sm font-medium text-stone-800">{admin.email}</p>
+                          <p className="break-all text-sm font-medium text-stone-800">{adminName || admin.email}</p>
                           <p className="mt-0.5 break-all text-xs text-stone-400">
-                            @{admin.username}{admin.id === user?.id ? ' · You' : ''}
+                            {adminName ? `${admin.email} · ` : ''}@{admin.username}{admin.id === user?.id ? ' · You' : ''}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">

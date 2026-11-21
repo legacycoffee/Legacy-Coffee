@@ -70,9 +70,10 @@ export function AuthProvider({ children }) {
   }, [saveAuth])
 
   const updateUser = useCallback(user => {
-    if (!auth?.token) return
-    saveAuth({ token: auth.token, user })
-  }, [auth, saveAuth])
+    const savedAuth = getSavedAuth()
+    if (!savedAuth?.token) return
+    saveAuth({ token: savedAuth.token, user })
+  }, [saveAuth])
 
   const clearAuth = useCallback(() => {
     localStorage.removeItem(AUTH_STORAGE_KEY)

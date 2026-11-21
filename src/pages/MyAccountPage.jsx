@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { LuHeart, LuTrash2, LuUserRound } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth.js'
+import { apiRequest } from '../context/api.js'
 
 const accountLinks = [
   { label: 'Profile', description: 'View your personal information', to: '/profile#profile-heading' },
@@ -12,7 +14,28 @@ const accountLinks = [
 ]
 
 export default function MyAccountPage() {
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, token, user, updateUser } = useAuth()
+  const [profileError, setProfileError] = useState('')
+
+  useEffect(() => {
+    if (!token) return undefined
+
+    let isCurrent = true
+    apiRequest('/auth/me/', { token })
+      .then(freshUser => {
+        if (isCurrent) {
+          updateUser(freshUser)
+          setProfileError('')
+        }
+      })
+      .catch(error => {
+        if (isCurrent) setProfileError(error.message)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [token, updateUser])
 
   if (!isAuthenticated) {
     return <Navigate to="/signin" replace state={{ from: '/my-account' }} />
@@ -26,6 +49,11 @@ export default function MyAccountPage() {
       <div className="mx-auto w-full max-w-3xl lg:max-w-none">
         <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-primary">Your account</p>
         <h1 className="text-3xl font-bold tracking-tight text-black sm:text-4xl">My account</h1>
+        {profileError && (
+          <p role="alert" className="mt-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            Your account details could not be refreshed: {profileError}
+          </p>
+        )}
 
         <div className="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
           <section aria-labelledby="account-overview-heading" className="border border-peach-mid/50 bg-white p-5 shadow-sm sm:p-7">

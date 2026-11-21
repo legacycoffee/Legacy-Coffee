@@ -291,6 +291,25 @@ class AuthenticationApiTests(APITestCase):
 
     @override_settings(GOOGLE_OAUTH_CLIENT_ID='google-web-client-id')
     @patch('accounts.google_auth.id_token.verify_oauth2_token')
+    def test_google_sign_in_fills_missing_family_name_from_full_name(self, verify_token):
+        verify_token.return_value = {
+            'email': 'partial-name@example.com',
+            'email_verified': True,
+            'sub': 'google-sub-partial-name',
+            'given_name': 'Coffee',
+            'name': 'Coffee Customer',
+        }
+
+        response = self.client.post('/api/auth/google/', {
+            'credential': 'signed-google-id-token',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['user']['first_name'], 'Coffee')
+        self.assertEqual(response.data['user']['last_name'], 'Customer')
+
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID='google-web-client-id')
+    @patch('accounts.google_auth.id_token.verify_oauth2_token')
     def test_google_sign_in_rejects_unverified_email(self, verify_token):
         verify_token.return_value = {
             'email': 'unverified@example.com',
@@ -349,6 +368,7 @@ class AuthenticationApiTests(APITestCase):
                     'password': 'StrongPassword!2026',
                     'confirm_password': 'StrongPassword!2026',
                     'first_name': 'Coffee',
+                    'last_name': 'Customer',
                     'delivery_address': '1 Coffee Road',
                     'delivery_city': 'Kampala',
                     'location_latitude': '0.347600',
@@ -361,11 +381,16 @@ class AuthenticationApiTests(APITestCase):
         self.assertIn('token', response.data)
         self.assertEqual(response.data['user']['email'], 'customer@example.com')
         self.assertEqual(response.data['user']['phone'], '+256700000001')
+        self.assertEqual(response.data['user']['first_name'], 'Coffee')
+        self.assertEqual(response.data['user']['last_name'], 'Customer')
         self.assertEqual(response.data['user']['id'], str(get_user_model().objects.get(email='customer@example.com').public_id))
         self.assertNotEqual(response.data['user']['id'], get_user_model().objects.get(email='customer@example.com').pk)
         self.assertEqual(response.data['user']['delivery_address'], '1 Coffee Road')
         self.assertEqual(response.data['user']['location_latitude'], '0.347600')
         self.assertTrue(get_user_model().objects.filter(email='customer@example.com').exists())
+        user = get_user_model().objects.get(email='customer@example.com')
+        self.assertEqual(user.first_name, 'Coffee')
+        self.assertEqual(user.last_name, 'Customer')
         self.assertEqual(
             Notification.objects.filter(user__email='customer@example.com').values_list('kind', flat=True).get(),
             Notification.Kind.WELCOME,

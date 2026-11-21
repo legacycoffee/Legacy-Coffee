@@ -940,12 +940,19 @@ class DashboardApiTests(APITestCase):
         create_response = self.client.post('/api/dashboard/admins/', {
             'username': 'second-admin',
             'email': 'second-admin@example.com',
+            'first_name': 'Second',
+            'last_name': 'Administrator',
             'password': 'CoffeeAdminPass!2026',
         }, format='json')
 
         self.assertEqual(create_response.status_code, 201)
         second_admin = get_user_model().objects.get(email='second-admin@example.com')
         self.assertEqual(create_response.data['id'], str(second_admin.public_id))
+        self.assertEqual(create_response.data['first_name'], 'Second')
+        self.assertEqual(create_response.data['last_name'], 'Administrator')
+        self.assertTrue(create_response.data['is_active'])
+        self.assertEqual(second_admin.first_name, 'Second')
+        self.assertEqual(second_admin.last_name, 'Administrator')
         self.assertTrue(second_admin.is_staff)
         self.assertFalse(second_admin.is_superuser)
         self.assertTrue(second_admin.must_change_password)
@@ -959,6 +966,8 @@ class DashboardApiTests(APITestCase):
             if item['email'] == second_admin.email
         )
         self.assertEqual(second_admin_data['id'], str(second_admin.public_id))
+        self.assertEqual(second_admin_data['first_name'], 'Second')
+        self.assertEqual(second_admin_data['last_name'], 'Administrator')
 
         delete_response = self.client.delete(f'/api/dashboard/admins/{second_admin.public_id}/')
         self.assertEqual(delete_response.status_code, 204)

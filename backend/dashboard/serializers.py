@@ -130,12 +130,16 @@ class AdminAccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'is_active', 'date_joined', 'last_login')
+        fields = (
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'is_active', 'date_joined', 'last_login',
+        )
         read_only_fields = fields
 
 
 class AdminAccountCreateSerializer(serializers.Serializer):
     id = serializers.UUIDField(source='public_id', read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
     username = serializers.CharField(
         max_length=150,
         validators=[UniqueValidator(queryset=User.objects.all())],
@@ -143,6 +147,8 @@ class AdminAccountCreateSerializer(serializers.Serializer):
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())],
     )
+    first_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    last_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     password = serializers.CharField(write_only=True, trim_whitespace=False)
 
     def validate_password(self, value):
@@ -153,6 +159,8 @@ class AdminAccountCreateSerializer(serializers.Serializer):
         return User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
             password=validated_data['password'],
             is_staff=True,
             must_change_password=True,
