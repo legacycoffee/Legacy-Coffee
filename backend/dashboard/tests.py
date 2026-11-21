@@ -45,6 +45,45 @@ class DashboardApiTests(APITestCase):
             403,
         )
 
+    def test_staff_can_clear_all_notifications_across_accounts(self):
+        customer_notification = Notification.objects.create(
+            user=self.customer,
+            kind=Notification.Kind.ORDER_SUBMITTED,
+            title='Customer order',
+            message='An order was submitted.',
+        )
+        staff_notification = Notification.objects.create(
+            user=self.staff,
+            kind=Notification.Kind.SIGN_IN,
+            title='Staff sign-in',
+            message='A staff member signed in.',
+        )
+        self.client.force_authenticate(self.staff)
+
+        response = self.client.delete(
+            '/api/dashboard/notifications/',
+            {'all': True},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['deleted_count'], 2)
+        self.assertEqual(response.data['remaining_count'], 0)
+        self.assertFalse(Notification.objects.filter(
+            pk__in=(customer_notification.pk, staff_notification.pk),
+        ).exists())
+
+    def test_customers_cannot_clear_all_dashboard_notifications(self):
+        self.client.force_authenticate(self.customer)
+
+        response = self.client.delete(
+            '/api/dashboard/notifications/',
+            {'all': True},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 403)
+
     def test_staff_can_read_and_clear_admin_data_categories(self):
         product = Product.objects.create(
             slug='data-coffee',

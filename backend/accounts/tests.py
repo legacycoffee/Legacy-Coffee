@@ -124,7 +124,7 @@ class CloudinaryUploadTests(SimpleTestCase):
 class TransactionalEmailTests(SimpleTestCase):
     @override_settings(
         RESEND_API_KEY='re_test_key',
-        NEWSLETTER_FROM_EMAIL='Legacy Coffee <orders@example.com>',
+        NEWSLETTER_FROM_EMAIL='Legacy Coffee <noreply@legacycoffee.org>',
     )
     @patch('accounts.email.urlopen')
     def test_welcome_email_uses_resend_configuration(self, urlopen):
@@ -142,7 +142,7 @@ class TransactionalEmailTests(SimpleTestCase):
         self.assertEqual(request.full_url, 'https://api.resend.com/emails')
         self.assertEqual(request.get_header('Authorization'), 'Bearer re_test_key')
         payload = json.loads(request.data)
-        self.assertEqual(payload['from'], 'Legacy Coffee <orders@example.com>')
+        self.assertEqual(payload['from'], 'Legacy Coffee <noreply@legacycoffee.org>')
         self.assertEqual(payload['to'], ['customer@example.com'])
         self.assertEqual(payload['subject'], 'Welcome to Legacy Coffee')
         self.assertIn('Hello Coffee', payload['text'])

@@ -2764,16 +2764,18 @@ export default function AdminDashboard() {
     })
   }
 
-  const deleteAdminNotificationsConfirmed = async publicIds => {
+  const deleteAdminNotificationsConfirmed = async (publicIds, all = false) => {
     setIsDeletingAdminNotifications(true)
     setAdminNotificationsError('')
     try {
       const result = await apiRequest('/dashboard/notifications/', {
         method: 'DELETE',
-        body: { public_ids: publicIds },
+        body: all ? { all: true } : { public_ids: publicIds },
         token,
       })
-      setSelectedAdminNotificationIds(current => current.filter(id => !publicIds.includes(id)))
+      setSelectedAdminNotificationIds(current => (
+        all ? [] : current.filter(id => !publicIds.includes(id))
+      ))
       setDataManagementCounts(current => current
         ? { ...current, notifications: result.remaining_count }
         : current)
@@ -2781,7 +2783,9 @@ export default function AdminDashboard() {
 
       const visibleIds = adminNotificationsPage?.results.map(item => item.public_id) || []
       const selectedOnPage = visibleIds.filter(id => publicIds.includes(id)).length
-      const nextPageNumber = visibleIds.length > 0
+      const nextPageNumber = all
+        ? 1
+        : visibleIds.length > 0
         && selectedOnPage === visibleIds.length
         && adminNotificationsPageNumber > 1
         ? adminNotificationsPageNumber - 1
@@ -2814,6 +2818,19 @@ export default function AdminDashboard() {
       warning: 'The selected notifications cannot be recovered. This action does not delete user accounts or other records.',
       confirmLabel: `Permanently delete ${count} notification${count === 1 ? '' : 's'}`,
       onConfirm: () => deleteAdminNotificationsConfirmed(selectedAdminNotificationIds),
+    })
+  }
+
+  const requestAllAdminNotificationDeletion = () => {
+    const count = adminNotificationsPage?.count || 0
+    if (!count) return
+    setDestructiveActionError('')
+    setPendingDestructiveAction({
+      title: 'Clear all notifications?',
+      description: `This will permanently delete all ${count} notifications across user accounts.`,
+      warning: 'No user accounts or other records will be deleted. This cannot be undone.',
+      confirmLabel: 'Permanently delete all notifications',
+      onConfirm: () => deleteAdminNotificationsConfirmed([], true),
     })
   }
 
@@ -3234,17 +3251,28 @@ export default function AdminDashboard() {
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-4 py-4 sm:px-5">
                   <div>
                     <h2 id="admin-notifications-heading" className="text-sm font-semibold text-stone-900">Manage notifications</h2>
-                    <p className="mt-1 text-xs text-stone-500">Select individual notifications across user accounts to delete, up to 500 per batch.</p>
+                    <p className="mt-1 text-xs text-stone-500">Delete selected notifications in batches of 500, or clear all notifications across user accounts.</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={requestAdminNotificationDeletion}
-                    disabled={!selectedAdminNotificationIds.length || isAdminNotificationsLoading || isDeletingAdminNotifications}
-                    className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-45"
-                  >
-                    <LuTrash2 aria-hidden="true" className="h-4 w-4" />
-                    Delete selected{selectedAdminNotificationIds.length ? ` (${selectedAdminNotificationIds.length})` : ''}
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={requestAdminNotificationDeletion}
+                      disabled={!selectedAdminNotificationIds.length || isAdminNotificationsLoading || isDeletingAdminNotifications}
+                      className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      <LuTrash2 aria-hidden="true" className="h-4 w-4" />
+                      Delete selected{selectedAdminNotificationIds.length ? ` (${selectedAdminNotificationIds.length})` : ''}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={requestAllAdminNotificationDeletion}
+                      disabled={!adminNotificationsPage?.count || isAdminNotificationsLoading || isDeletingAdminNotifications}
+                      className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-rose-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      <LuTrash2 aria-hidden="true" className="h-4 w-4" />
+                      Clear all
+                    </button>
+                  </div>
                 </div>
                 {adminNotificationsError && (
                   <p role="alert" className="border-b border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:px-5">

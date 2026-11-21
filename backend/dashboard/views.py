@@ -434,14 +434,21 @@ class DashboardNotificationSerializer(serializers.ModelSerializer):
 class DashboardNotificationDeleteSerializer(serializers.Serializer):
     public_ids = serializers.ListField(
         child=serializers.UUIDField(),
+        required=False,
         allow_empty=False,
         max_length=500,
     )
+    all = serializers.BooleanField(required=False, default=False)
 
-    def validate_public_ids(self, public_ids):
-        if len(set(public_ids)) != len(public_ids):
-            raise serializers.ValidationError('Duplicate notification IDs are not allowed.')
-        return public_ids
+    def validate(self, attrs):
+        has_public_ids = 'public_ids' in attrs
+        if attrs['all'] == has_public_ids:
+            raise serializers.ValidationError(
+                'Provide either public_ids or all=true, but not both.',
+            )
+        if has_public_ids and len(set(attrs['public_ids'])) != len(attrs['public_ids']):
+            raise serializers.ValidationError({'public_ids': 'Duplicate notification IDs are not allowed.'})
+        return attrs
 
 
 class DashboardNotificationsView(APIView):
@@ -459,14 +466,17 @@ class DashboardNotificationsView(APIView):
     def delete(self, request):
         serializer = DashboardNotificationDeleteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        public_ids = serializer.validated_data['public_ids']
-        selected = Notification.objects.filter(public_id__in=public_ids)
-        if selected.count() != len(public_ids):
-            return Response(
-                {'detail': 'One or more selected notifications were not found.'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        deleted_count, _ = selected.delete()
+        if serializer.validated_data['all']:
+            deleted_count, _ = Notification.objects.all().delete()
+        else:
+            public_ids = serializer.validated_data['public_ids']
+            selected = Notification.objects.filter(public_id__in=public_ids)
+            if selected.count() != len(public_ids):
+                return Response(
+                    {'detail': 'One or more selected notifications were not found.'},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            deleted_count, _ = selected.delete()
         return Response({
             'deleted_count': deleted_count,
             'remaining_count': Notification.objects.count(),

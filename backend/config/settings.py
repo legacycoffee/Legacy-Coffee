@@ -127,7 +127,10 @@ CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY', '')
 CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET', '')
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')
-NEWSLETTER_FROM_EMAIL = os.environ.get('NEWSLETTER_FROM_EMAIL', '')
+NEWSLETTER_FROM_EMAIL = (
+    os.environ.get('NEWSLETTER_FROM_EMAIL')
+    or 'Legacy Coffee <noreply@legacycoffee.org>'
+)
 NEWSLETTER_PUBLIC_URL = os.environ.get(
     'NEWSLETTER_PUBLIC_URL',
     'https://legacycoffee.github.io/Legacy-Coffee',
